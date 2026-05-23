@@ -32,3 +32,7 @@ func _on_area_entered(body: Area2D) -> void:
 	else:
 		queue_free()
 		print("Planet hit")
+
+
+func die():
+	pass
