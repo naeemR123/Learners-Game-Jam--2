@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://fhlb4d0wu6bp"]
+
+[ext_resource type="Texture2D" uid="uid://eyr5wjavd8ld" path="res://icon.svg" id="1_ct11x"]
+[ext_resource type="Script" uid="uid://c6ve88aiimc05" path="res://scripts/AutoCannon.gd" id="1_pqccg"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ct11x"]
+radius = 400.0
+
+[node name="AutoCannon" type="Node2D" unique_id=1674642591]
+script = ExtResource("1_pqccg")
+
+[node name="CannonSprite" type="Sprite2D" parent="." unique_id=1185311697]
+texture = ExtResource("1_ct11x")
+
+[node name="DetectionRadius" type="Area2D" parent="." unique_id=1581279807]
+monitorable = false
+
+[node name="DetectionCollisionShape" type="CollisionShape2D" parent="DetectionRadius" unique_id=192751450]
+shape = SubResource("CircleShape2D_ct11x")
+
+[node name="FireTimer" type="Timer" parent="." unique_id=2023985334]
