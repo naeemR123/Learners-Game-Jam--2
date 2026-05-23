@@ -6,7 +6,7 @@ extends Node2D
 @export var projectile_scene : PackedScene
 
 @onready var turret_body : Node2D = $Turret
-@onready var range : Area2D = $Turret/Range
+@onready var sensor : Area2D = $Turret/Range
 @onready var muzzle : Marker2D = $Turret/Muzzle
 @onready var planet : Area2D = %Planet
 
@@ -36,7 +36,7 @@ func _on_firerate_timeout() -> void:
 func get_nearest_asteroid() -> Area2D:
 	
 	# Grab all areas currently inside the Range's collision circle
-	var asteroids_in_range = range.get_overlapping_areas()
+	var asteroids_in_range = sensor.get_overlapping_areas()
 	
 	if asteroids_in_range.is_empty():
 		return null
@@ -60,7 +60,7 @@ func shoot(target: Area2D) -> void:
 		return
 	
 	var proj = projectile_scene.instantiate()
-	# Always add projectiles to the main scene so they don't inherit the turret's rotation!
+	# CRITICAL Adds projectiles to the main scene so they don't inherit the turret's rotation
 	get_tree().current_scene.add_child(proj)
 	
 	# Initialize the projectile

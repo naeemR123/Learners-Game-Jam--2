@@ -18,5 +18,5 @@ func _physics_process(delta: float) -> void:
 
 func _on_area_entered(asteroid: Area2D) -> void:
 	# Destorys asteroid, then destroys self
-	asteroid.queue_free()
+	asteroid.die()
 	queue_free()

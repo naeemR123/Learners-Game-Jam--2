@@ -1,10 +1,17 @@
 extends Area2D
 
 
+@export var resource_max : int = 3
+@export var resource_min : int = 1
+
 @export var max_speed : float = 40
 @export var min_speed : float = 15
+@export var rotation_speed : float = randf_range(-0.8,0.8)
 var speed : float = randf_range(min_speed,max_speed)
 var direction : Vector2
+
+
+@onready var resource_scene : PackedScene = preload("res://Scenes/resource.tscn")
 
 var planet: Area2D 
 
@@ -22,8 +29,9 @@ func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool, debug_s
 
 
 func _physics_process(delta: float) -> void:
-	# Produces movement
+	# Produces movement and rotation
 	global_position += direction * speed * delta
+	rotation += rotation_speed * delta
 
 
 func _on_area_entered(body: Area2D) -> void:
@@ -35,4 +43,11 @@ func _on_area_entered(body: Area2D) -> void:
 
 
 func die():
-	pass
+	var randamount = randi_range(resource_min, resource_max)
+	
+	for i in randamount:
+		var resource = resource_scene.instantiate()
+		resource.global_position = global_position
+		get_tree().current_scene.call_deferred("add_child", resource)
+		
+	queue_free()

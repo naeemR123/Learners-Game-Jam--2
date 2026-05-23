@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://m860hk5ygins" path="res://Scripts/asteroid_spawner.gd" id="2_bo1nx"]
 [ext_resource type="PackedScene" uid="uid://dy1a5mdt6iqir" path="res://Scenes/asteroid.tscn" id="3_8gbba"]
 [ext_resource type="PackedScene" uid="uid://dha1d0wqh3pxm" path="res://Scenes/turret.tscn" id="4_jjvhh"]
+[ext_resource type="PackedScene" uid="uid://ct42g3vrmj7ac" path="res://Scenes/tractor_beam.tscn" id="5_kry3j"]
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 
@@ -25,5 +26,7 @@ asteroid_scene = ExtResource("3_8gbba")
 [node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]
 
 [node name="TurretPivot" parent="." unique_id=1893972898 instance=ExtResource("4_jjvhh")]
+
+[node name="TractorBeam" parent="." unique_id=81739787 instance=ExtResource("5_kry3j")]
 
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
