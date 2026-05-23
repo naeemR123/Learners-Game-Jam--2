@@ -56,6 +56,12 @@ SpaceBar={
 ]
 }
 
+[layer_names]
+
+2d_physics/layer_1="Planet"
+2d_physics/layer_2="Asteroids"
+2d_physics/layer_3="Projectiles"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

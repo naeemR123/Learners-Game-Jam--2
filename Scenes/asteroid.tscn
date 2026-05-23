@@ -9,6 +9,7 @@ size = Vector2(50, 50)
 radius = 32.0
 
 [node name="Asteroid" type="Area2D" unique_id=1960516722 groups=["Asteroids"]]
+collision_layer = 2
 script = ExtResource("1_0tomg")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=189141741]
