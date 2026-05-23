@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://b2gekchbr7tpo"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_7u77a"]
+size = Vector2(128, 128)
+
+[node name="Main" type="Node2D" unique_id=1160054467]
+
+[node name="GameManager" type="Node" parent="." unique_id=812158394]
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1796223530]
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0, 0, 0.10980392, 1)
+
+[node name="planet" type="Sprite2D" parent="." unique_id=750936787]
+position = Vector2(960, 540)
+texture = SubResource("PlaceholderTexture2D_7u77a")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1602601979]
+position = Vector2(960, 540)
