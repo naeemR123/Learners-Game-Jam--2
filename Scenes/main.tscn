@@ -1,20 +1,26 @@
 [gd_scene format=3 uid="uid://b2gekchbr7tpo"]
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_7u77a"]
-size = Vector2(128, 128)
+[ext_resource type="PackedScene" uid="uid://clr4m10penbht" path="res://Scenes/planet.tscn" id="1_jjgbg"]
+[ext_resource type="Script" uid="uid://m860hk5ygins" path="res://Scripts/asteroid_spawner.gd" id="2_bo1nx"]
+[ext_resource type="PackedScene" uid="uid://dy1a5mdt6iqir" path="res://Scenes/asteroid.tscn" id="3_8gbba"]
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 
-[node name="GameManager" type="Node" parent="." unique_id=812158394]
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1796223530]
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
 offset_right = 1920.0
 offset_bottom = 1080.0
-color = Color(0, 0, 0.10980392, 1)
+color = Color(0.019607844, 0, 0.14117648, 1)
 
-[node name="planet" type="Sprite2D" parent="." unique_id=750936787]
+[node name="Planet" parent="." unique_id=604275000 instance=ExtResource("1_jjgbg")]
+unique_name_in_owner = true
 position = Vector2(960, 540)
-texture = SubResource("PlaceholderTexture2D_7u77a")
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=1602601979]
+[node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)
+script = ExtResource("2_bo1nx")
+debug_speed = true
+asteroid_scene = ExtResource("3_8gbba")
+
+[node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]
+
+[connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
