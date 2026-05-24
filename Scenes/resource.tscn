@@ -7,7 +7,7 @@
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_2f3j8"]
 size = Vector2(4, 4)
 
-[node name="Resource" type="Area2D" unique_id=1201714602]
+[node name="Resource" type="Area2D" unique_id=1201714602 groups=["Resource"]]
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("1_2f3j8")

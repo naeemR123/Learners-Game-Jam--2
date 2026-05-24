@@ -1,5 +1,6 @@
 extends Area2D
 
+@onready var game := Game_Manager
 
 @export var pull_speed: float = 150.0
 @export var pull_strength: float = 10
@@ -12,6 +13,8 @@ func _ready() -> void:
 	# Makes the radius of the collision shape 60% of the width of the sprite
 	var spriteradius = sprite.texture.get_size()
 	collision.shape.radius = ( spriteradius.x / 1.67)
+	area_entered.connect(_on_area_entered)
+	area_exited.connect(_on_area_exited)
 
 
 
@@ -37,10 +40,12 @@ func _physics_process(delta: float) -> void:
 		
 
 func collect_resources(delta: float) -> void:
+	
 	var caught_resources = get_overlapping_areas()
 	
 	for resource in caught_resources:
-		
+		if !resource.is_in_group("Resource"):
+			continue
 		if "speed" in resource and "direction" in resource:
 			var current_velocity = resource.direction * resource.speed
 			
@@ -62,3 +67,14 @@ func collect_resources(delta: float) -> void:
 			if resource.speed > 0.01: # CRITICAL Prevents divide by 0 error
 				# Smoothly bends the resource's current flying direction toward the satellite
 				resource.direction = (new_velocity).normalized()
+
+
+func _on_area_entered(area: Area2D):
+	if area.is_in_group("Asteroids"):
+		area.local_time_scale = game.slow_down_amount
+	
+
+
+func _on_area_exited(area: Area2D):
+	if area.is_in_group("Asteroids"):
+		area.local_time_scale = 1.0

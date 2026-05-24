@@ -1,8 +1,11 @@
 extends Area2D
 
+@onready var game := Game_Manager
 
 @export var resource_max : int = 3
 @export var resource_min : int = 1
+
+var local_time_scale : float = 1.0
 
 @export var max_speed : float = 40
 @export var min_speed : float = 15
@@ -30,8 +33,8 @@ func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool, debug_s
 
 func _physics_process(delta: float) -> void:
 	# Produces movement and rotation
-	global_position += direction * speed * delta
-	rotation += rotation_speed * delta
+	global_position += direction * speed * local_time_scale * delta
+	rotation += rotation_speed * local_time_scale * delta
 
 
 func _on_area_entered(body: Area2D) -> void:

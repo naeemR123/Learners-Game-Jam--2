@@ -43,33 +43,20 @@ offset_top = 50.0
 offset_right = 40.0
 offset_bottom = 23.0
 theme_override_font_sizes/font_size = 25
-text = "Resources: 0
-Level: 1"
+text = "Resources: 0"
 
-[node name="HBoxContainer" type="HBoxContainer" parent="UI" unique_id=1203005661]
-custom_minimum_size = Vector2(0.2, 0)
+[node name="TurretUpgrade" type="Button" parent="UI" unique_id=1593550338]
+custom_minimum_size = Vector2(300, 50)
 anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -150.0
-offset_top = 50.0
-offset_right = 150.0
-offset_bottom = 54.0
+offset_left = -89.5
+offset_top = 65.0
+offset_right = 89.5
+offset_bottom = 31.0
 grow_horizontal = 2
-alignment = 1
-
-[node name="TurretUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=1593550338]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
 text = "Upgrade Turret Speed
 Cost: X"
 
-[node name="SlowDownUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=1264650432]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Upgrade Slow Down Speed
-Cost: X"
-
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
-[connection signal="pressed" from="UI/HBoxContainer/TurretUpgrade" to="UI" method="_on_turret_upgrade_pressed"]
-[connection signal="pressed" from="UI/HBoxContainer/SlowDownUpgrade" to="UI" method="_on_slow_down_upgrade_pressed"]
+[connection signal="pressed" from="UI/TurretUpgrade" to="UI" method="_on_turret_upgrade_pressed"]

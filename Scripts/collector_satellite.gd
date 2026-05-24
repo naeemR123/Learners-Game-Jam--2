@@ -1,7 +1,7 @@
 extends Node2D
 
 
-
+@onready var game := Game_Manager
 
 
 @export var orbit_speed : float = 0.2
@@ -62,5 +62,5 @@ func _physics_process(delta: float) -> void:
 
 # Mask is set to 4, meaning 'area' is guaranteed to be a Resource
 func _on_collection_area_entered(area: Area2D) -> void: 
-	Game_Manager.add_resource(1)
+	game.add_resource(1)
 	area.queue_free()

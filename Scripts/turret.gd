@@ -1,18 +1,21 @@
 extends Node2D
 
-
+@onready var game := Game_Manager
 
 @export var orbit_speed : float = 1.0
 @export var projectile_scene : PackedScene
+@export var turn_speed : float = 10
 
 @onready var turret_body : Node2D = $Turret
 @onready var sensor : Area2D = $Turret/Range
 @onready var muzzle : Marker2D = $Turret/Muzzle
 @onready var planet : Area2D = %Planet
+@onready var firerate: Timer = $Turret/Firerate
 
 func _ready() -> void:
 	global_position = planet.global_position
-
+	game.turret_upgrade.connect(upgrade_firerate)
+	firerate.wait_time = game.turret_fire_rate
 
 func _process(delta: float) -> void:
 	# Rotates the pivot, making the offset Turret orbit
@@ -23,7 +26,9 @@ func _process(delta: float) -> void:
 	
 	if target != null:
 		# Makes the turret visually face the target
-		turret_body.look_at(target.global_position)
+		var target_angle = turret_body.global_position.direction_to(target.global_position).angle()
+		
+		turret_body.global_rotation = lerp_angle(turret_body.global_rotation, target_angle, turn_speed * delta)
 	
 
 func _on_firerate_timeout() -> void:
@@ -65,3 +70,8 @@ func shoot(target: Area2D) -> void:
 	
 	# Initialize the projectile
 	proj.start(muzzle.global_position, target.global_position)
+
+
+func upgrade_firerate(new_amount):
+	firerate.wait_time = new_amount
+	print("Turret Firerate: ", firerate.wait_time)

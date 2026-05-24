@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dy1a5mdt6iqir"]
 
 [ext_resource type="Script" uid="uid://cwfbsagvg5wos" path="res://Scripts/asteroid.gd" id="1_0tomg"]
-[ext_resource type="PackedScene" uid="uid://b8itoghsjeal8" path="res://Scenes/resource.tscn" id="2_a2bka"]
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_eayck"]
 size = Vector2(50, 50)
@@ -12,7 +11,6 @@ radius = 32.0
 [node name="Asteroid" type="Area2D" unique_id=1960516722 groups=["Asteroids"]]
 collision_layer = 2
 script = ExtResource("1_0tomg")
-resource_scene = ExtResource("2_a2bka")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=189141741]
 texture = SubResource("PlaceholderTexture2D_eayck")
