@@ -3,13 +3,15 @@ extends CanvasLayer
 @onready var game := Game_Manager
 
 
-@onready var label: Label = $Label
+@onready var label: Label = $Stats
 @onready var turret_upgrade: Button = $HBoxContainer/TurretUpgrade
 @onready var slow_down_upgrade: Button = $HBoxContainer/SlowDownUpgrade
+@onready var defense_label: Label = $PlanetDefense
 
 
 func _ready() -> void:
 	game.resources_changed.connect(resource_label)
+	game.defense_changed.connect(update_defense_ui)
 	turret_button_refresh(0.2 * game.turret_upgrade_level)
 	tractor_button_refresh()
 
@@ -43,8 +45,19 @@ func update_ui():
 	if game.tractor_upgrade_level > 1:
 		display_text += "\nTractor Level: " + str(game.tractor_upgrade_level)
 	
+	if game.defense_upgrade_level > 1:
+		display_text += "\nPlanet Defense Level: " + str(game.defense_upgrade_level)
+	
 	label.text = display_text
 	
+
+func update_defense_ui():
+	defense_label.text = "Defense:" + "\n- " + str(game.current_planet_defense) + " -"
+
+
+func update_defense_button():
+	pass
+
 
 func _on_slow_down_upgrade_pressed() -> void:
 	if game.resources >= game.tractor_upgrade_cost:

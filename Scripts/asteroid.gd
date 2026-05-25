@@ -5,6 +5,8 @@ extends Area2D
 @export var resource_max : int = 3
 @export var resource_min : int = 1
 
+@export var damage : int = 3
+
 var local_time_scale : float = 1.0
 
 @export var max_speed : float = 40
@@ -41,6 +43,7 @@ func _on_area_entered(body: Area2D) -> void:
 	if body != planet:
 		return
 	else:
+		game.take_damage(damage)
 		queue_free()
 		print("Planet hit")
 

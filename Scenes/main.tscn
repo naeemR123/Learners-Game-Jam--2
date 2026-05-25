@@ -36,7 +36,7 @@ asteroid_scene = ExtResource("3_8gbba")
 [node name="UI" type="CanvasLayer" parent="." unique_id=1549426236]
 script = ExtResource("7_6bp64")
 
-[node name="Label" type="Label" parent="UI" unique_id=999709284]
+[node name="Stats" type="Label" parent="UI" unique_id=999709284]
 anchors_preset = -1
 offset_left = 50.0
 offset_top = 50.0
@@ -69,6 +69,27 @@ custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
 text = "Upgrade Slow Down Speed
 Cost: X"
+
+[node name="DefenseUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=302552945]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+text = "Upgrade"
+
+[node name="PlanetDefense" type="Label" parent="UI" unique_id=1738248385]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -34.0
+offset_top = 170.0
+offset_right = 34.0
+offset_bottom = 24.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Defense:
+- 10 -"
+horizontal_alignment = 1
 
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
 [connection signal="pressed" from="UI/HBoxContainer/TurretUpgrade" to="UI" method="_on_turret_upgrade_pressed"]
