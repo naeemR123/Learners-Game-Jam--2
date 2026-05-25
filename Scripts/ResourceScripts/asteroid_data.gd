@@ -6,7 +6,8 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export_category("Visuals")
 @export var name: String
 @export var sprite_texture: Texture2D
-@export var base_scale: Vector2 = Vector2(max_health*1.2,max_health*1.2)
+@export var scale_ratio: float = 1
+var	base_scale: Vector2 = Vector2(max_health*scale_ratio,max_health*scale_ratio)
 
 @export_category("Base Stats")
 @export var max_health: float

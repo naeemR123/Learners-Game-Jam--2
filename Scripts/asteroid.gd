@@ -23,6 +23,10 @@ var direction : Vector2
 var planet: Area2D 
 
 func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool, debug_speed_value: float) -> void:
+	if not data:
+		queue_free()
+		return
+	
 	if debug_speed == true:
 		speed = debug_speed_value
 	planet = target_planet
