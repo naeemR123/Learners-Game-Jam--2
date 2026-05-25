@@ -2,6 +2,8 @@ extends Area2D
 
 @onready var game := Game_Manager
 
+@export var data : AsteroidData
+
 @export var resource_max : int = 3
 @export var resource_min : int = 1
 
@@ -15,7 +17,7 @@ var local_time_scale : float = 1.0
 var speed : float = randf_range(min_speed,max_speed)
 var direction : Vector2
 
-
+@onready var sprite : Sprite2D = $Sprite2D
 @onready var resource_scene : PackedScene = preload("res://Scenes/resource.tscn")
 
 var planet: Area2D 
