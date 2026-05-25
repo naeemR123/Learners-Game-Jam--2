@@ -59,3 +59,20 @@ func trigger_game_over():
 	planet_destroyed = true
 	game_over.emit()
 	get_tree().paused = true
+
+
+# Reset function for "Try Again?" Button
+func game_reset():
+	resources = 0
+	turret_fire_rate = 2.0
+	turret_upgrade_cost = 10
+	turret_upgrade_level = 1
+	slow_down_amount = 0.75
+	tractor_upgrade_cost = 10
+	tractor_upgrade_level = 1
+	
+	current_planet_defense = max_planet_defense
+	planet_destroyed = false
+	get_tree().paused = false
+	
+	

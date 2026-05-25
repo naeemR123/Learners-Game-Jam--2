@@ -91,6 +91,48 @@ text = "Defense:
 - 10 -"
 horizontal_alignment = 1
 
+[node name="GameOverScreen" type="Control" parent="UI" unique_id=1149630224]
+process_mode = 2
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="UI/GameOverScreen" unique_id=435270478]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.09803922, 0, 0.22352941, 0.63529414)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameOverScreen" unique_id=913743804]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -78.0
+offset_top = -127.0
+offset_right = 78.0
+offset_bottom = 127.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GameOverLabel" type="Label" parent="UI/GameOverScreen/VBoxContainer" unique_id=1325165462]
+layout_mode = 2
+size_flags_vertical = 6
+text = "PLANET DESTROYED"
+horizontal_alignment = 1
+
+[node name="RetryButton" type="Button" parent="UI/GameOverScreen/VBoxContainer" unique_id=357145147]
+layout_mode = 2
+text = "Try Again?"
+
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
 [connection signal="pressed" from="UI/HBoxContainer/TurretUpgrade" to="UI" method="_on_turret_upgrade_pressed"]
 [connection signal="pressed" from="UI/HBoxContainer/SlowDownUpgrade" to="UI" method="_on_slow_down_upgrade_pressed"]

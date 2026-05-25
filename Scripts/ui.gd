@@ -3,17 +3,31 @@ extends CanvasLayer
 @onready var game := Game_Manager
 
 
-@onready var label: Label = $Stats
 @onready var turret_upgrade: Button = $HBoxContainer/TurretUpgrade
 @onready var slow_down_upgrade: Button = $HBoxContainer/SlowDownUpgrade
+
+@onready var label: Label = $Stats
 @onready var defense_label: Label = $PlanetDefense
+@onready var planet_defense: Label = $PlanetDefense
+
+@onready var game_over_screen: Control = $GameOverScreen
+@onready var retry_button: Button = $GameOverScreen/VBoxContainer/RetryButton
 
 
 func _ready() -> void:
 	game.resources_changed.connect(resource_label)
 	game.defense_changed.connect(update_defense_ui)
+	game.game_over.connect(game_over_event)
+	
+	retry_button.pressed.connect(_on_retry_button_pressed)
+	
+	game_over_screen.visible = false
+	
 	turret_button_refresh(0.2 * game.turret_upgrade_level)
 	tractor_button_refresh()
+	update_ui()
+	update_defense_ui()
+
 
 func resource_label():
 	update_ui()
@@ -32,6 +46,7 @@ func _on_turret_upgrade_pressed() -> void:
 		game.turret_upgrade_cost = int(10 * pow(1.15,game.turret_upgrade_level))
 		turret_button_refresh(upgrade_amount)
 
+
 func turret_button_refresh(speed_amount):
 	turret_upgrade.text = "Upgrade Turret Speed: +" + str(speed_amount) + "\nCost: " + str(game.turret_upgrade_cost)
 
@@ -49,7 +64,7 @@ func update_ui():
 		display_text += "\nPlanet Defense Level: " + str(game.defense_upgrade_level)
 	
 	label.text = display_text
-	
+
 
 func update_defense_ui():
 	defense_label.text = "Defense:" + "\n- " + str(game.current_planet_defense) + " -"
@@ -74,8 +89,17 @@ func _on_slow_down_upgrade_pressed() -> void:
 		game.tractor_upgrade_level += 1
 		game.tractor_upgrade_cost = int(10 * pow(1.15,game.tractor_upgrade_level))
 		tractor_button_refresh()
-		
 
 
 func tractor_button_refresh():
 	slow_down_upgrade.text =  "Upgrade Slow Down Speed: +" + str(0.05 * game.tractor_upgrade_level) + "\nCost: " + str(game.tractor_upgrade_cost)
+
+
+func _on_retry_button_pressed():
+	game.game_reset()
+	# Reload the current active scene to wipe existing asteroids/resources from the field
+	get_tree().reload_current_scene()
+
+
+func game_over_event():
+	game_over_screen.visible = true
