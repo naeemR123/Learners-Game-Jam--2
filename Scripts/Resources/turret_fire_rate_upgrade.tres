@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://47xdrmudolho"]
+
+[ext_resource type="Script" uid="uid://b3n4xmqgxjhgf" path="res://Scripts/ResourceScripts/upgrade_data.gd" id="1_qtxok"]
+
+[resource]
+script = ExtResource("1_qtxok")
+id = "turret_fire_rate"
+display_name = "Turret Fire Rate"
+description = "Each Upgrade:
+- Decreases time between shots for turret satellites. (Decreased cooldown)"
+metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

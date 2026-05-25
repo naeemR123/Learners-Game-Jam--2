@@ -58,7 +58,7 @@ offset_bottom = 54.0
 grow_horizontal = 2
 alignment = 1
 
-[node name="TurretUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=1593550338]
+[node name="TurretFireRateUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=1593550338]
 custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
 text = "Upgrade Turret Speed
@@ -134,5 +134,5 @@ layout_mode = 2
 text = "Try Again?"
 
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
-[connection signal="pressed" from="UI/HBoxContainer/TurretUpgrade" to="UI" method="_on_turret_upgrade_pressed"]
+[connection signal="pressed" from="UI/HBoxContainer/TurretFireRateUpgrade" to="UI" method="_on_turret_upgrade_pressed"]
 [connection signal="pressed" from="UI/HBoxContainer/SlowDownUpgrade" to="UI" method="_on_slow_down_upgrade_pressed"]

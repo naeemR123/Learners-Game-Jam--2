@@ -1,47 +1,53 @@
 extends Node
 
 var resources :int = 0
-
-# Turret Upgrades
-@export var turret_fire_rate: float = 2.0
-var turret_upgrade_cost: int = 10
-var turret_upgrade_level: int = 1
-
-# Tractor Beam Upgrades
-@export var slow_down_amount: float = 0.75
-var tractor_upgrade_cost: int = 10
-var tractor_upgrade_level: int = 1
-
-# Planet Defense Upgrades
-@export var max_planet_defense: int = 10
-var current_planet_defense: int = 10
-var defense_upgrade_cost: int = 10
-var defense_upgrade_level: int = 1
 var planet_destroyed : bool = false
 
+# This Dictionary holds the CURRENT value of all upgrade stats
+# Turrets and Tractor beams will read from this dictionary using the exact "id" string.
+var active_stats: Dictionary = {
+	"turret_fire_rate": 2.0,
+	"turret_damage": 3.0,
+	"slow_down_amount": 0.75,
+	"planet_defense": 10.0,
+}
+
+var max_planet_defense: float = 10.0
+
+
 # Signals
-signal turret_upgrade(new_amount)
+signal stats_changed()
 signal resources_changed()
-signal defense_changed()
 signal game_over()
+
+
 
 #################
 # - Functions - #
 #################
+
 
 func add_resource(amount: int):
 	resources += amount
 	resources_changed.emit()
 
 
-func update_firerate(amount: float):
-	turret_fire_rate -= amount
-	if turret_fire_rate < 0.05:
-		turret_fire_rate = 0.05
-	turret_upgrade.emit(turret_fire_rate)
+func purchase_upgrade(upgrade: UpgradeData) -> bool:
+	var cost = upgrade.get_current_cost()
+	
+	if resources >= cost:
+		resources -= cost
+		upgrade.level_up()
+		
+		# Update the dictionary using the UpgradeData's ID
+		active_stats[upgrade.id] = upgrade.get_current_value()
+		
+		resources_changed.emit()
+		return true # Purchase successful
+	return false # Purchase unsuccessful : not enough resources
 
 
-func take_damage(damage_val: int):
+func take_damage(damage_val: float):
 	if planet_destroyed:
 		return
 	
@@ -64,9 +70,10 @@ func trigger_game_over():
 # Reset function for "Try Again?" Button
 func game_reset():
 	resources = 0
-	turret_fire_rate = 2.0
-	turret_upgrade_cost = 10
-	turret_upgrade_level = 1
+	
+	active_stats[turret_fire_rate] = 2.0
+	turret_fire_rate_upgrade_cost = 10
+	turret_fire_rate_upgrade_level = 1
 	slow_down_amount = 0.75
 	tractor_upgrade_cost = 10
 	tractor_upgrade_level = 1

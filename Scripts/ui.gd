@@ -3,7 +3,7 @@ extends CanvasLayer
 @onready var game := Game_Manager
 
 
-@onready var turret_upgrade: Button = $HBoxContainer/TurretUpgrade
+@onready var turret_fire_rate_upgrade: Button = $HBoxContainer/TurretUpgrade
 @onready var slow_down_upgrade: Button = $HBoxContainer/SlowDownUpgrade
 
 @onready var label: Label = $Stats
@@ -23,7 +23,7 @@ func _ready() -> void:
 	
 	game_over_screen.visible = false
 	
-	turret_button_refresh(0.2 * game.turret_upgrade_level)
+	turret_button_refresh(0.2 * game.turret_fire_rate_upgrade_level)
 	tractor_button_refresh()
 	update_ui()
 	update_defense_ui()
@@ -35,20 +35,20 @@ func resource_label():
 
 func _on_turret_upgrade_pressed() -> void:
 	
-	if game.resources >= game.turret_upgrade_cost:
-		game.resources -= game.turret_upgrade_cost
+	if game.resources >= game.turret_fire_rate_upgrade_cost:
+		game.resources -= game.turret_fire_rate_upgrade_cost
 		
-		var upgrade_amount = 0.2 * game.turret_upgrade_level
+		var upgrade_amount = 0.2 * game.turret_fire_rate_upgrade_level
 		game.update_firerate(upgrade_amount)
 		
-		game.turret_upgrade_level += 1
+		game.turret_fire_rate_upgrade_level += 1
 		
-		game.turret_upgrade_cost = int(10 * pow(1.15,game.turret_upgrade_level))
+		game.turret_fire_rate_upgrade_cost = int(10 * pow(1.15,game.turret_fire_rate_upgrade_level))
 		turret_button_refresh(upgrade_amount)
 
 
 func turret_button_refresh(speed_amount):
-	turret_upgrade.text = "Upgrade Turret Speed: +" + str(speed_amount) + "\nCost: " + str(game.turret_upgrade_cost)
+	turret_fire_rate_upgrade.text = "Upgrade Turret Speed: +" + str(speed_amount) + "\nCost: " + str(game.turret_fire_rate_upgrade_cost)
 
 
 func update_ui():
