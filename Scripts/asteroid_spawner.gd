@@ -26,8 +26,7 @@ func _on_spawn_cooldown_timeout() -> void:
 
 
 func spawn_asteroid() -> void:
-	if asteroid_scene == null:
-		return
+	if asteroid_scene == null: return
 		
 	var viewport_size = get_viewport_rect().size
 	
@@ -65,7 +64,7 @@ func spawn_asteroid() -> void:
 	get_tree().current_scene.add_child(asteroid)
 	print("Asteroid spawned")
 	
-	asteroid.start(planet, spawn_position, debug_speed, debug_speed_value)
+	asteroid.start(planet, spawn_position, debug_speed, debug_speed_value, )
 	
 		
 	

@@ -24,31 +24,31 @@ var rotation_speed : float = randf_range(-0.8,0.8)
 
 var planet: Area2D 
 
-func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool, debug_speed_value: float, speed_multiplier: float, health_multiplier: float) -> void:
+func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1) -> void:
 	if not data:
 		queue_free()
 		return
-	
-	if debug_speed == true:
-		speed = debug_speed_value
+		
 	planet = target_planet
 	global_position = start_pos
-	area_entered.connect(_on_area_entered)
-	
+	if not area_entered.is_connected(_on_area_entered):
+		area_entered.connect(_on_area_entered)
 	
 	###################################################################
 	#  - Assigns properties based on attached AsteroidData resource - #
 	
+	if debug_speed == true:
+		speed = debug_speed_value
+	else: 
+		speed = randf_range(data.min_speed, data.max_speed) * speed_multiplier
+		
 	current_health = data.max_health * health_multiplier
-	speed = randf_range(data.min_speed, data.max_speed) * speed_multiplier
 	rotation_speed = randf_range(-0.8, 0.8)
-	
 	sprite.texture = data.sprite_texture
-	var base_scale := Vector2(data.max_health * data.scale_ratio, data.max_health * data.scale_ratio)
-	scale = base_scale
 	
+	scale = Vector2(data.max_health * data.scale_ratio, data.max_health * data.scale_ratio)
 	
-	# Determines flight path based on assigned AI behavior
+	# ++ Determines flight path based on assigned AI behavior
 	if data.behavior == AsteroidData.BehaviorType.COMET:
 		# Comets fly straight past the screen, avoiding the Planet. Picks a random vector moving roughly opposite
 		var screen_center = get_viewport_rect().size/2

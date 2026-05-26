@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://dha1d0wqh3pxm" path="res://Scenes/turret.tscn" id="4_jjvhh"]
 [ext_resource type="PackedScene" uid="uid://ct42g3vrmj7ac" path="res://Scenes/tractor_beam.tscn" id="5_kry3j"]
 [ext_resource type="PackedScene" uid="uid://br3j53i1f8n32" path="res://Scenes/collector_satellite.tscn" id="6_21xkr"]
-[ext_resource type="Script" uid="uid://08k0aiebr17m" path="res://Scripts/ui.gd" id="7_6bp64"]
+[ext_resource type="PackedScene" uid="uid://nphp6edurswp" path="res://Scenes/ui.tscn" id="7_6bp64"]
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 
@@ -33,106 +33,6 @@ asteroid_scene = ExtResource("3_8gbba")
 
 [node name="CollectorPivot" parent="." unique_id=918467222 instance=ExtResource("6_21xkr")]
 
-[node name="UI" type="CanvasLayer" parent="." unique_id=1549426236]
-script = ExtResource("7_6bp64")
-
-[node name="Stats" type="Label" parent="UI" unique_id=999709284]
-anchors_preset = -1
-offset_left = 50.0
-offset_top = 50.0
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_font_sizes/font_size = 25
-text = "Resources: 0
-Level: 1"
-
-[node name="HBoxContainer" type="HBoxContainer" parent="UI" unique_id=1203005661]
-custom_minimum_size = Vector2(0.2, 0)
-anchors_preset = -1
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -150.0
-offset_top = 50.0
-offset_right = 150.0
-offset_bottom = 54.0
-grow_horizontal = 2
-alignment = 1
-
-[node name="TurretFireRateUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=1593550338]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Upgrade Turret Speed
-Cost: X"
-
-[node name="SlowDownUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=1264650432]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Upgrade Slow Down Speed
-Cost: X"
-
-[node name="DefenseUpgrade" type="Button" parent="UI/HBoxContainer" unique_id=302552945]
-custom_minimum_size = Vector2(300, 50)
-layout_mode = 2
-text = "Upgrade"
-
-[node name="PlanetDefense" type="Label" parent="UI" unique_id=1738248385]
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -34.0
-offset_top = 170.0
-offset_right = 34.0
-offset_bottom = 24.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "Defense:
-- 10 -"
-horizontal_alignment = 1
-
-[node name="GameOverScreen" type="Control" parent="UI" unique_id=1149630224]
-process_mode = 2
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="ColorRect" type="ColorRect" parent="UI/GameOverScreen" unique_id=435270478]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.09803922, 0, 0.22352941, 0.63529414)
-
-[node name="VBoxContainer" type="VBoxContainer" parent="UI/GameOverScreen" unique_id=913743804]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -78.0
-offset_top = -127.0
-offset_right = 78.0
-offset_bottom = 127.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="GameOverLabel" type="Label" parent="UI/GameOverScreen/VBoxContainer" unique_id=1325165462]
-layout_mode = 2
-size_flags_vertical = 6
-text = "PLANET DESTROYED"
-horizontal_alignment = 1
-
-[node name="RetryButton" type="Button" parent="UI/GameOverScreen/VBoxContainer" unique_id=357145147]
-layout_mode = 2
-text = "Try Again?"
+[node name="UI" parent="." unique_id=1543760008 instance=ExtResource("7_6bp64")]
 
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]
-[connection signal="pressed" from="UI/HBoxContainer/TurretFireRateUpgrade" to="UI" method="_on_turret_upgrade_pressed"]
-[connection signal="pressed" from="UI/HBoxContainer/SlowDownUpgrade" to="UI" method="_on_slow_down_upgrade_pressed"]

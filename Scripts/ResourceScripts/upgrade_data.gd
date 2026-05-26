@@ -6,8 +6,9 @@ class_name UpgradeData
 # -= PROPERTY ASSIGNMENT =- #
 #############################
 
-@export var id: String = "upgrad_id" # A unique name used by Game_Manager
-@export var display_name: String = "Upgrade Name" # The name displayed for players
+@export var id: String = "upgrad_id" 		# A unique name used by Game_Manager (e.g. fire_rate)
+@export var display_name: String = "Upgrade Name"	# The name displayed for players
+@export var target_category: String			# Tells the game WHERE to apply this upgrade
 @export_multiline var description: String = "What this upgrade does..."
 
 @export_category("Economy")
