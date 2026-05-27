@@ -18,6 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 Game_Manager="*uid://biekavyxjqdu8"
+DefenseIds="*uid://375n2xba56ox"
+UpgradeIds="*uid://c6q0oxekf42hj"
 
 [display]
 

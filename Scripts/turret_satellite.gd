@@ -3,7 +3,7 @@ extends Node2D
 @onready var game := Game_Manager
 
 
-@export var projectile_scene : PackedScene
+@export var projectile_scene : PackedScene = preload("res://Scenes/projectile.tscn")
 
 
 @onready var turret_body : Node2D = $Turret
@@ -16,9 +16,11 @@ extends Node2D
 var my_turn_speed : float = 10
 var my_orbit_distance : float = 100
 var my_orbit_speed : float = 1
+var my_id : String
 
 
-func initialize(data: DefenseData):			# Runs right after instantiation, driven by GameManager
+func initialize(data: SatelliteData):	# Runs right after instantiation, driven by GameManager
+	my_id = data.id
 	my_orbit_distance = randf_range(data.min_orbit_distance, data.max_orbit_distance)
 	my_orbit_speed = randf_range(data.min_orbit_speed, data.max_orbit_speed)
 	my_turn_speed = data.turn_speed
@@ -37,7 +39,7 @@ func _ready() -> void:
 
 
 func update_turret_stats():
-	firerate.wait_time = game.active_stats["turret_satellite"]["fire_rate"]
+	firerate.wait_time = game.active_stats[my_id][StatIDs.FIRE_RATE]
 
 
 func _process(delta: float) -> void:
@@ -87,4 +89,4 @@ func shoot(target: Area2D) -> void:
 	get_tree().current_scene.add_child(proj)
 	
 	# Initialize the projectile
-	proj.start(muzzle.global_position, target.global_position)
+	proj.start(muzzle.global_position, target.global_position, game.active_stats[my_id][StatIDs.DAMAGE])

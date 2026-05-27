@@ -15,15 +15,14 @@ class_name DefenseData
 @export_category("Spawning")
 @export var defense_scene : PackedScene	# The actual scene to instance (e.g. turret.tscn)
 @export var max_allowed : int  = 10000		# Max amount player can purchase. Leave at 10,000 if unlimited
-@export var turn_speed : float = 10
-@export var min_orbit_speed : float
-@export var max_orbit_speed : float
-@export var min_orbit_distance : float
-@export var max_orbit_distance : float
 
 @export_category("Economy")
 @export var base_cost : int
 @export var cost_multiplier : float = 1.5
+
+@export_category("Stats")
+@export var default_stats : Dictionary = {}
+
 
 # State variables (Dynamic: saved during gameplay)
 var is_unlocked: bool = false

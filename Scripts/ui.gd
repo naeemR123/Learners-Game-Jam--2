@@ -2,6 +2,8 @@ extends CanvasLayer
 
 @onready var game := Game_Manager
 
+
+
 @onready var label: Label = $Stats
 @onready var planet_shield: Label = $PlanetShield
 @onready var game_over_screen: Control = $GameOverScreen
