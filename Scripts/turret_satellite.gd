@@ -12,34 +12,35 @@ extends Node2D
 @onready var planet : Area2D = %Planet
 @onready var firerate: Timer = $Turret/Firerate
 
-
+var my_damage : float = 3
 var my_turn_speed : float = 10
-var my_orbit_distance : float = 100
+var my_orbit_radius : float = 100
 var my_orbit_speed : float = 1
 var my_id : String
 
 
 func initialize(data: SatelliteData):	# Runs right after instantiation, driven by GameManager
 	my_id = data.id
-	my_orbit_distance = randf_range(data.min_orbit_distance, data.max_orbit_distance)
-	my_orbit_speed = randf_range(data.min_orbit_speed, data.max_orbit_speed)
+	my_orbit_radius = randf_range(data.min_orbit_radius, data.max_orbit_radius)
 	my_turn_speed = data.turn_speed
 	
 	# Randomizes starting angle so they don't all spawn at the exact same spot
 	rotation = randf_range(0, TAU)		# TAU is 360 degrees in radians
 
 
-func _ready() -> void:
+func _ready() -> void:		# Runs after initialize()
 	global_position = planet.global_position
-	
-	turret_body.position.x = my_orbit_distance
-	
-	game.stats_changed.connect(update_turret_stats)
-	update_turret_stats()
+	turret_body.position.x = my_orbit_radius
+	game.stats_changed.connect(update_satellite_stats)
+	update_satellite_stats()
 
 
-func update_turret_stats():
+func update_satellite_stats():
 	firerate.wait_time = game.active_stats[my_id][StatIDs.FIRE_RATE]
+	my_orbit_speed = game.active_stats[my_id][StatIDs.FIRE_RATE]
+	my_turn_speed = game.active_stats[my_id][StatIDs.TURN_SPEED]
+	my_damage = game.active_stats[my_id][StatIDs.DAMAGE]
+	
 
 
 func _process(delta: float) -> void:

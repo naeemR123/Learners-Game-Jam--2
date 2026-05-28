@@ -1,11 +1,8 @@
 extends Node
 
-var resources :int = 0
-var planet_destroyed : bool = false
 
-var owned_defenses: Array[String] = []
 
-var max_planet_shield: float = 10.0
+
 
 # This Dictionary holds the CURRENT value of ALL upgrade stats including defenses, planet, and cursor
 # Defense categories get added dynamically via register_defense_stats()
@@ -16,6 +13,10 @@ var active_stats: Dictionary = {
 	},
 }
 
+var resources :int = 0
+var planet_destroyed : bool = false
+var owned_defenses: Array[String] = []
+var max_planet_shield: float = 10.0
 
 # Signals
 signal stats_changed()
