@@ -24,7 +24,6 @@ position = Vector2(960, 540)
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)
 script = ExtResource("2_bo1nx")
-debug_speed = true
 asteroid_scene = ExtResource("3_8gbba")
 
 [node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]

@@ -1,11 +1,14 @@
 class_name StatIDs
 
 
+
+
 ###################
 # Global Upgrades #
 const FIRE_RATE = "fire_rate"
 const DAMAGE = "damage"
 const RANGE = "range"
+
 
 
 ######################

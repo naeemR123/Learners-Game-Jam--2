@@ -22,7 +22,7 @@ collision_mask = 8
 [node name="Sprite2D" type="Sprite2D" parent="Satellite" unique_id=637893447]
 texture = SubResource("PlaceholderTexture2D_4a87g")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Satellite" unique_id=1401070686]
+[node name="Range" type="CollisionShape2D" parent="Satellite" unique_id=1401070686]
 shape = SubResource("CircleShape2D_2oyko")
 
 [node name="CollectionZone" type="Area2D" parent="Satellite" unique_id=1925393022]

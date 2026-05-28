@@ -10,15 +10,15 @@ extends Node2D
 
 
 var my_id : String
-var my_turn_speed : float = 10
-var my_orbit_distance : float = 150
+var my_orbit_radius : float = 150
+var my_range : float = 100.0
 var my_orbit_speed : float = 0.5
 var my_collection_speed : float = 100
 var my_collection_strength : float = 5
 
 func initialize(data: SatelliteData):
 	my_id = data.id
-	my_orbit_distance = randf_range(data.min_orbit_distance, data.max_orbit_distance)
+	my_orbit_radius = randf_range(data.orbit_radius - 20, data.orbit_radius + 20)
 	
 	# Randomizes starting angle so they don't all spawn at the exact same spot
 	rotation = randf_range(0, TAU)		# TAU is 360 degrees in radians
@@ -29,8 +29,7 @@ func _ready() -> void:
 		push_warning("No planet body found. ", self, " setup aborted.")
 		return
 	global_position = planet.global_position
-	satellite.position.x = my_orbit_distance
-	print("Satelitte pos: ",satellite.position)
+	satellite.position.x = my_orbit_radius
 	
 	# Connects the Area2D signals via code
 	collection_zone.area_entered.connect(_on_collection_area_entered)
@@ -43,7 +42,7 @@ func update_satellite_stats():
 	my_collection_speed = game.active_stats[my_id][StatIDs.SAT_COLLECTION_SPEED]
 	my_collection_strength = game.active_stats[my_id][StatIDs.SAT_COLLECTION_STRENGTH]
 	my_orbit_speed = game.active_stats[my_id][StatIDs.ORBIT_SPEED]
-
+	my_range = game.active_stats[my_id][StatIDs.RANGE]
 
 func _process(delta: float) -> void:
 	

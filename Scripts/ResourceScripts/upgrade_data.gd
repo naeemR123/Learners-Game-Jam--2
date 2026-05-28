@@ -41,4 +41,4 @@ func level_up() -> void:
 	current_level += 1
 
 func reset() -> void:
-	pass
+	current_level = 1
