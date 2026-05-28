@@ -13,9 +13,11 @@ var active_stats: Dictionary = {
 	},
 }
 
+
 var resources :int = 0
 var planet_destroyed : bool = false
 var owned_defenses: Array[String] = []
+var all_upgrades : Array[UpgradeData] = []
 var max_planet_shield: float = 10.0
 
 # Signals
@@ -32,6 +34,7 @@ signal game_over()
 
 func _ready() -> void:
 	register_all_defenses()
+	register_all_upgrades()
 
 
 # Scans the Defenses folder and registers stats for every DefenseData it finds
@@ -65,12 +68,47 @@ func register_all_defenses() -> void:
 	dir.list_dir_end()	# CRITICAL : always needs to be called when done iterating
 
 
-# Reads 'default_stats' from resource, then registers them under it's id
+# Checks 'default_stats' for resource.id , if not found, duplicates it under it's id
 func register_defense_stats(defense: DefenseData) -> void:
 	# Safe for multiple calls : won't overwrite if entry exists
 	if not active_stats.has(defense.id):
 		# Duplicates to store an independant copy, instead of referencing the original
 		active_stats[defense.id] = defense.default_stats.duplicate()
+
+
+# Scans the Upgrades folder and registers stats for every UpgradeData it finds
+# Almost identical to register_all_defenses()
+func register_all_upgrades() -> void:
+	
+	var dir = DirAccess.open("res://Scripts/Resources/Upgrades/")
+	if dir == null:
+		push_error("Could not open Upgrades resource folder")
+		return
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			var path = "res://Scripts/Resources/Upgrades/" + file_name
+			var resource = load(path)
+			
+			if resource is UpgradeData:
+				register_upgrade_array(resource)
+			else:
+				push_warning("Unexpected resource type in Upgrades folder: " + path)
+			
+		file_name = dir.get_next()
+	
+	dir.list_dir_end()	# CRITICAL 
+
+
+# Checks 'all_upgrades' for resource , if not found, references it
+func register_upgrade_array(upgrade: UpgradeData) -> void:
+	
+	if not all_upgrades.has(upgrade):
+		
+		all_upgrades.append(upgrade)
 
 
 func add_resource(amount: int):		# Adds resource to inventory and updates ui
@@ -151,6 +189,9 @@ func game_reset():		# Reset function for "Try Again?" Button
 	
 	active_stats["global"]["slow_down_amount"] = 0.75
 	active_stats["global"]["planet_shield"] = max_planet_shield
+	
+	for upgrade in all_upgrades:
+		upgrade.reset()
 	
 	for key in active_stats.keys():
 		if key != "global":
