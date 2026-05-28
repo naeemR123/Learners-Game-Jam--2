@@ -6,7 +6,7 @@ extends Node2D
 
 @onready var satellite: Area2D = $Satellite
 @onready var collection_zone: Area2D = $Satellite/CollectionZone
-@onready var planet: Area2D = %Planet
+@onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
 
 var my_id : String

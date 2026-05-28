@@ -8,7 +8,7 @@ extends Marker2D
 @export var margin: float = 50.0 # How far offscreen to spawn
 
 @onready var spawntimer: Timer = $SpawnCooldown
-@onready var planet: Area2D = %Planet
+@onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
 func _ready() -> void:
 	spawntimer.wait_time = spawn_interval

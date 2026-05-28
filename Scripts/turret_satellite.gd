@@ -9,8 +9,8 @@ extends Node2D
 @onready var turret_body : Node2D = $Turret
 @onready var sensor : Area2D = $Turret/Range
 @onready var muzzle : Marker2D = $Turret/Muzzle
-@onready var planet : Area2D = %Planet
 @onready var firerate: Timer = $Turret/Firerate
+@onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
 var my_damage : float = 3
 var my_range : float = 300

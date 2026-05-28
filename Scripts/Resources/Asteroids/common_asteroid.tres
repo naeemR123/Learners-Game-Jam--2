@@ -12,5 +12,7 @@ scale_ratio = 1.2
 max_health = 3.0
 min_speed = 15.0
 max_speed = 40.0
+min_wave = 1
+spawn_weight = 10.0
 max_resources = 3
 metadata/_custom_type_script = "uid://b7ruo5o8pgeta"

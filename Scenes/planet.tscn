@@ -8,7 +8,7 @@ radius = 65.51336
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_xehyc"]
 size = Vector2(100, 100)
 
-[node name="Planet" type="Area2D" unique_id=604275000]
+[node name="Planet" type="Area2D" unique_id=604275000 groups=["Planet"]]
 collision_mask = 0
 script = ExtResource("1_xehyc")
 

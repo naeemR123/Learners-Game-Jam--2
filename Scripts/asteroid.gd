@@ -27,6 +27,7 @@ var planet: Area2D
 func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1) -> void:
 	if not data:
 		queue_free()
+		push_warning("No AsteroidData loaded. Asteroid aborted.")
 		return
 		
 	planet = target_planet

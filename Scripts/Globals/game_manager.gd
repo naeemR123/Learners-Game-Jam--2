@@ -40,7 +40,7 @@ func _ready() -> void:
 # Scans the Defenses folder and registers stats for every DefenseData it finds
 func register_all_defenses() -> void:
 	
-	# Routes acces to Defenses Resource folder, and returns if there is no folder
+	# Routes access to Defenses Resource folder, and returns if there is no folder
 	var dir = DirAccess.open("res://Scripts/Resources/Defenses/")
 	if dir == null:
 		push_error("Could not open Defenses resource folder")
