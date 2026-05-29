@@ -1,32 +1,47 @@
 extends Marker2D
 
+
+@onready var wave := WaveManager
+
+
 @export var debug_speed : bool = false
 @export var debug_speed_value : float = 200
 
-@export var asteroid_scene: PackedScene
-@export var spawn_interval: float = 2.0
-@export var margin: float = 50.0 # How far offscreen to spawn
+@export var margin: float = 100.0 # How far offscreen to spawn
+
+var asteroid_scene: PackedScene = preload("res://Scenes/asteroid.tscn")
+
+var amount_spawned : int = 0
 
 @onready var spawntimer: Timer = $SpawnCooldown
 @onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
+
+
 func _ready() -> void:
-	spawntimer.wait_time = spawn_interval
-	spawntimer.start()
-	
+	wave.timer_interval.connect(timer_info)
+
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	pass
 
 
+func timer_info(interval : float) -> void:
+	spawntimer.start(interval)
+
+
 func _on_spawn_cooldown_timeout() -> void:
-	spawn_asteroid()
-	
+	var type = WaveManager.get_next_asteroid()
+	if type == null:
+		spawntimer.stop()
+	spawn_asteroid(type)
 
-
-func spawn_asteroid() -> void:
-	if asteroid_scene == null: return
+func spawn_asteroid(asteroid_type) -> void:
+	if asteroid_scene == null: 
+		push_warning("Cannot spawn Asteroid: No scene loaded (from: asteroid_spawner/spawn_asteroid)")
+		return
 		
 	var viewport_size = get_viewport_rect().size
 	
@@ -62,10 +77,8 @@ func spawn_asteroid() -> void:
 	# CRITICAL FIX: Add to the main scene, NOT the Marker2D spawner.
 	# This prevents the asteroid from inheriting the spawner's transform.
 	get_tree().current_scene.add_child(asteroid)
+	wave.asteroid_spawned()
 	print("Asteroid spawned")
 	
-	asteroid.start(planet, spawn_position, debug_speed, debug_speed_value, )
-	
-		
-	
+	asteroid.start(asteroid_type, planet, spawn_position, debug_speed, debug_speed_value, )
 	

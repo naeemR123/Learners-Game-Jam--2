@@ -1,8 +1,7 @@
 extends Area2D
 
 @onready var game := Game_Manager
-
-@export var data : AsteroidData
+@onready var wave := WaveManager
 
 var resource_max : int = 3
 var resource_min : int = 1
@@ -18,18 +17,24 @@ var direction : Vector2
 
 var rotation_speed : float = randf_range(-0.8,0.8)
 
+var data : AsteroidData
 
 @onready var sprite : Sprite2D = $Sprite2D
 @onready var resource_scene : PackedScene = preload("res://Scenes/resource.tscn")
 
 var planet: Area2D 
 
-func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1) -> void:
+
+
+func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1) -> void:
+	
+	data = asteroid_type
+	
 	if not data:
 		queue_free()
 		push_warning("No AsteroidData loaded. Asteroid aborted.")
 		return
-		
+	
 	planet = target_planet
 	global_position = start_pos
 	if not area_entered.is_connected(_on_area_entered):
@@ -62,7 +67,8 @@ func start(target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false,
 	
 	#####################################################################
 	
-	print("Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed)	# Displays current Asteroid's name, pos, and speed
+	# Displays current Asteroid's info : name, pos, and speed
+	print("Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed)
 
 
 func _physics_process(delta: float) -> void:
@@ -95,4 +101,5 @@ func die():
 		resource.global_position = global_position
 		get_tree().current_scene.call_deferred("add_child", resource)
 		
+	wave.asteroid_death()
 	queue_free()

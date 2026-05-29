@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://clr4m10penbht" path="res://Scenes/planet.tscn" id="1_jjgbg"]
 [ext_resource type="Resource" uid="uid://doyfo336gdf5o" path="res://Scripts/Resources/Defenses/turret_satellite.tres" id="2_344ge"]
 [ext_resource type="Script" uid="uid://m860hk5ygins" path="res://Scripts/asteroid_spawner.gd" id="2_bo1nx"]
-[ext_resource type="PackedScene" uid="uid://dy1a5mdt6iqir" path="res://Scenes/asteroid.tscn" id="3_8gbba"]
 [ext_resource type="Resource" uid="uid://d3u0lub8qw7dc" path="res://Scripts/Resources/Defenses/collector_satellite.tres" id="3_ynf5e"]
 [ext_resource type="PackedScene" uid="uid://ct42g3vrmj7ac" path="res://Scenes/tractor_beam.tscn" id="5_kry3j"]
 [ext_resource type="PackedScene" uid="uid://nphp6edurswp" path="res://Scenes/ui.tscn" id="7_6bp64"]
@@ -25,7 +24,6 @@ position = Vector2(960, 540)
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)
 script = ExtResource("2_bo1nx")
-asteroid_scene = ExtResource("3_8gbba")
 
 [node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]
 

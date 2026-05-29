@@ -3,9 +3,20 @@ extends Node
 
 var all_asteroids : Array[AsteroidData] = []
 
+var current_wave : int = 1
+var wave_active : bool
+var max_asteroids : int
+var asteroids_spawned : int = 0
+var asteroids_alive : int
+var spawn_interval : float
+
+
+signal timer_interval(interval)
+signal stop_timer()
 
 
 func _ready() -> void:
+	
 	register_all_asteroids()
 
 
@@ -48,5 +59,70 @@ func register_asteroids_stats(asteroid: AsteroidData) -> void:
 		all_asteroids.append(asteroid)
 
 
-func pick_asteroid_type(current_wave: int) -> AsteroidData:
-	pass
+# Chooses an asteroid to spawn based on minimum wave and spawn weight (chance)
+func pick_asteroid_type(wave: int) -> AsteroidData:
+	# Safety check : aborts if there is no asteroids in 'all_asteroids' array
+	if all_asteroids.is_empty():
+		push_warning("Cannot choose Asteroid to spawn: No Asteroids registered (from: wave_manager.gd/pick_asteroid_type | Array 'all_asteroids' is empty)")
+		return null
+	
+	# Build array and weight variable to get pool of asteroids and their weight
+	var eligible : Array[AsteroidData] = []
+	var total_weight : float = 0
+	
+	# For each available asteroid, checks if it CAN spawn this wave and isn't a boss
+	for asteroid in all_asteroids:
+		if asteroid.min_wave <= wave and asteroid.behavior != AsteroidData.BehaviorType.BOSS:
+			
+			# If passes criteria, adds asteroid to the array and 
+			# adds it's spawn weight to the total_weight value
+			eligible.append(asteroid)
+			total_weight += asteroid.spawn_weight
+	
+	# Safety check : aborts if there is no asteroids in 'eligible' array
+	if eligible.is_empty():
+		push_warning("Cannot choose Asteroid to spawn: No Asteroids eligible (from: wave_manager.gd/pick_asteroid_type | Array 'eligible' is empty)")
+		return null
+	
+	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
+	
+	# Subtracts each eligible asteroid's weight by the random number.
+	# If the asteroid's weight causes the number goes below or 
+	# reaches 0, then THAT asteroid is returned - chosen to be spawned
+	for asteroid in eligible:
+		roll -= asteroid.spawn_weight
+		if roll <= 0:
+			return asteroid
+	
+	return eligible.back() # Safety fallback in case of floating point
+
+
+
+func start_wave() -> void:
+	wave_active = true
+	asteroids_spawned = 0
+	asteroids_alive = 0
+	
+	max_asteroids = 4 + (current_wave * 2)
+	spawn_interval = clampf(3.0 - (0.1 * current_wave),0.4, 3.0)
+	
+	timer_interval.emit(spawn_interval)
+
+
+func get_next_asteroid() -> AsteroidData:
+	if asteroids_spawned >= max_asteroids:
+		return null # Tells spawner to stop
+	asteroids_spawned += 1
+	asteroids_alive += 1
+	return pick_asteroid_type(current_wave)
+
+
+func asteroid_spawned() -> void:
+	asteroids_spawned += 1
+	if asteroids_spawned >= max_asteroids:
+		stop_timer.emit()
+
+func asteroid_death() -> void:
+	asteroids_alive -= 1
+	if asteroids_alive <= 0:
+		pass	 # Add wave end
