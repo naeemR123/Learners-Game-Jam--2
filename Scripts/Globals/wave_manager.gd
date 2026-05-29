@@ -1,23 +1,31 @@
 extends Node
 
 
+
+# Holds data for all asteroid resources from "res://Scripts/Resources/Asteroids/"
+# Populated via register_all_asteroids()
 var all_asteroids : Array[AsteroidData] = []
 
+
+# Wave Properties
 var current_wave : int = 1
 var wave_active : bool
+
 var max_asteroids : int
 var asteroids_spawned : int = 0
 var asteroids_alive : int
+
 var spawn_interval : float
 
 
-signal timer_interval(interval)
-signal stop_timer()
+# Signals
+signal timer_interval(interval)		# connects to asteroid_spawner.gd
+signal wave_complete()				# connects to ui.gd
 
 
 func _ready() -> void:
 	
-	register_all_asteroids()
+	register_all_asteroids()	# CRITICAL : needs to run on game startup
 
 
 # Scans the Asteroids folder and registers stats for every AsteroidData it find
@@ -97,27 +105,46 @@ func pick_asteroid_type(wave: int) -> AsteroidData:
 	return eligible.back() # Safety fallback in case of floating point
 
 
-
+# Initiates logic for the next wave
 func start_wave() -> void:
+	
+	# Resets wave properties to default
 	wave_active = true
 	asteroids_spawned = 0
 	asteroids_alive = 0
 	
+	# Calculates asteroid amound and their spawn interval
+	# based on the current wave number
 	max_asteroids = 4 + (current_wave * 2)
 	spawn_interval = clampf(3.0 - (0.1 * current_wave),0.4, 3.0)
 	
+	# Sends the spawn timer interval to the asteroid spawner
 	timer_interval.emit(spawn_interval)
 
 
+# Used by the asteroid spawner | Runs pick_asteroid_type and returns chosen asteroid type
 func get_next_asteroid() -> AsteroidData:
+	
+	# If the max amount of asteroids has been reached, the function is aborted
 	if asteroids_spawned >= max_asteroids:
-		return null # Tells spawner to stop
+		return null # Tells spawner (timer) to stop
+	
+	# Keeps track of how many asteroids are produced
 	asteroids_spawned += 1
 	asteroids_alive += 1
+	
+	# Returns value back to asteroid spawner
 	return pick_asteroid_type(current_wave)
 
 
+# Tracks how many asteroids are still active
+# Ends the wave if conditions are met
 func asteroid_death() -> void:
 	asteroids_alive -= 1
-	if asteroids_alive <= 0:
-		pass	 # Add wave end
+	
+	# If there are no more asteroids alive and all 
+	# asteroids have been spawned, then the wave ends
+	if asteroids_alive <= 0 and asteroids_spawned == max_asteroids:
+		wave_active = false
+		current_wave += 1
+		wave_complete.emit()

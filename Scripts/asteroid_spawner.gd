@@ -11,7 +11,6 @@ extends Marker2D
 
 var asteroid_scene: PackedScene = preload("res://Scenes/asteroid.tscn")
 
-var amount_spawned : int = 0
 
 @onready var spawntimer: Timer = $SpawnCooldown
 @onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
@@ -19,36 +18,45 @@ var amount_spawned : int = 0
 
 
 func _ready() -> void:
-	wave.timer_interval.connect(timer_info)
+	wave.timer_interval.connect(timer_info)		# connects from WaveManager
 
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
-	pass
-
-
+# Recieves spawn interval from WaveManager and starts timer
 func timer_info(interval : float) -> void:
 	spawntimer.start(interval)
 
 
+# Runs get_next_asteroid() from WaveManager, then spawns that random type if eligible
 func _on_spawn_cooldown_timeout() -> void:
+	
+	# Recieves a random asteroid type based on wave + asteroid type criteria
 	var type = WaveManager.get_next_asteroid()
-	if type == null:
+	
+	# Will recieve null if max asteroids have been spawned, stops spawning if so
+	if type == null:	
 		spawntimer.stop()
+		return
+	
 	spawn_asteroid(type)
 
-func spawn_asteroid(asteroid_type) -> void:
+
+# Spawns asteroid in a random location off screen, then 
+# passes asteroid type along and runs its start function
+func spawn_asteroid(asteroid_type: AsteroidData) -> void:
+	
+	# Safety net : If no scene loaded then aborts with warning
 	if asteroid_scene == null: 
 		push_warning("Cannot spawn Asteroid: No scene loaded (from: asteroid_spawner/spawn_asteroid)")
 		return
-		
+	
+	# Gets size of screen
 	var viewport_size = get_viewport_rect().size
 	
 	# Chooses random screen edge (0 = top, 1 = bottom, 2 = left, 3 = right)
 	var edge = randi() % 4 # <- chooses random number between 0 and 3
 	var spawn_position : Vector2
-
+	
+	# Matches randomly chosen number to screen edge with spawn margin
 	match edge:
 		0: # Top edge
 			spawn_position = Vector2(
@@ -71,13 +79,15 @@ func spawn_asteroid(asteroid_type) -> void:
 				randf_range(0, viewport_size.y)		# y value
 				)
 	
-	# Instance the asteroid, add it to the scene, and sets position
+	# Instance the asteroid scene
 	var asteroid = asteroid_scene.instantiate()
 	
-	# CRITICAL FIX: Add to the main scene, NOT the Marker2D spawner.
+	# CRITICAL : Add to the main scene, NOT the Marker2D spawner.
 	# This prevents the asteroid from inheriting the spawner's transform.
 	get_tree().current_scene.add_child(asteroid)
+	
 	print("Asteroid spawned")
 	
+	# Run asteroid's start function, passing important parameter values
 	asteroid.start(asteroid_type, planet, spawn_position, debug_speed, debug_speed_value, )
 	
