@@ -117,11 +117,6 @@ func get_next_asteroid() -> AsteroidData:
 	return pick_asteroid_type(current_wave)
 
 
-func asteroid_spawned() -> void:
-	asteroids_spawned += 1
-	if asteroids_spawned >= max_asteroids:
-		stop_timer.emit()
-
 func asteroid_death() -> void:
 	asteroids_alive -= 1
 	if asteroids_alive <= 0:

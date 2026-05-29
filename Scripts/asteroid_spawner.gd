@@ -77,7 +77,6 @@ func spawn_asteroid(asteroid_type) -> void:
 	# CRITICAL FIX: Add to the main scene, NOT the Marker2D spawner.
 	# This prevents the asteroid from inheriting the spawner's transform.
 	get_tree().current_scene.add_child(asteroid)
-	wave.asteroid_spawned()
 	print("Asteroid spawned")
 	
 	asteroid.start(asteroid_type, planet, spawn_position, debug_speed, debug_speed_value, )
