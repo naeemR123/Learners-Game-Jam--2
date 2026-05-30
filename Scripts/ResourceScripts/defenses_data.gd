@@ -16,12 +16,15 @@ class_name DefenseData
 @export var defense_scene : PackedScene	# The actual scene to instance (e.g. turret.tscn)
 @export var max_allowed : int  = 10000		# Max amount player can purchase. Leave at 10,000 if unlimited
 
+@export_category("Progression")
+@export var unlock_wave : int = 1	# Which wave this defense unlocks for purhcase
+
 @export_category("Economy")
 @export var base_cost : int
 @export var cost_multiplier : float = 1.5
 
 @export_category("Stats")
-@export var default_stats : Dictionary = {}
+@export var default_stats : Dictionary = {}		# Populated via Inspector
 
 
 # State variables (Dynamic: saved during gameplay)

@@ -19,10 +19,17 @@ func _on_pressed() -> void:
 func update_display() -> void:
 	if not defense_data: return
 	
+	var is_locked : bool = defense_data.unlock_wave > WaveManager.current_wave
 	var cost = defense_data.get_current_cost()
 	var owned = defense_data.amount_owned
 	
+	if is_locked:
+		disabled = true
+		text = "Unlocks at wave " + str(defense_data.unlock_wave)
+		return
+	
 	# Disables button if unaffordable
 	disabled = game.resources < cost or owned >= defense_data.max_allowed
+	
 	
 	text = "%s (Owned: %d)\nCost: %d" % [defense_data.display_name, owned, cost]

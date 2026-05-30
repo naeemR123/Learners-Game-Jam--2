@@ -5,12 +5,12 @@
 
 [resource]
 script = ExtResource("1_j5cwb")
-orbit_speed = 1.0
 orbit_radius = 80.0
 id = "turret_satellite"
 display_name = "Turret Satellite"
 description = "Defensive satellite that orbits the planet, shooting Asteroids in its range."
 defense_scene = ExtResource("1_kx8qd")
+unlock_wave = 1
 base_cost = 5
 default_stats = {
 "damage": 3.0,

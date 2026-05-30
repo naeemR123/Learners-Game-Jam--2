@@ -15,9 +15,8 @@ var local_time_scale : float = 1.0
 var resource_max : int = 3
 var resource_min : int = 1
 
-var speed : float = randf_range(min_speed,max_speed)
-var max_speed : float = 40
-var min_speed : float = 15
+var speed : float 
+var speed_variance : float = 15
 var direction : Vector2
 # -
 
@@ -56,8 +55,8 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	if debug_speed == true:		# If debug mode on, sets debug speed
 		speed = debug_speed_value
 	else: 
-		# Assigns speed based on asteroid's min-max speed and wave's speed multiplier
-		speed = randf_range(data.min_speed, data.max_speed) * speed_multiplier
+		# Assigns speed based on asteroid's min-max speed + speed_variance and wave's speed multiplier
+		speed = randf_range(data.max_speed - speed_variance, data.max_speed + speed_variance) * speed_multiplier
 	
 	# Assigning properties
 	current_health = data.max_health * health_multiplier
@@ -65,7 +64,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	sprite.texture = data.sprite_texture
 	
 	# Sets scale based on health and asteroid type's scale ratio
-	scale = Vector2(data.max_health * data.scale_ratio, data.max_health * data.scale_ratio)
+	scale = Vector2(data.scale_ratio, data.scale_ratio)
 	
 	# Determines flight path | Comet vs. Other Asteroids
 	if data.behavior == AsteroidData.BehaviorType.COMET:
@@ -84,7 +83,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	#####################################################################
 	
 	# Displays current Asteroid's info : name, pos, and speed
-	print("Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed)
+	print("Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed, " | Scale: ", scale, " | Sprite Size: ", sprite.texture.get_size(), " | Health: ", current_health)
 
 
 func _physics_process(delta: float) -> void:

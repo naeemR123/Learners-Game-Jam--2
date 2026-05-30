@@ -13,11 +13,13 @@ var active_stats: Dictionary = {
 	},
 }
 var owned_defenses: Array[String] = []			# Stores all active defenses : populated via purchase_defenses()
-var all_upgrades : Array[UpgradeData] = []		# Stores all active upgrades : populated via register_upgrade_array()
+var all_defenses : Array[DefenseData] = []		# Stores all defenses : populated via register_all_defenses()
+var all_upgrades : Array[UpgradeData] = []		# Stores all upgrades : populated via register_upgrade_array()
+
 # =
 
 # Universal Game Properties
-var resources :int = 0
+var resources : int = 0
 var planet_destroyed : bool = false
 var max_planet_shield: float = 10.0
 
@@ -80,6 +82,7 @@ func register_defense_stats(defense: DefenseData) -> void:
 	if not active_stats.has(defense.id):
 		# Duplicates to store an independant copy, instead of referencing the original
 		active_stats[defense.id] = defense.default_stats.duplicate()
+		all_defenses.append(defense)
 
 
 # Scans the Upgrades folder and registers stats for every UpgradeData it finds

@@ -7,7 +7,7 @@ extends Marker2D
 @export var debug_speed : bool = false
 @export var debug_speed_value : float = 200
 
-@export var margin: float = 100.0 # How far offscreen to spawn
+@export var margin: float = 50 # How far offscreen to spawn
 
 var asteroid_scene: PackedScene = preload("res://Scenes/asteroid.tscn")
 
@@ -33,7 +33,7 @@ func _on_spawn_cooldown_timeout() -> void:
 	var type = WaveManager.get_next_asteroid()
 	
 	# Will recieve null if max asteroids have been spawned, stops spawning if so
-	if type == null:	
+	if type == null:
 		spawntimer.stop()
 		return
 	
@@ -53,7 +53,7 @@ func spawn_asteroid(asteroid_type: AsteroidData) -> void:
 	var viewport_size = get_viewport_rect().size
 	
 	# Chooses random screen edge (0 = top, 1 = bottom, 2 = left, 3 = right)
-	var edge = randi() % 4 # <- chooses random number between 0 and 3
+	var edge : int = randi() % 4 # <- chooses random number between 0 and 3
 	var spawn_position : Vector2
 	
 	# Matches randomly chosen number to screen edge with spawn margin

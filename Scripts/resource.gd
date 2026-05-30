@@ -10,7 +10,7 @@ var swarm_offset : Vector2
 func _ready() -> void:
 	
 	direction = Vector2(randf_range(-1,1),randf_range(-1,1))		# Sets a random direction
-	print("Resource spawned | Position: ", global_position, " | Direction: ", direction)
+	#print("Resource spawned | Position: ", global_position, " | Direction: ", direction)
 	
 	swarm_offset = Vector2(randf_range(-5,5),randf_range(-5,5))	# Sets a random offset when clustered
 

@@ -13,7 +13,6 @@ var	base_scale: Vector2
 
 @export_category("Base Stats")
 @export var max_health: float
-@export var min_speed: float
 @export var max_speed: float
 @export var slow_resistance: float = 0.0
 

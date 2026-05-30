@@ -15,8 +15,6 @@ var max_asteroids : int
 var asteroids_spawned : int = 0
 var asteroids_alive : int
 
-var spawn_interval : float
-
 
 # Signals
 signal timer_interval(interval)		# connects to asteroid_spawner.gd
@@ -24,7 +22,6 @@ signal wave_complete()				# connects to ui.gd
 
 
 func _ready() -> void:
-	
 	register_all_asteroids()	# CRITICAL : needs to run on game startup
 
 
@@ -95,8 +92,8 @@ func pick_asteroid_type(wave: int) -> AsteroidData:
 	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
 	
 	# Subtracts each eligible asteroid's weight by the random number.
-	# If the asteroid's weight causes the number goes below or 
-	# reaches 0, then THAT asteroid is returned - chosen to be spawned
+	# If the asteroid's weight causes the number to go below or 
+	# reaches 0, then THAT asteroid is returned (chosen to be spawned)
 	for asteroid in eligible:
 		roll -= asteroid.spawn_weight
 		if roll <= 0:
@@ -116,7 +113,7 @@ func start_wave() -> void:
 	# Calculates asteroid amound and their spawn interval
 	# based on the current wave number
 	max_asteroids = 4 + (current_wave * 2)
-	spawn_interval = clampf(3.0 - (0.1 * current_wave),0.4, 3.0)
+	var spawn_interval : float = clampf(3.0 - (0.1 * current_wave),0.4, 3.0)
 	
 	# Sends the spawn timer interval to the asteroid spawner
 	timer_interval.emit(spawn_interval)
