@@ -11,6 +11,7 @@ name = "Common"
 sprite_texture = SubResource("PlaceholderTexture2D_meeva")
 max_health = 3.0
 max_speed = 40.0
+damage = 3.0
 min_wave = 1
 spawn_weight = 10.0
 max_resources = 3

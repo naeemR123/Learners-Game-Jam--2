@@ -225,8 +225,10 @@ func game_reset():
 	owned_defenses.clear()
 	
 	# Sets everything to default values
-	active_stats["global"]["slow_down_amount"] = 0.75
+	active_stats["global"]["slow_down_amount"] = 1.00
 	active_stats["global"]["planet_shield"] = max_planet_shield
+	
+	WaveManager.reset() 	# Resets Wave to 1
 	
 	# Runs reset() for all current upgrades : sets upgrade level to 1
 	for upgrade in all_upgrades:

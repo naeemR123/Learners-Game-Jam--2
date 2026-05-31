@@ -85,7 +85,7 @@ func shop_ui() -> void:
 	else:
 		shop_container.show()
 		wlabel.text = "Next Wave: " + str(wave.current_wave)
-		
+		 
 		# Deletes any existing buttons in the Shop lists
 		for child in defenses_list.get_children():
 			child.queue_free()

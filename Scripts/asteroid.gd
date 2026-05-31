@@ -12,13 +12,17 @@ var damage : float = 3
 var current_health: float
 var local_time_scale : float = 1.0
 
-var resource_max : int = 3
 var resource_min : int = 1
+var resource_max : int = 3
 
 var speed : float 
 var speed_variance : float = 15
 var direction : Vector2
 # -
+
+# Despawning
+@onready var screen_size : Vector2 = get_viewport_rect().size
+var despawn_margin : float = 200
 
 var rotation_speed : float = randf_range(-0.8,0.8)	# Random rotation : Purely visual
 
@@ -29,7 +33,7 @@ var data : AsteroidData		# ^
 
 # Runs immediately after entering the scene tree | Called from asteroid_spawner.gd
 # Sets up asteroid with all necessary data and properties
-func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1) -> void:
+func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1, damage_multiplier: float = 1.0) -> void:
 	
 	# Assigns variable to chosen asteroid type
 	data = asteroid_type	# CRITICAL : Needs to be at top.
@@ -43,6 +47,9 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	# Assigns variable to Planet, and position to determined spawn position
 	planet = target_planet
 	global_position = start_pos
+	
+	# Adds Asteroid to 'Asteroids' group
+	add_to_group("Asteroids")
 	
 	# Connects Planet collision signal, if not already connected
 	if not area_entered.is_connected(_on_area_entered):
@@ -62,6 +69,9 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	current_health = data.max_health * health_multiplier
 	rotation_speed = randf_range(-0.8, 0.8)
 	sprite.texture = data.sprite_texture
+	damage = data.damage * damage_multiplier
+	resource_min = data.min_resources
+	resource_max = data.max_resources
 	
 	# Sets scale based on health and asteroid type's scale ratio
 	scale = Vector2(data.scale_ratio, data.scale_ratio)
@@ -90,6 +100,16 @@ func _physics_process(delta: float) -> void:
 	# Produces movement and rotation
 	global_position += direction * speed * local_time_scale * delta
 	rotation += rotation_speed * local_time_scale * delta
+	
+	# Checks and despawns asteroid if off-screen by 'despawn_margin' amount
+	if \
+	global_position.x < -despawn_margin or \
+	global_position.x > screen_size.x + despawn_margin or \
+	global_position.y < -despawn_margin or \
+	global_position.y > screen_size.y + despawn_margin:
+		print(self, " despawned | Too far off screen")
+		wave.asteroid_death()
+		queue_free()
 
 
 # Processes damage from Defenses
@@ -117,7 +137,7 @@ func _on_area_entered(body: Area2D) -> void:
 # assigned amount of resources and tells WaveManager
 func die():
 	# Randomly chooses an amount based on the min and max values of resources, then spawns that amount
-	var randamount = randi_range(data.min_resources, data.max_resources)
+	var randamount = randi_range(resource_min, resource_max)
 	for i in randamount:
 		var resource = resource_scene.instantiate()
 		resource.global_position = global_position

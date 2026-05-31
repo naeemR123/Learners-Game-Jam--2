@@ -12,6 +12,7 @@ sprite_texture = SubResource("PlaceholderTexture2D_4qp8t")
 scale_ratio = 1.5
 max_health = 15.0
 max_speed = 20.0
+damage = 8.0
 slow_resistance = 0.5
 min_wave = 7
 spawn_weight = 5.0

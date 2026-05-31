@@ -145,3 +145,9 @@ func asteroid_death() -> void:
 		wave_active = false
 		current_wave += 1
 		wave_complete.emit()
+
+
+# Resets Wave to 1 | Called via game_reset() in Game_Manager
+func reset() -> void:
+	current_wave = 1
+	wave_active = false

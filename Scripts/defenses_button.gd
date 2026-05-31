@@ -20,8 +20,8 @@ func update_display() -> void:
 	if not defense_data: return
 	
 	var is_locked : bool = defense_data.unlock_wave > WaveManager.current_wave
-	var cost = defense_data.get_current_cost()
-	var owned = defense_data.amount_owned
+	var cost : int = defense_data.get_current_cost()
+	var owned : int = defense_data.amount_owned
 	
 	if is_locked:
 		disabled = true
