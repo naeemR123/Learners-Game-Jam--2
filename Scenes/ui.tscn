@@ -44,6 +44,7 @@ text = "Shield:
 horizontal_alignment = 1
 
 [node name="ShopContainer" type="Control" parent="." unique_id=555884059]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -70,9 +71,8 @@ text = "Start Wave"
 [node name="DefensesPanel" type="PanelContainer" parent="ShopContainer" unique_id=50841706]
 layout_mode = 1
 anchors_preset = -1
-anchor_right = 300.0
 anchor_bottom = 1.0
-offset_right = -575700.0
+offset_right = 300.0
 grow_vertical = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="ShopContainer/DefensesPanel" unique_id=672314520]
@@ -98,7 +98,6 @@ anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -300.0
-offset_right = 0.00012207031
 grow_horizontal = 0
 grow_vertical = 2
 

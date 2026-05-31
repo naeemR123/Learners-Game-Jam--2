@@ -1,7 +1,7 @@
 extends Button
 
 @onready var game := Game_Manager
-@export var defense_data: DefenseData
+var defense_data: DefenseData
 
 
 
