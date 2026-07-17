@@ -10,11 +10,10 @@ id = "turret_satellite"
 display_name = "Turret Satellite"
 description = "Defensive satellite that orbits the planet, shooting Asteroids in its range."
 defense_scene = ExtResource("1_kx8qd")
-unlock_wave = 1
 base_cost = 5
 default_stats = {
-"damage": 3.0,
-"fire_rate": 2.0,
+"damage": 1.0,
+"fire_rate": 2.6,
 "orbit_speed": 1.0,
 "range": 300.0,
 "turn_speed": 10.0

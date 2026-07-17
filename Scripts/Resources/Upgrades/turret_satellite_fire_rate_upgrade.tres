@@ -8,5 +8,7 @@ id = "fire_rate"
 display_name = "Turret Satellite Fire Rate"
 target_category = "turret_satellite"
 description = "Each Upgrade:
-- Decreases time between shots for turret satellites. (Decreased cooldown)"
+- Decreases time between shots for all turret satellites. (Decreased cooldown)"
+base_value = 2.0
+val_up_per_level = -0.2
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

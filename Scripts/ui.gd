@@ -12,6 +12,7 @@ const UPGRADE_BUTTON = preload("res://Scenes/upgrade_button.tscn")
 # Labels
 @onready var rlabel: Label = $ResourceLabel
 @onready var wlabel: Label = $WaveLabel
+@onready var bwave_label: Label = $ShopContainer/BossWaveLabel
 @onready var planet_shield: Label = $PlanetShield
 
 # Buttons
@@ -85,7 +86,13 @@ func shop_ui() -> void:
 	else:
 		shop_container.show()
 		wlabel.text = "Next Wave: " + str(wave.current_wave)
-		 
+		
+		# Displays next boss wave if current wave is within 5 waves
+		if wave.current_wave + 5 >= wave.next_boss_wave:
+			bwave_label.text = "Upcoming Boss: Wave " + str(wave.next_boss_wave)
+		else:
+			bwave_label.text = ""
+		
 		# Deletes any existing buttons in the Shop lists
 		for child in defenses_list.get_children():
 			child.queue_free()
@@ -93,12 +100,13 @@ func shop_ui() -> void:
 		for child in upgrades_list.get_children():
 			child.queue_free()
 		
-		
+		# Populates buttons in Defenses list in Shop with all available Defenses
 		for defense in game.all_defenses:
 			var button = DEFENSE_BUTTON.instantiate()
 			button.defense_data = defense
 			defenses_list.add_child(button)
-			
+		
+		# Populates buttons in Upgrades list in Shop with all available Upgrades
 		for upgrade in game.all_upgrades:
 			var button = UPGRADE_BUTTON.instantiate()
 			button.upgrade_data = upgrade

@@ -11,14 +11,16 @@ extends Node2D
 
 var my_id : String
 var my_orbit_radius : float = 150
+var orbit_radius_variance : float = 40
 var my_range : float = 100.0
 var my_orbit_speed : float = 0.5
+var orbit_speed_variance : float = 0.3
 var my_collection_speed : float = 100
 var my_collection_strength : float = 5
 
 func initialize(data: SatelliteData):
 	my_id = data.id
-	my_orbit_radius = randf_range(data.orbit_radius - 20, data.orbit_radius + 20)
+	my_orbit_radius = randf_range(data.orbit_radius - orbit_radius_variance, data.orbit_radius + orbit_radius_variance)
 	
 	# Randomizes starting angle so they don't all spawn at the exact same spot
 	rotation = randf_range(0, TAU)		# TAU is 360 degrees in radians
@@ -47,7 +49,7 @@ func update_satellite_stats():
 func _process(delta: float) -> void:
 	
 	# Rotates the pivot to make the satellite orbit
-	rotation += my_orbit_speed * delta
+	rotation += randf_range(my_orbit_speed - orbit_speed_variance, my_orbit_speed + orbit_speed_variance) * delta
 
 
 func _physics_process(delta: float) -> void:

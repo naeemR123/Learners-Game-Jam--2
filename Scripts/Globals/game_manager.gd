@@ -161,7 +161,7 @@ func purchase_defenses(defense: DefenseData) -> bool:
 
 
 # Purchase function for Upgrades
-func purchase_upgrade(upgrade: UpgradeData) -> bool:		
+func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	
 	# Defines current cost of upgrade based on its criteria
 	var cost = upgrade.get_current_cost()

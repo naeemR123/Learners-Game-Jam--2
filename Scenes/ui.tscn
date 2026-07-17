@@ -52,17 +52,36 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="BossWaveLabel" type="Label" parent="ShopContainer" unique_id=999909947]
+custom_minimum_size = Vector2(225, 30)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -121.0
+offset_top = -151.0
+offset_right = 121.0
+offset_bottom = -121.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+text = "Upcoming Boss: Wave XX"
+horizontal_alignment = 1
+
 [node name="StartWaveButton" type="Button" parent="ShopContainer" unique_id=1335325550]
+custom_minimum_size = Vector2(200, 50)
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -125.0
+offset_left = -150.0
 offset_top = -111.90997
-offset_right = 125.0
-offset_bottom = -31.90918
+offset_right = 150.0
+offset_bottom = -31.908936
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_font_sizes/font_size = 30

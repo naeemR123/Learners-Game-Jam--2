@@ -10,6 +10,7 @@ var all_asteroids : Array[AsteroidData] = []
 # Wave Properties
 var current_wave : int = 1
 var wave_active : bool
+var next_boss_wave : int = randi_range(15, 20)
 
 var max_asteroids : int
 var asteroids_spawned : int = 0
@@ -110,6 +111,11 @@ func start_wave() -> void:
 	asteroids_spawned = 0
 	asteroids_alive = 0
 	
+	if next_boss_wave == current_wave:
+		boss_wave()
+		next_boss_wave = current_wave + randi_range(15, 20)
+		return
+	
 	# Calculates asteroid amound and their spawn interval
 	# based on the current wave number
 	max_asteroids = 4 + (current_wave * 2)
@@ -117,6 +123,10 @@ func start_wave() -> void:
 	
 	# Sends the spawn timer interval to the asteroid spawner
 	timer_interval.emit(spawn_interval)
+
+
+func boss_wave() -> void:
+	pass
 
 
 # Used by the asteroid spawner | Runs pick_asteroid_type and returns chosen asteroid type
@@ -147,7 +157,8 @@ func asteroid_death() -> void:
 		wave_complete.emit()
 
 
-# Resets Wave to 1 | Called via game_reset() in Game_Manager
+# Resets Wave info | Called via game_reset() in Game_Manager
 func reset() -> void:
 	current_wave = 1
+	next_boss_wave = randi_range(15, 20)
 	wave_active = false

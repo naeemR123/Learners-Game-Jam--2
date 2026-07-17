@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://deteak5870qop"]
+
+[ext_resource type="Script" uid="uid://b3n4xmqgxjhgf" path="res://Scripts/ResourceScripts/upgrade_data.gd" id="1_ttrus"]
+
+[resource]
+script = ExtResource("1_ttrus")
+id = "damage"
+display_name = "Turret Satellite Damage"
+target_category = "turret_satellite"
+description = "Each Upgrade:
+- Increases damage for all turret satellites. (Increased Damage)"
+val_up_per_level = 1.0
+metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"
