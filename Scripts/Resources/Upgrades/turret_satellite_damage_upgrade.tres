@@ -9,5 +9,9 @@ display_name = "Turret Satellite Damage"
 target_category = "turret_satellite"
 description = "Each Upgrade:
 - Increases damage for all turret satellites. (Increased Damage)"
-val_up_per_level = 1.0
+base_cost = 5
+cost_multiplier = 2.0
+base_value = 1.5
+val_up_per_level = 1.5
+scaling_type = 1
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

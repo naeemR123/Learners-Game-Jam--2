@@ -40,3 +40,7 @@ var amount_owned: int = 0
 
 func get_current_cost() -> int:
 	return int(base_cost * pow(cost_multiplier, amount_owned))
+
+
+func reset() -> void:
+	amount_owned = 0

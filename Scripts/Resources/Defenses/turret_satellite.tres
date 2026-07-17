@@ -12,8 +12,8 @@ description = "Defensive satellite that orbits the planet, shooting Asteroids in
 defense_scene = ExtResource("1_kx8qd")
 base_cost = 5
 default_stats = {
-"damage": 1.0,
-"fire_rate": 2.6,
+"damage": 1.5,
+"fire_rate": 2.4,
 "orbit_speed": 1.0,
 "range": 300.0,
 "turn_speed": 10.0

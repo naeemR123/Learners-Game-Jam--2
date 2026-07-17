@@ -12,6 +12,8 @@ var current_wave : int = 1
 var wave_active : bool
 var next_boss_wave : int = randi_range(15, 20)
 
+var max_spawn_interval : float = 7 # seconds
+
 var max_asteroids : int
 var asteroids_spawned : int = 0
 var asteroids_alive : int
@@ -118,8 +120,8 @@ func start_wave() -> void:
 	
 	# Calculates asteroid amound and their spawn interval
 	# based on the current wave number
-	max_asteroids = 4 + (current_wave * 2)
-	var spawn_interval : float = clampf(3.0 - (0.1 * current_wave),0.4, 3.0)
+	max_asteroids = 3 + (current_wave * 2)
+	var spawn_interval : float = clampf(max_spawn_interval - (0.1 * current_wave),0.4, max_spawn_interval)
 	
 	# Sends the spawn timer interval to the asteroid spawner
 	timer_interval.emit(spawn_interval)

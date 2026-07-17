@@ -23,6 +23,8 @@ func _ready() -> void:
 
 # Recieves spawn interval from WaveManager and starts timer
 func timer_info(interval : float) -> void:
+	await get_tree().create_timer(3.0).timeout
+	spawn_asteroid(wave.get_next_asteroid())
 	spawntimer.start(interval)
 
 
@@ -88,6 +90,8 @@ func spawn_asteroid(asteroid_type: AsteroidData) -> void:
 	
 	print("Asteroid spawned")
 	
+	var speed_multiplier : float = 0.1 * wave.current_wave
+	
 	# Run asteroid's start function, passing important parameter values
-	asteroid.start(asteroid_type, planet, spawn_position, debug_speed, debug_speed_value, )
+	asteroid.start(asteroid_type, planet, spawn_position, debug_speed, debug_speed_value, speed_multiplier)
 	

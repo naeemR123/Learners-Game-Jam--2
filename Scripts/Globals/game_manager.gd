@@ -118,6 +118,12 @@ func register_upgrade_array(upgrade: UpgradeData) -> void:
 	
 	# Safe for multiple calls : won't overwrite if entry exists
 	if not all_upgrades.has(upgrade):
+		
+		# Syncs base_value with the defense's actual base stat, so the two can't be different
+		if active_stats.has(upgrade.target_category) and active_stats[upgrade.target_category].has(upgrade.id):
+			upgrade.base_value = active_stats[upgrade.target_category][upgrade.id]
+		else:
+			push_warning("register_upgrade_array: target_category '%s' or id '%s' not found in active_stats. Check the UpgradeData's fields" % [upgrade.target_category, upgrade.id])
 		# References original data in Array
 		all_upgrades.append(upgrade)
 
@@ -178,7 +184,7 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 			active_stats[upgrade.target_category][upgrade.id] = upgrade.get_current_value()
 		else:
 			# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
-			push_warning("purchase_upgrade: target_category '%s' not found in active_stats. Was it registered correctly?" % upgrade.target_category)
+			push_warning("Purchase_upgrade: target_category '%s' not found in active_stats. Was it registered correctly?" % upgrade.target_category)
 		
 		# Tells UI to refresh
 		resources_changed.emit()
@@ -233,6 +239,9 @@ func game_reset():
 	# Runs reset() for all current upgrades : sets upgrade level to 1
 	for upgrade in all_upgrades:
 		upgrade.reset()
+	
+	for defense in all_defenses:
+		defense.reset()
 	
 	# Clears all data from Array, except 'global'
 	for key in active_stats.keys():

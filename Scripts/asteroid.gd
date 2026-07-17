@@ -17,6 +17,8 @@ var resource_max : int = 3
 
 var speed : float 
 var speed_variance : float = 15
+var max_speed : float = 300
+var min_speed : float = 20
 var direction : Vector2
 # -
 
@@ -62,8 +64,9 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	if debug_speed == true:		# If debug mode on, sets debug speed
 		speed = debug_speed_value
 	else: 
-		# Assigns speed based on asteroid's min-max speed + speed_variance and wave's speed multiplier
-		speed = randf_range(data.max_speed - speed_variance, data.max_speed + speed_variance) * speed_multiplier
+		# Assigns speed based on set min-max speed with speed_variance and wave's speed multiplier
+		speed = clampf((randf_range(data.max_speed - speed_variance, data.max_speed + speed_variance) * speed_multiplier) + (min_speed/2), min_speed, max_speed)
+		
 	
 	# Assigning properties
 	current_health = data.max_health * health_multiplier
@@ -115,6 +118,7 @@ func _physics_process(delta: float) -> void:
 # Processes damage from Defenses
 func take_damage(amount: float): 
 	current_health -= amount
+	print("Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, current_health])
 	# Add hit-flash here
 	if current_health <=0:
 		die()

@@ -22,9 +22,10 @@ func update_display() -> void:
 	
 	var cost : int = upgrade_data.get_current_cost()
 	var level : int = upgrade_data.current_level
+	var current_val : float = upgrade_data.base_value + (upgrade_data.val_up_per_level * (level - 1))
 	var next_val : float = upgrade_data.base_value + (upgrade_data.val_up_per_level * level)
 	
 	# Disables button if unaffordable
 	disabled = game.resources < cost
 	
-	text = "%s (Lv %d)\nCost: %d | Next: %.2f" % [upgrade_data.display_name, level, cost, next_val]
+	text = "%s (Lv %d)\nCost: %d | Current: %.1f | Next: %.1f" % [upgrade_data.display_name, level, cost, current_val, next_val]

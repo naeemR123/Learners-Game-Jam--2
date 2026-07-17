@@ -12,7 +12,7 @@ extends Node2D
 @onready var firerate: Timer = $Turret/Firerate
 @onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
-var my_damage : float = 3
+var my_damage : float = 1.5
 var my_range : float = 300
 var my_turn_speed : float = 10
 var my_orbit_radius : float = 100
@@ -90,4 +90,4 @@ func shoot(target: Area2D) -> void:
 	get_tree().current_scene.add_child(proj)
 	
 	# Initialize the projectile
-	proj.start(muzzle.global_position, target.global_position, game.active_stats[my_id][StatIDs.DAMAGE])
+	proj.start(muzzle.global_position, target.global_position, my_damage)

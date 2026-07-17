@@ -8,9 +8,6 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var sprite_texture : Texture2D
 @export var scale_ratio : float = 1
 
-# Add this to asteroid.gd using the start() function instead.
-var base_scale : Vector2 
-
 @export_category("Base Stats")
 @export var max_health : float
 @export var max_speed : float
