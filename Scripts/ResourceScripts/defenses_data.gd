@@ -28,7 +28,7 @@ class_name DefenseData
 
 
 # State variables (Dynamic: saved during gameplay)
-var is_unlocked: bool = false
+var is_purchased: bool = false
 var amount_owned: int = 0
 
 
@@ -43,4 +43,5 @@ func get_current_cost() -> int:
 
 
 func reset() -> void:
+	is_purchased = false
 	amount_owned = 0

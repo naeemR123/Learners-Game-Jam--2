@@ -144,7 +144,7 @@ func purchase_defenses(defense: DefenseData) -> bool:
 	if resources >= cost and defense.amount_owned < defense.max_allowed:
 		resources -= cost
 		defense.amount_owned += 1
-		defense.is_unlocked = true
+		defense.is_purchased = true
 		
 		# Adds defense.id to 'owned_defenses' Array
 		owned_defenses.append(defense.id)

@@ -22,8 +22,8 @@ func update_display() -> void:
 	
 	var cost : int = upgrade_data.get_current_cost()
 	var level : int = upgrade_data.current_level
-	var current_val : float = upgrade_data.base_value + (upgrade_data.val_up_per_level * (level - 1))
-	var next_val : float = upgrade_data.base_value + (upgrade_data.val_up_per_level * level)
+	var current_val : float = upgrade_data.get_current_value()
+	var next_val : float = upgrade_data.get_current_value(upgrade_data.current_level + 1)
 	
 	# Disables button if unaffordable
 	disabled = game.resources < cost

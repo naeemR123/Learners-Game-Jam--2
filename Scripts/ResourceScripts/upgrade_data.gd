@@ -40,15 +40,15 @@ func get_current_cost() -> int:
 		return int(base_cost * pow(cost_multiplier, current_level))
 
 
-func get_current_value() -> float:
+func get_current_value(level: float = current_level) -> float:
 	
 	# Uses matching formula to selected scaling_type then uses val_up_per_level as the value increase
 	match scaling_type:
 		
 		ScalingType.ADDITIVE:
-			return base_value + (val_up_per_level * (current_level - 1))
+			return base_value + (val_up_per_level * (level - 1))
 		ScalingType.MULTIPLICATIVE:
-			return base_value * pow(val_up_per_level, current_level - 1)
+			return base_value * pow(val_up_per_level, level - 1)
 		
 		# If no acceptable scaling_type selected, pushes warning and returns base_value
 		_:
