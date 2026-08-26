@@ -34,10 +34,7 @@ var current_level: int = 1
 
 
 func get_current_cost() -> int:
-	if current_level == 1:
-		return int(base_cost)
-	else:
-		return int(base_cost * pow(cost_multiplier, current_level))
+	return int(base_cost * pow(cost_multiplier, current_level - 1))
 
 
 func get_current_value(level: float = current_level) -> float:

@@ -39,10 +39,11 @@ func _ready() -> void:
 	retry_button.pressed.connect(_on_retry_button_pressed)	# signal from button in ui.tscn
 	start_wave_button.pressed.connect(_on_start_wave_button_pressed)
 	
+	# Deferred so these read final values; waits for sibling's _ready() debug settings
 	# Refresh ui with current stats upon loading
-	update_r_ui()
-	update_shield_ui()
-	shop_ui()
+	update_r_ui.call_deferred()
+	update_shield_ui.call_deferred()
+	shop_ui.call_deferred()
 
 # Refreshes resource display ui
 func update_r_ui():

@@ -96,7 +96,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	#####################################################################
 	
 	# Displays current Asteroid's info : name, pos, and speed
-	print("Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed, " | Scale: ", scale, " | Sprite Size: ", sprite.texture.get_size(), " | Health: ", current_health)
+	print(" - Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed, " | Scale: ", scale, " | Sprite Size: ", sprite.texture.get_size(), " | Health: ", current_health)
 
 
 func _physics_process(delta: float) -> void:
