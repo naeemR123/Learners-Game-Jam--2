@@ -9,7 +9,7 @@
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
 extra_resources = true
-extra_amount = 400
+extra_amount = 1500
 custom_wave = true
 wave_number = 30
 

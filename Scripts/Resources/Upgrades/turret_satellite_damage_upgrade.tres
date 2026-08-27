@@ -8,7 +8,7 @@ id = "damage"
 display_name = "Turret Satellite Damage"
 target_category = "turret_satellite"
 description = "Each Upgrade:
-- Increases damage for all turret satellites. (Increased Damage)"
+- Increases turret satellite damage."
 base_cost = 5
 cost_multiplier = 2.0
 base_value = 1.5

@@ -222,3 +222,5 @@ func reset() -> void:
 	next_boss_wave = randi_range(15, 20)
 	wave_active = false
 	is_boss_wave = false
+	
+	print(" | WAVE INFO RESET | ")

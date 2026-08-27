@@ -22,10 +22,12 @@ var min_speed : float = 20
 var direction : Vector2
 # -
 
-# Despawning
+# - Despawning -
 @onready var screen_size : Vector2 = get_viewport_rect().size
 var despawn_margin : float = 200
+# -
 
+var hit_flash_tween : Tween
 var rotation_speed : float = randf_range(-0.8,0.8)	# Random rotation : Purely visual
 
 var planet: Area2D 			# Assigned at start()
@@ -42,7 +44,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	
 	# Safety Net : If no asteroid_type was given, aborts.
 	if not data:
-		queue_free()
+		despawn()
 		push_warning("No AsteroidData loaded. Asteroid aborted.")
 		return
 	
@@ -112,16 +114,7 @@ func _physics_process(delta: float) -> void:
 	global_position.y > screen_size.y + despawn_margin:
 		print(self, " despawned | Too far off screen")
 		wave.asteroid_death()
-		queue_free()
-
-
-# Processes damage from Defenses
-func take_damage(amount: float): 
-	current_health -= amount
-	print("Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, current_health])
-	# Add hit-flash here
-	if current_health <=0:
-		die()
+		despawn()
 
 
 # Processes collision damage to Planet and destroys asteroid
@@ -133,20 +126,42 @@ func _on_area_entered(body: Area2D) -> void:
 	else:
 		game.take_damage(damage)	# Runs function in Game_Manager, tracking Planet shield
 		wave.asteroid_death()		# Runs function in WaveManager, tracking asteroid death
-		queue_free()				# Deletes this instance
+		despawn()				# Deletes this instance
 		print("Planet hit")
+
+
+# Processes damage from Defenses
+func take_damage(amount: float): 
+	current_health -= amount
+	print(" Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, current_health])
+	
+	# Hit Flash - Visual Effect
+	# Kills pre-existing hit-flash before starting a new one
+	if hit_flash_tween and hit_flash_tween.is_valid(): hit_flash_tween.kill()
+	sprite.modulate = Color(4,4,4)
+	hit_flash_tween = create_tween()
+	hit_flash_tween.tween_property(sprite, "modulate", Color(1,1,1), 0.2)
+	
+	if current_health <=0:
+		die()
 
 
 # Destroys asteroid (from death by Defenses), dropping
 # assigned amount of resources and tells WaveManager
 func die():
+	
 	# Randomly chooses an amount based on the min and max values of resources, then spawns that amount
 	var randamount = randi_range(resource_min, resource_max)
 	for i in randamount:
 		var resource = resource_scene.instantiate()
 		resource.global_position = global_position
 		get_tree().current_scene.call_deferred("add_child", resource)
+		resource.call_deferred("start")
 	
 	
 	wave.asteroid_death()	# Runs function in WaveManager, tracking asteroid death
-	queue_free()	# Deletes this instance
+	despawn()	# Deletes this instance
+
+
+func despawn() -> void:
+	queue_free()

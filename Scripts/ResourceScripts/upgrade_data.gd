@@ -59,3 +59,4 @@ func level_up() -> void:
 
 func reset() -> void:
 	current_level = 1
+	

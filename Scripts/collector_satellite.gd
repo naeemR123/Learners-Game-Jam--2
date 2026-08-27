@@ -4,8 +4,9 @@ extends Node2D
 @onready var game := Game_Manager
 
 
-@onready var satellite: Area2D = $Satellite
-@onready var collection_zone: Area2D = $Satellite/CollectionZone
+@onready var satellite : Area2D = $Satellite
+@onready var collector_range : CollisionShape2D = $Satellite/Range
+@onready var collection_zone : Area2D = $Satellite/CollectionZone
 @onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
 
@@ -15,8 +16,8 @@ var orbit_radius_variance : float = 40
 var my_range : float = 100.0
 var my_orbit_speed : float = 0.5
 var orbit_speed_variance : float = 0.3
-var my_collection_speed : float = 100
-var my_collection_strength : float = 5
+var my_collection_speed : float = 80
+var my_collection_strength : float = 0.5
 
 func initialize(data: SatelliteData):
 	my_id = data.id
@@ -32,6 +33,7 @@ func _ready() -> void:
 		return
 	global_position = planet.global_position
 	satellite.position.x = my_orbit_radius
+	collector_range.shape = collector_range.shape.duplicate()
 	
 	# Connects the Area2D signals via code
 	collection_zone.area_entered.connect(_on_collection_area_entered)
@@ -45,6 +47,7 @@ func update_satellite_stats():
 	my_collection_strength = game.active_stats[my_id][StatIDs.SAT_COLLECTION_STRENGTH]
 	my_orbit_speed = game.active_stats[my_id][StatIDs.ORBIT_SPEED]
 	my_range = game.active_stats[my_id][StatIDs.RANGE]
+	collector_range.shape.radius = my_range
 
 func _process(delta: float) -> void:
 	
@@ -85,4 +88,4 @@ func _physics_process(delta: float) -> void:
 # Mask is set to 4, meaning 'area' is guaranteed to be a Resource
 func _on_collection_area_entered(area: Area2D) -> void: 
 	game.add_resource(1)
-	area.queue_free()
+	area.despawn()

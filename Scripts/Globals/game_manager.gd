@@ -72,16 +72,21 @@ func register_all_defenses() -> void:
 		file_name = dir.get_next()	# Moves to next file
 	
 	dir.list_dir_end()	# CRITICAL : always needs to be called when done iterating
+	
+	print(" | DEFENSES REGISTERED | ")
 
 
-# Checks 'default_stats' for resource.id , if not found, duplicates it under it's id
+# Checks arrays for defense , if not found, adds or duplicates it under it's id
 # Called by register_all_defenses()
 func register_defense_stats(defense: DefenseData) -> void:
 	
-	# Safe for multiple calls : won't overwrite if entry exists
+	# Safe for multiple calls : won't write if entry exists
 	if not active_stats.has(defense.id):
 		# Duplicates to store an independant copy, instead of referencing the original
 		active_stats[defense.id] = defense.default_stats.duplicate()
+		
+	# Safe for multiple calls : won't write if entry exists
+	if not all_defenses.has(defense):
 		all_defenses.append(defense)
 
 
@@ -110,7 +115,7 @@ func register_all_upgrades() -> void:
 		file_name = dir.get_next()
 	
 	dir.list_dir_end()	# CRITICAL 
-
+	print(" | UPGRADES REGISTERED | ")
 
 # Checks 'all_upgrades' for resource , if not found, references it
 # Called by register_all_upgrades()
@@ -174,17 +179,22 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	
 	# Purchases if player has enough resources
 	if resources >= cost:
-		resources -= cost
-		upgrade.level_up()	# Increases Upgrade level
 		
 		# Safety check : Only upgrades if it is a valid, registered category and property
 		if active_stats.has(upgrade.target_category):
+			
+			resources -= cost
+			upgrade.level_up()	# Increases Upgrade level
+			
 			# Updates the dictionary using the UpgradeData's ID
 			# Upgrades the specified category and property of the targeted Defense
 			active_stats[upgrade.target_category][upgrade.id] = upgrade.get_current_value()
+			
 		else:
 			# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
 			push_warning("Purchase_upgrade: target_category '%s' not found in active_stats. Was it registered correctly?" % upgrade.target_category)
+			return false # Purchase unsuccessful : target_category not found in active_stats
+		
 		
 		# Tells UI to refresh
 		resources_changed.emit()
@@ -217,35 +227,51 @@ func take_damage(damage_val: float):
 
 # Game over function
 func trigger_game_over():
+	print(" ~ GAME OVER ~ ")
 	planet_destroyed = true
 	game_over.emit()			# Tells UI to display 'Game Over' screen
 	get_tree().paused = true	# Pauses game
+	
 
 
 # Reset function | Connected to "Try Again?" Button on 'Game Over' screen
 func game_reset():
 	
+	print(" ~ RESETTING GAME... ~ ")
+	
 	# Resets values and properties
 	resources = 0
 	planet_destroyed = false
 	owned_defenses.clear()
+	print(" | GLOBAL STATE VARIABLES RESET | ")
 	
 	# Sets everything to default values
 	active_stats["global"]["slow_down_amount"] = 1.00
 	active_stats["global"]["planet_shield"] = max_planet_shield
+	print(" | GLOBAL ACTIVE_STATS RESET | ")
 	
 	WaveManager.reset() 	# Resets Wave to 1
 	
 	# Runs reset() for all current upgrades : sets upgrade level to 1
 	for upgrade in all_upgrades:
 		upgrade.reset()
+	print(" | UPGRADE LEVELS RESET | ")
 	
 	for defense in all_defenses:
 		defense.reset()
+	print(" | DEFENSE LEVELS RESET | ")
 	
 	# Clears all data from Array, except 'global'
 	for key in active_stats.keys():
 		if key != "global":
 			active_stats.erase(key)
 	
+	print(" | ACTIVE_STAT ARRAY RESET | ")
+	
+	# Rebuilds stat library arrays
+	register_all_defenses()
+	register_all_upgrades()
+	
 	get_tree().paused = false	# Unpauses game
+	
+	print(" ~ GAME RESET COMPLETE ~ ")
