@@ -3,38 +3,23 @@ extends Marker2D
 
 @onready var wave := WaveManager
 
+@onready var spawntimer: Timer = $SpawnCooldown
+@onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
 
-@export_group("Debug")
-@export var debug_asteroid_speed : bool = false
-@export var debug_asteroid_speed_value : float = 200
-@export var debug_boss_wave : bool = false
-@export var bwave_number : int = 3
 
 @export_category("Spawn Adjustments")
 @export var margin: float = 50 # How far offscreen to spawn
 
 
+var custom_asteroid_speed : bool
+var custom_asteroid_speed_value : float
+
 var asteroid_scene: PackedScene = preload("res://Scenes/asteroid.tscn")
-
-
-@onready var spawntimer: Timer = $SpawnCooldown
-@onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
-
 
 
 func _ready() -> void:
 	wave.timer_interval.connect(timer_info)		# connects from WaveManager
-	
-	if debug_asteroid_speed:
-		print("! Asteroid Speed Debug: ENABLED")
-	
-	# Sets next boss wave to exported debug value
-	if debug_boss_wave:
-		wave.next_boss_wave = bwave_number
-		print("! Boss Wave Debug: ENABLED")
-	
-	# Prints Boss Wave value at game start
-	print(" - Boss Wave set to: Wave " + str(wave.next_boss_wave))
+
 
 # Recieves spawn interval from WaveManager and starts timer
 func timer_info(interval : float) -> void:
@@ -108,5 +93,5 @@ func spawn_asteroid(asteroid_type: AsteroidData) -> void:
 	var speed_multiplier : float = 0.1 * wave.current_wave
 	
 	# Run asteroid's start function, passing important parameter values
-	asteroid.start(asteroid_type, planet, spawn_position, debug_asteroid_speed, debug_asteroid_speed_value, speed_multiplier)
+	asteroid.start(asteroid_type, planet, spawn_position, custom_asteroid_speed, custom_asteroid_speed_value, speed_multiplier)
 	

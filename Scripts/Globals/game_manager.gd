@@ -9,7 +9,7 @@ extends Node
 var active_stats: Dictionary = {
 	"global": {
 			"slow_down_amount": 1.00,
-			"planet_shield": 10.0,
+			"planet_shield": 10,
 	},
 }
 var owned_defenses: Array[String] = []			# Stores all active defenses : populated via purchase_defenses()
@@ -21,7 +21,7 @@ var all_upgrades : Array[UpgradeData] = []		# Stores all upgrades : populated vi
 # Universal Game Properties
 var resources : int = 0
 var planet_destroyed : bool = false
-var max_planet_shield: float = 10.0
+var max_planet_shield: float = 10
 
 
 # Signals
@@ -39,6 +39,33 @@ signal game_over()
 func _ready() -> void:
 	register_all_defenses()		# CRITICAL : needs to run on game startup
 	register_all_upgrades()		# CRITICAL : ^
+
+
+# Adds resource to inventory and updates ui
+func add_resource(amount: int):
+	resources += amount
+	resources_changed.emit()
+
+
+# Processes damage done to Planet, destroys if 0
+func take_damage(damage_val: float):
+	
+	# Safety net : Can't take damage if destroyed
+	if planet_destroyed:
+		return
+		
+	# Reduces shield based on damage value
+	active_stats["global"]["planet_shield"] -= damage_val
+	
+	if active_stats["global"]["planet_shield"] < 0:		# Small correction
+		active_stats["global"]["planet_shield"] = 0
+	
+	# Tells UI to refresh
+	shield_changed.emit()
+	
+	# If shield is 0, run game over function
+	if active_stats["global"]["planet_shield"] == 0:
+		trigger_game_over()
 
 
 # Scans the Defenses folder and registers stats for every DefenseData it finds
@@ -133,12 +160,6 @@ func register_upgrade_array(upgrade: UpgradeData) -> void:
 		all_upgrades.append(upgrade)
 
 
-# Adds resource to inventory and updates ui
-func add_resource(amount: int):
-	resources += amount
-	resources_changed.emit()
-
-
 # Purchase function for Defenses
 func purchase_defenses(defense: DefenseData) -> bool:
 	
@@ -203,26 +224,6 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 		return true # Purchase successful
 	return false # Purchase unsuccessful : not enough resources
 
-
-# Processes damage done to Planet, destroys if 0
-func take_damage(damage_val: float):
-	
-	# Safety net : Can't take damage if destroyed
-	if planet_destroyed:
-		return
-		
-	# Reduces shield based on damage value
-	active_stats["global"]["planet_shield"] -= damage_val
-	
-	if active_stats["global"]["planet_shield"] < 0:		# Small correction
-		active_stats["global"]["planet_shield"] = 0
-	
-	# Tells UI to refresh
-	shield_changed.emit()
-	
-	# If shield is 0, run game over function
-	if active_stats["global"]["planet_shield"] == 0:
-		trigger_game_over()
 
 
 # Game over function

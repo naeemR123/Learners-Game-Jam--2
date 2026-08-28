@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://c6swg3tohwufj"]
+
+[ext_resource type="Script" uid="uid://kefa4hi87lcy" path="res://Scripts/starfield.gd" id="1_ewnal"]
+
+[node name="Starfield" type="Node2D" unique_id=1160965770]
+script = ExtResource("1_ewnal")
+far_star_count = 100
+far_autoscroll = Vector2(10, 3)
+mid_star_count = 60
+mid_star_size = 2
+mid_autoscroll = Vector2(20, 6)
+near_star_count = 25
+near_star_size = 3
+near_autoscroll = Vector2(50, 15)
+
+[node name="FarLayer" type="Parallax2D" parent="." unique_id=1988040171]
+repeat_times = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="FarLayer" unique_id=1585354859]
+
+[node name="MidLayer" type="Parallax2D" parent="." unique_id=1823408230]
+repeat_times = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="MidLayer" unique_id=1259709802]
+
+[node name="NearLayer" type="Parallax2D" parent="." unique_id=1118916638]
+repeat_times = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="NearLayer" unique_id=1520735628]
