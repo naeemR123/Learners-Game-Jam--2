@@ -73,7 +73,8 @@ func _ready() -> void:
 	
 	if custom_shield:
 		game.active_stats["global"]["planet_shield"] = shield_amount
-		print("[DEBUG] Custom Shield Debug: ENABLED | Added %d shield" % shield_amount)
+		game.max_planet_shield = shield_amount
+		print("[DEBUG] Custom Shield Debug: ENABLED | Added %d shield , Set max_planet_shield to %d" % [shield_amount, game.max_planet_shield])
 	
 	if custom_asteroid_speed:
 		asteroid_spawner.custom_asteroid_speed = true

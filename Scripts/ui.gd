@@ -30,32 +30,32 @@ const UPGRADE_BUTTON = preload("res://Scenes/upgrade_button.tscn")
 
 
 func _ready() -> void:
-	game.resources_changed.connect(update_r_ui)				# signals from Game_Manager
-	game.shield_changed.connect(update_shield_ui)			# ^
+	game.resources_changed.connect(_update_r_ui)				# signals from Game_Manager
+	game.shield_changed.connect(_update_shield_ui)			# ^
 	game.game_over.connect(game_over_event)					# ^
 	
-	wave.wave_complete.connect(shop_ui)						# signal from WaveManager
+	wave.wave_complete.connect(_shop_ui)						# signal from WaveManager
 	
 	retry_button.pressed.connect(_on_retry_button_pressed)	# signal from button in ui.tscn
 	start_wave_button.pressed.connect(_on_start_wave_button_pressed)
 	
 	# Deferred so these read final values; waits for sibling's _ready() debug settings
 	# Refresh ui with current stats upon loading
-	update_r_ui.call_deferred()
-	update_shield_ui.call_deferred()
-	shop_ui.call_deferred()
+	_update_r_ui.call_deferred()
+	_update_shield_ui.call_deferred()
+	_shop_ui.call_deferred()
 
 # Refreshes resource display ui
-func update_r_ui():
+func _update_r_ui():
 	rlabel.text = "Resources: " + str(game.resources)
 
 
 # Refreshes Planet shield display ui
-func update_shield_ui():
+func _update_shield_ui():
 	
 	# Gets shield value from active_stats Array in Game_Manager
 	var current_shield = game.active_stats["global"]["planet_shield"]
-	planet_shield.text = "shield:\n- " + str(current_shield) + " -"
+	planet_shield.text = "Shield: " + str(current_shield)
 
 
 # Runs reset function in Game_Manager
@@ -67,7 +67,7 @@ func _on_retry_button_pressed():
 
 func _on_start_wave_button_pressed():
 	wave.start_wave()
-	shop_ui()
+	_shop_ui()
 	
 
 
@@ -77,7 +77,7 @@ func game_over_event():
 
 
 # Displays and handles shop screen ui
-func shop_ui() -> void:
+func _shop_ui() -> void:
 	
 	
 	# Displays Shop and UI info based on if the wave is active
