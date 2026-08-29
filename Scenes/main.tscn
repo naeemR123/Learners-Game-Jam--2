@@ -15,6 +15,9 @@ wave_number = 30
 extra_resources = true
 extra_amount = 1000
 custom_shield = true
+damage_number_toggle = null
+custom_asteroid_speed = true
+custom_asteroid_speed_value = 250.0
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
 offset_left = -301.0
@@ -26,21 +29,15 @@ color = Color(0.019607844, 0, 0.14117648, 1)
 [node name="Starfield" parent="." unique_id=1160965770 instance=ExtResource("2_6bp64")]
 texture_filter = 2
 position = Vector2(960, 540)
-far_star_count = 150
-far_star_size = 2
-far_texture_size = Vector2i(960, 540)
-far_autoscroll = Vector2(15, 3)
-mid_star_count = 90
+far_star_size = 3
 mid_star_size = 3
-mid_texture_size = Vector2i(960, 540)
-mid_scroll_scale = 0.25
-mid_autoscroll = Vector2(40, 6)
-mid_repeat_times = 3
-near_star_size = 5
-near_texture_size = Vector2i(960, 540)
-near_scroll_scale = 0.4
-near_autoscroll = Vector2(100, 15)
+mid_autoscroll = Vector2(16, 8)
+near_star_size = 4
+near_autoscroll = Vector2(35, 10)
 near_repeat_times = 3
+near2_texture_size = Vector2i(1280, 1280)
+near2_autoscroll = Vector2(220, 50)
+near2_repeat_times = 3
 
 [node name="Planet" parent="." unique_id=604275000 instance=ExtResource("1_jjgbg")]
 position = Vector2(960, 540)

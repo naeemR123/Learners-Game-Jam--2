@@ -29,7 +29,7 @@ func _physics_process(delta: float) -> void:
 	global_position.x > screen_size.x + despawn_margin or \
 	global_position.y < -despawn_margin or \
 	global_position.y > screen_size.y + despawn_margin:
-		print("Projectile despawned : Too far off screen")
+		#print("Projectile despawned : Too far off screen")
 		_despawn()
 
 

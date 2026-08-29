@@ -13,8 +13,9 @@ extends Marker2D
 
 var custom_asteroid_speed : bool
 var custom_asteroid_speed_value : float
+var damage_number_toggle : bool
 
-var asteroid_scene: PackedScene = preload("res://Scenes/asteroid.tscn")
+var asteroid_scene: PackedScene = preload("uid://dy1a5mdt6iqir")
 
 
 func _ready() -> void:
@@ -93,5 +94,5 @@ func spawn_asteroid(asteroid_type: AsteroidData) -> void:
 	var speed_multiplier : float = 0.1 * wave.current_wave
 	
 	# Run asteroid's start function, passing important parameter values
-	asteroid.start(asteroid_type, planet, spawn_position, custom_asteroid_speed, custom_asteroid_speed_value, speed_multiplier)
+	asteroid.start(asteroid_type, planet, spawn_position, custom_asteroid_speed, custom_asteroid_speed_value, speed_multiplier, damage_number_toggle)
 	

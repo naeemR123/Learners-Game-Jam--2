@@ -3,7 +3,7 @@ extends Node2D
 @onready var game := Game_Manager
 
 
-@export var projectile_scene : PackedScene = preload("res://Scenes/projectile.tscn")
+@export var projectile_scene : PackedScene = preload("uid://dp2nh1twswdbk")
 
 
 @onready var turret_body : Node2D = $Turret

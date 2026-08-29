@@ -38,11 +38,14 @@ extends Node2D
 
 @export_group("Asteroids")
 
+@export var damage_number_toggle : bool = false
+
 @export var custom_asteroid_speed : bool = false:
 	set(value):
 		custom_asteroid_speed = value
 		notify_property_list_changed()
 @export var custom_asteroid_speed_value : float = 200
+
 @export_group("")
 
 func _ready() -> void:
@@ -76,6 +79,13 @@ func _ready() -> void:
 		asteroid_spawner.custom_asteroid_speed = true
 		asteroid_spawner.custom_asteroid_speed_value = custom_asteroid_speed_value
 		print("[DEBUG] Asteroid Speed Debug: ENABLED | Asteroid Speed set to: %.1f" % custom_asteroid_speed_value)
+	
+	if damage_number_toggle:
+		asteroid_spawner.damage_number_toggle = true
+		print("[DEBUG] Output Damage Message Toggle: ENABLED")
+	else:
+		asteroid_spawner.damage_number_toggle = false
+
 	
 	
 	

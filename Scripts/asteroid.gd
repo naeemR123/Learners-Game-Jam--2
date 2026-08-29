@@ -4,8 +4,14 @@ extends Area2D
 @onready var wave := WaveManager
 
 @onready var sprite : Sprite2D = $Sprite2D
-@onready var resource_scene : PackedScene = preload("res://Scenes/resource.tscn")
+@onready var resource_scene : PackedScene = preload("uid://b8itoghsjeal8")
+@onready var damage_number : PackedScene = preload("uid://c7hnus72cghp0")
 
+
+
+# - Debugging -
+var damage_msgs : bool = false
+# -
 
 # - Properties -
 var damage : float = 3
@@ -37,7 +43,7 @@ var data : AsteroidData		# ^
 
 # Runs immediately after entering the scene tree | Called from asteroid_spawner.gd
 # Sets up asteroid with all necessary data and properties
-func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, health_multiplier: float = 1, damage_multiplier: float = 1.0) -> void:
+func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, damage_message_toggle: bool = false, health_multiplier: float = 1, damage_multiplier: float = 1.0) -> void:
 	
 	# Assigns variable to chosen asteroid type
 	data = asteroid_type	# CRITICAL : Needs to be at top.
@@ -63,15 +69,19 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	###################################################################
 	#  - Assigns properties based on attached AsteroidData resource - #
 	
+	if damage_message_toggle:
+		damage_msgs = damage_message_toggle
+	
 	if debug_speed == true:		# If debug mode on, sets debug speed
 		speed = debug_speed_value
 	else: 
 		# Assigns speed based on set min-max speed with speed_variance and wave's speed multiplier
 		speed = clampf((randf_range(data.max_speed - speed_variance, data.max_speed + speed_variance) * speed_multiplier) + (min_speed/2), min_speed, max_speed)
-		
+	
 	
 	# Assigning properties
 	current_health = data.max_health * health_multiplier
+	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
 	rotation_speed = randf_range(-0.8, 0.8)
 	sprite.texture = data.sprite_texture
 	damage = data.damage * damage_multiplier
@@ -141,6 +151,12 @@ func take_damage(amount: float):
 	sprite.modulate = Color(4,4,4)
 	hit_flash_tween = create_tween()
 	hit_flash_tween.tween_property(sprite, "modulate", Color(1,1,1), 0.2)
+	
+	var damage_node = damage_number.instantiate()
+	get_tree().current_scene.add_child(damage_node)
+	damage_node.start(amount, global_position)
+	if damage_msgs:
+		print("[DEBUG] Damage Number triggered | Displays: %.1f" % amount)
 	
 	if current_health <=0:
 		die()
