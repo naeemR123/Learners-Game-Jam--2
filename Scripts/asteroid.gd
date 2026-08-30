@@ -8,6 +8,7 @@ extends Area2D
 const RESOURCE_SCENE = preload("uid://b8itoghsjeal8")
 const DAMAGE_NUMBER = preload("uid://c7hnus72cghp0")
 const DEATH_PARTICLES = preload("uid://f7ms6af6m58t")
+const HIT_PARTICLES = preload("uid://y4r8isaruwon")
 
 
 
@@ -88,7 +89,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	# For Debugging
 	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
 	rotation_speed = randf_range(-0.8, 0.8)
-	sprite.texture = data.sprite_texture
+	sprite.texture = data.get_random_texture()
 	damage = data.damage * damage_multiplier
 	resource_min = data.min_resources
 	resource_max = data.max_resources
@@ -165,11 +166,18 @@ func take_damage(amount: float):
 	if hit_flash_tween and hit_flash_tween.is_valid(): hit_flash_tween.kill()
 	sprite.modulate = Color(4,4,4)
 	hit_flash_tween = create_tween()
-	hit_flash_tween.tween_property(sprite, "modulate", Color(1,1,1), 0.2)
+	hit_flash_tween.tween_property(sprite, "modulate", Color(1,1,1), 0.1)
 	
+	# Emits damage number upon hit
 	var damage_node = DAMAGE_NUMBER.instantiate()
 	get_tree().current_scene.add_child(damage_node)
 	damage_node.start(amount, global_position)
+	
+	# Emits particles upon hit
+	var hit_particles = HIT_PARTICLES.instantiate()
+	get_tree().current_scene.call_deferred("add_child", hit_particles)
+	hit_particles.call_deferred("start", direction, global_position)
+	
 	if damage_msgs:
 		print("[DEBUG] Damage Number triggered | Displays: %.1f" % amount)
 	

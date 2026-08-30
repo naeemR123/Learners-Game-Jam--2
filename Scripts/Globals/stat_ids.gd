@@ -8,7 +8,7 @@ class_name StatIDs
 const GLOBAL = "global"
 
 const SLOW_DOWN_AMOUNT = "slow_down_amount"
-const PLANET_SHIELD = "planet_shield"
+const MAX_SHIELD = "max_planet_shield"
 
 
 ######################

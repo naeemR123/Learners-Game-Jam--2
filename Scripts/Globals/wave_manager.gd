@@ -6,7 +6,6 @@ extends Node
 # Populated via register_all_asteroids()
 var all_asteroids : Array[AsteroidData] = []
 
-
 # Wave Properties
 var current_wave : int = 1
 var wave_active : bool

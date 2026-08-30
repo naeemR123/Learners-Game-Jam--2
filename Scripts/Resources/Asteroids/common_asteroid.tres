@@ -1,14 +1,15 @@
 [gd_resource type="Resource" script_class="AsteroidData" format=3 uid="uid://dhw17c26y8o5t"]
 
 [ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceScripts/asteroid_data.gd" id="1_bgh7d"]
-
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_meeva"]
-size = Vector2(35, 35)
+[ext_resource type="Texture2D" uid="uid://t0mt84r7oe2y" path="res://Assets/Asteroids/Common/CommonAsteroid1.png" id="2_3hlow"]
+[ext_resource type="Texture2D" uid="uid://bsv5mdyvcnkni" path="res://Assets/Asteroids/Common/CommonAsteroid2.png" id="3_smeli"]
+[ext_resource type="Texture2D" uid="uid://dv7vw2bytkb0l" path="res://Assets/Asteroids/Common/CommonAsteroid3.png" id="4_kk1cs"]
+[ext_resource type="Texture2D" uid="uid://bvlko5fsrkc2s" path="res://Assets/Asteroids/Common/CommonAsteroid4.png" id="5_nfb45"]
 
 [resource]
 script = ExtResource("1_bgh7d")
 name = "Common"
-sprite_texture = SubResource("PlaceholderTexture2D_meeva")
+sprite_textures = Array[Texture2D]([ExtResource("2_3hlow"), ExtResource("3_smeli"), ExtResource("4_kk1cs"), ExtResource("5_nfb45")])
 max_health = 3.0
 max_speed = 40.0
 damage = 3.0

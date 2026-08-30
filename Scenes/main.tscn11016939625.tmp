@@ -10,12 +10,9 @@
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
-wave_number = 15
-bwave_number = 30
-extra_resources = true
+wave_number = 30
 extra_amount = 1000
-custom_asteroid_speed = true
-custom_asteroid_speed_value = 100.0
+custom_asteroid_speed_value = 140.0
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
 offset_left = -301.0

@@ -5,7 +5,7 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 
 @export_category("Visuals")
 @export var name : String
-@export var sprite_texture : Texture2D
+@export var sprite_textures : Array[Texture2D] = []
 @export var scale_ratio : float = 1
 
 @export_category("Base Stats")
@@ -24,3 +24,11 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 
 @export_category("AI")
 @export var behavior : BehaviorType = BehaviorType.DEFAULT
+
+# Chooses random texture from Array | Applies a placeholder if empty
+func get_random_texture() -> Texture2D:
+	if sprite_textures.is_empty():
+		var placeholder := PlaceholderTexture2D.new()
+		placeholder.size = Vector2(50,50)
+		return placeholder
+	return sprite_textures.pick_random()

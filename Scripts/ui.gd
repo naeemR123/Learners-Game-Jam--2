@@ -9,6 +9,9 @@ extends CanvasLayer
 const DEFENSE_BUTTON = preload("uid://c3qyfa3alxw6w")
 const UPGRADE_BUTTON = preload("uid://dqa3qsqv65vay")
 
+# Nodes
+@onready var planet := get_tree().get_first_node_in_group("Planet")
+
 # Labels
 @onready var rlabel: Label = $ResourceLabel
 @onready var wlabel: Label = $WaveLabel
@@ -56,7 +59,7 @@ func _update_r_ui() -> void:
 func _update_shield_ui() -> void:
 	
 	# Gets shield value from active_stats Array in Game_Manager
-	var current_shield = game.active_stats["global"]["planet_shield"]
+	var current_shield = planet.shield
 	planet_shield.text = "Shield: " + str(current_shield)
 
 
@@ -68,7 +71,7 @@ func _on_retry_button_pressed() -> void:
 
 
 func _on_restart_button_pressed() -> void:
-	print(" [DEBUG] Game Manually Reset via 'Restart Game' Button ")
+	print_rich(" [color=yellow][b][DEBUG][/b][/color] Game Manually Reset via 'Restart Game' Button ")
 	game.game_reset()
 	# Reload the current active scene to wipe existing asteroids/resources from the field
 	get_tree().reload_current_scene()

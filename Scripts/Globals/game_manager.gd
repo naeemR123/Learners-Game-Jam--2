@@ -8,7 +8,7 @@ extends Node
 var active_stats: Dictionary = {
 	"global": {
 			"slow_down_amount": 1.0,
-			"planet_shield": 10,
+			"max_planet_shield": 20,
 	},
 }
 var owned_defenses: Array[String] = []			# Stores all active defenses : populated via purchase_defenses()
@@ -20,7 +20,6 @@ var all_upgrades : Array[UpgradeData] = []		# Stores all upgrades : populated vi
 # Universal Game Properties
 var resources : int = 0
 var planet_destroyed : bool = false
-var max_planet_shield: float = 10
 
 
 # Signals
@@ -54,20 +53,25 @@ func take_damage(damage_val: float) -> void:
 		return
 		
 	# Reduces shield based on damage value
-	var shield = active_stats[StatIDs.GLOBAL][StatIDs.PLANET_SHIELD]
-	shield -= damage_val
+	var planet = get_tree().get_first_node_in_group("Planet")
+	
+	if planet == null: 
+		push_warning(" [GAME] Could not run take_damage() due to planet == null | Game_Manager ")
+		return
+	
+	planet.shield -= damage_val
 	
 	# Safety correction
-	if shield <= 0:
-		shield = 0
+	if planet.shield <= 0:
+		planet.shield = 0
 	
 	# Tells UI to refresh
 	shield_changed.emit()
 	
-	print_rich(" [color=green][b][GAME][/b][/color] Planet hit for %.1f damage | Current Shield: %.1f" % [damage_val,shield])
+	print_rich(" [color=green][b][GAME][/b][/color] Planet hit for %.1f damage | Current Shield: %.1f" % [damage_val,planet.shield])
 	
 	# If shield is 0, run game over function
-	if shield == 0:
+	if planet.shield == 0:
 		trigger_game_over()
 
 
@@ -307,8 +311,10 @@ func game_reset() -> void:
 	print(" | GLOBAL STATE VARIABLES RESET | ")
 	
 	# Sets everything to default values
+	var planet = get_tree().get_first_node_in_group("Planet")
+	
 	active_stats[StatIDs.GLOBAL][StatIDs.SLOW_DOWN_AMOUNT] = 1.00
-	active_stats[StatIDs.GLOBAL][StatIDs.PLANET_SHIELD] = max_planet_shield
+	active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = planet.max_shield
 	print(" | GLOBAL ACTIVE_STATS RESET | ")
 	
 	WaveManager.reset() 	# Resets Wave to 1
