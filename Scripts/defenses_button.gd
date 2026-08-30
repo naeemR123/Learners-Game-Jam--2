@@ -14,6 +14,7 @@ func _ready() -> void:
 func _on_pressed() -> void:
 	if game.purchase_defenses(defense_data):
 		update_display()
+	
 
 
 func update_display() -> void:

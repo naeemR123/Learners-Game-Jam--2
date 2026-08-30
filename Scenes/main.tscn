@@ -15,7 +15,6 @@ wave_number = 30
 extra_resources = true
 extra_amount = 1000
 custom_shield = true
-damage_number_toggle = null
 custom_asteroid_speed = true
 custom_asteroid_speed_value = 250.0
 
@@ -35,12 +34,13 @@ mid_autoscroll = Vector2(16, 8)
 near_star_size = 4
 near_autoscroll = Vector2(35, 10)
 near_repeat_times = 3
-near2_texture_size = Vector2i(1280, 1280)
 near2_autoscroll = Vector2(220, 50)
 near2_repeat_times = 3
 
 [node name="Planet" parent="." unique_id=604275000 instance=ExtResource("1_jjgbg")]
 position = Vector2(960, 540)
+
+[node name="OrbitManager" type="Node2D" parent="." unique_id=1736299382]
 
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)

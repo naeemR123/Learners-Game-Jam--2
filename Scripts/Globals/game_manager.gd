@@ -2,7 +2,6 @@ extends Node
 
 
 
-
 #  = Arrays - Dictionaries = #
 
 # Holds the CURRENT value of ALL upgradable stats game-wide : populated via register_defense_stats()
@@ -42,13 +41,13 @@ func _ready() -> void:
 
 
 # Adds resource to inventory and updates ui
-func add_resource(amount: int):
+func add_resource(amount: int) -> void:
 	resources += amount
 	resources_changed.emit()
 
 
 # Processes damage done to Planet, destroys if 0
-func take_damage(damage_val: float):
+func take_damage(damage_val: float) -> void:
 	
 	# Safety net : Can't take damage if destroyed
 	if planet_destroyed:
@@ -168,9 +167,6 @@ func purchase_defenses(defense: DefenseData) -> bool:
 	
 	# Purchases Defense if player has enough resources and space
 	if resources >= cost and defense.amount_owned < defense.max_allowed:
-		resources -= cost
-		defense.amount_owned += 1
-		defense.is_purchased = true
 		
 		# Adds defense.id to 'owned_defenses' Array
 		owned_defenses.append(defense.id)
@@ -178,17 +174,47 @@ func purchase_defenses(defense: DefenseData) -> bool:
 		# Register stats the first time it is purchased
 		register_defense_stats(defense)
 		
-		# Adds the Defense to the scene and runs its initialize function
+		# - Generation of Orbit Rings (if necessary) -
+		var existing_rings = get_tree().current_scene.get_node("OrbitManager").get_children()	# Creates array of OrbitManager's children
+		var duplicate_ring : bool = false
+		var correct_ring : Node2D = null	# If nothing assigns it will push error
+		
+		# If the id matches the incoming defense's id, then the generation 
+		# of a new ring is aborted and assigns that ring as the correct_ring
+		for ring in existing_rings: # Checks each existing ring's id
+			if ring.my_id == defense.id: 
+				duplicate_ring = true
+				correct_ring = ring
+				break
+		# Creates new ring if it doesn't already exist
+		if not duplicate_ring: 
+			correct_ring = generate_orbit_ring(defense)
+		
+		# Safety check
+		if correct_ring == null:
+			push_warning(" [GAME] Defense Purchase Unsuccessful | Ring Generation Failed , 'correct_ring' returns null value | Attempted to Purchase %s" % defense.id)
+			return false
+		# -
+		
+		# Instantiates the Defense and runs its initialize function
 		var new_defense = defense.defense_scene.instantiate()
 		if new_defense.has_method("initialize"):
 			new_defense.initialize(defense)
 		
-		get_tree().current_scene.add_child(new_defense)
+		# Adds Defense to scene tree under dedicated Orbit Ring
+		correct_ring.add_child(new_defense)
+		correct_ring.redistribute()
+		
+		resources -= cost
+		defense.amount_owned += 1
+		defense.is_purchased = true
 		
 		# Tells UI to refresh
 		resources_changed.emit()
 		
+		print(" [GAME] Defense Purchase Successful | Purchased %s" % defense.id)
 		return true # Purchase successful
+	print(" [GAME] Defense Purchase Unsuccessful | Attempted to Purchase %s" % defense.id)
 	return false # Purchase unsuccessful : not enough resources or max amount owned
 
 
@@ -225,9 +251,19 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	return false # Purchase unsuccessful : not enough resources
 
 
+func generate_orbit_ring(defense) -> Node2D:
+	var ring_scene = load("uid://d3a75aybwxj44")
+	var new_ring = ring_scene.instantiate()
+	if new_ring.has_method("initialize"):
+		new_ring.initialize(defense)
+		get_tree().current_scene.get_node("OrbitManager").add_child(new_ring)
+		return new_ring
+	else:
+		push_error("[ERROR] Could not run 'initialize' on new orbit_ring -- function does not exist in node | Origin: Game_Manager/func purchase_defenses")
+		return null
 
 # Game over function
-func trigger_game_over():
+func trigger_game_over() -> void:
 	print(" ~ GAME OVER ~ ")
 	planet_destroyed = true
 	game_over.emit()			# Tells UI to display 'Game Over' screen
@@ -236,7 +272,7 @@ func trigger_game_over():
 
 
 # Reset function | Connected to "Try Again?" Button on 'Game Over' screen
-func game_reset():
+func game_reset() -> void:
 	
 	print(" ~ RESETTING GAME... ~ ")
 	

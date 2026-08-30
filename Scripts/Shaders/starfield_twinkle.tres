@@ -4,5 +4,5 @@
 
 [resource]
 shader = ExtResource("1_xw332")
-shader_parameter/twinkle_speed = 1.20000005374012
-shader_parameter/twinkle_intensity = 0.350000016625
+shader_parameter/twinkle_speed = 1.6000000727401202
+shader_parameter/twinkle_intensity = 0.450000021375

@@ -10,10 +10,10 @@ display_name = "Collector Satellite"
 description = "Orbits the planet, emitting a gravitational field strong enough to pull in small resources that the satellite then processes for multi-use cases."
 defense_scene = ExtResource("1_m0ou7")
 max_allowed = 30
-unlock_wave = 1
 base_cost = 10
 cost_multiplier = 2.5
 default_stats = {
+"orbit_radius": 100.0,
 "orbit_speed": 0.5,
 "range": 100.0,
 "satellite_collection_speed": 100.0,

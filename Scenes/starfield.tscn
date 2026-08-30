@@ -19,7 +19,7 @@ near_scroll_scale = 0.4
 near_autoscroll = Vector2(22, 8)
 near2_star_count = 2
 near2_star_size = 4
-near2_texture_size = Vector2i(1280, 720)
+near2_texture_size = Vector2i(1280, 1280)
 near2_autoscroll = Vector2(250, 50)
 near2_repeat_times = 2
 
