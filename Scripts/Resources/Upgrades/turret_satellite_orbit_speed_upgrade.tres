@@ -8,7 +8,7 @@ id = "orbit_speed"
 display_name = "Turret Satellite Orbit Speed"
 target_category = "turret_satellite"
 description = "Each Upgrade:
-- Increases turret satellites orbit speed around the planet."
+- Increases turret satellites' orbit speed around the planet."
 base_cost = 10
 cost_multiplier = 1.5
 base_value = 1.0

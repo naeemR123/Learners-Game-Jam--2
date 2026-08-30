@@ -4,8 +4,10 @@ extends Area2D
 @onready var wave := WaveManager
 
 @onready var sprite : Sprite2D = $Sprite2D
-@onready var resource_scene : PackedScene = preload("uid://b8itoghsjeal8")
-@onready var damage_number : PackedScene = preload("uid://c7hnus72cghp0")
+
+const RESOURCE_SCENE = preload("uid://b8itoghsjeal8")
+const DAMAGE_NUMBER = preload("uid://c7hnus72cghp0")
+const DEATH_PARTICLES = preload("uid://f7ms6af6m58t")
 
 
 
@@ -152,7 +154,7 @@ func take_damage(amount: float):
 	hit_flash_tween = create_tween()
 	hit_flash_tween.tween_property(sprite, "modulate", Color(1,1,1), 0.2)
 	
-	var damage_node = damage_number.instantiate()
+	var damage_node = DAMAGE_NUMBER.instantiate()
 	get_tree().current_scene.add_child(damage_node)
 	damage_node.start(amount, global_position)
 	if damage_msgs:
@@ -169,11 +171,15 @@ func die():
 	# Randomly chooses an amount based on the min and max values of resources, then spawns that amount
 	var randamount = randi_range(resource_min, resource_max)
 	for i in randamount:
-		var resource = resource_scene.instantiate()
+		var resource = RESOURCE_SCENE.instantiate()
 		resource.global_position = global_position
 		get_tree().current_scene.call_deferred("add_child", resource)
 		resource.call_deferred("start")
 	
+	# Emits particles upon death
+	var particles = DEATH_PARTICLES.instantiate()
+	get_tree().current_scene.call_deferred("add_child", particles)
+	particles.call_deferred("start", direction, global_position)
 	
 	wave.asteroid_death()	# Runs function in WaveManager, tracking asteroid death
 	despawn()	# Deletes this instance

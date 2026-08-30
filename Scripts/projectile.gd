@@ -18,7 +18,7 @@ func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float) -> void:
 	
 	# Points the projectile in the direction it is flying
 	rotation = direction.angle()
-	
+	#print("[DEBUG] Projectile fired")
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta

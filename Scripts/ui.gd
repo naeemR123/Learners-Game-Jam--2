@@ -6,8 +6,8 @@ extends CanvasLayer
 
 
 # Constants
-const DEFENSE_BUTTON = preload("res://Scenes/defenses_button.tscn")
-const UPGRADE_BUTTON = preload("res://Scenes/upgrade_button.tscn")
+const DEFENSE_BUTTON = preload("uid://c3qyfa3alxw6w")
+const UPGRADE_BUTTON = preload("uid://dqa3qsqv65vay")
 
 # Labels
 @onready var rlabel: Label = $ResourceLabel
@@ -77,7 +77,6 @@ func _on_restart_button_pressed() -> void:
 func _on_start_wave_button_pressed() -> void:
 	wave.start_wave()
 	_shop_ui()
-	
 
 
 # Displays "Game Over" screen | Called from Game_Manager

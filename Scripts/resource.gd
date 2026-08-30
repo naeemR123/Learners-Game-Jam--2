@@ -9,6 +9,13 @@ var speed := randf_range(20,50)					# Sets random speed
 var direction : Vector2
 var rotation_speed : float = randf_range(-4,4)	# Sets random rotation speed
 
+# - Claiming behavior -
+var claimed_by : Node = null
+var claim_frame : int = -1
+var claim_distance : float = INF
+# -
+
+var swarm_offset_val : int = 8
 var swarm_offset : Vector2
 
 
@@ -19,7 +26,7 @@ func start() -> void:
 	direction = Vector2(randf_range(-1,1),randf_range(-1,1))		# Sets a random direction
 	#print("Resource spawned | Position: ", global_position, " | Direction: ", direction)
 	
-	swarm_offset = Vector2(randf_range(-5,5),randf_range(-5,5))	# Sets a random offset when clustered
+	swarm_offset = Vector2(randf_range(-swarm_offset_val,swarm_offset_val),randf_range(-swarm_offset_val,swarm_offset_val))	# Sets a random offset when clustered
 	
 
 

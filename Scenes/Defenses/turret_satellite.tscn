@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://dha1d0wqh3pxm"]
+
+[ext_resource type="Script" uid="uid://bflt2d1kwn5u4" path="res://Scripts/turret_satellite.gd" id="1_fcprl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hskch"]
+radius = 403.1935
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_6spbj"]
+size = Vector2(10, 10)
+
+[node name="Turret" type="Node2D" unique_id=1687788052]
+script = ExtResource("1_fcprl")
+
+[node name="Muzzle" type="Marker2D" parent="." unique_id=1647276655]
+position = Vector2(0, -6)
+
+[node name="Range" type="Area2D" parent="." unique_id=987259406]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Range" unique_id=22405902]
+shape = SubResource("CircleShape2D_hskch")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1145106754]
+texture = SubResource("PlaceholderTexture2D_6spbj")
+
+[node name="Firerate" type="Timer" parent="." unique_id=1260779235]
+wait_time = 2.0
+one_shot = true

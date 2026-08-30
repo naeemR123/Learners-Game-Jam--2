@@ -1,7 +1,10 @@
 extends Marker2D
 
 
+const ASTEROID_SCENE : PackedScene = preload("uid://dy1a5mdt6iqir")
+
 @onready var wave := WaveManager
+
 
 @onready var spawntimer: Timer = $SpawnCooldown
 @onready var planet : Area2D = get_tree().get_first_node_in_group("Planet")
@@ -15,7 +18,7 @@ var custom_asteroid_speed : bool
 var custom_asteroid_speed_value : float
 var damage_number_toggle : bool
 
-var asteroid_scene: PackedScene = preload("uid://dy1a5mdt6iqir")
+
 
 
 func _ready() -> void:
@@ -48,7 +51,7 @@ func _on_spawn_cooldown_timeout() -> void:
 func spawn_asteroid(asteroid_type: AsteroidData) -> void:
 	
 	# Safety net : If no scene loaded then aborts with warning
-	if asteroid_scene == null: 
+	if ASTEROID_SCENE == null: 
 		push_warning("Cannot spawn Asteroid: No scene loaded (from: asteroid_spawner/spawn_asteroid)")
 		return
 	
@@ -83,7 +86,7 @@ func spawn_asteroid(asteroid_type: AsteroidData) -> void:
 				)
 	
 	# Instance the asteroid scene
-	var asteroid = asteroid_scene.instantiate()
+	var asteroid = ASTEROID_SCENE.instantiate()
 	
 	# CRITICAL : Add to the main scene, NOT the Marker2D spawner.
 	# This prevents the asteroid from inheriting the spawner's transform.

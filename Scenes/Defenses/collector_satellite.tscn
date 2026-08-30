@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://br3j53i1f8n32"]
 
-[ext_resource type="Script" uid="uid://cloxn4h812rn4" path="res://Scripts/collector_satellite.gd" id="1_4a87g"]
+[ext_resource type="Script" uid="uid://cloxn4h812rn4" path="res://Scripts/collector_satellite.gd" id="1_diy38"]
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_4a87g"]
 size = Vector2(20, 20)
@@ -14,7 +14,7 @@ radius = 20.0
 [node name="CollectorSatellite" type="Area2D" unique_id=1018827546]
 collision_layer = 0
 collision_mask = 8
-script = ExtResource("1_4a87g")
+script = ExtResource("1_diy38")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2004718042]
 texture = SubResource("PlaceholderTexture2D_4a87g")

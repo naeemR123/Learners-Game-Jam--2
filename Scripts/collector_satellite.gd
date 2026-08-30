@@ -11,7 +11,7 @@ extends Area2D
 var my_id : String
 var my_range : float = 100.0
 var my_collection_speed : float = 80
-var my_collection_strength : float = 0.5
+var my_gravity_strength : float = 0.5
 
 func initialize(data: SatelliteData) -> void:
 	my_id = data.id
@@ -28,31 +28,42 @@ func _ready() -> void:
 
 func update_satellite_stats():
 	my_collection_speed = game.active_stats[my_id][StatIDs.SAT_COLLECTION_SPEED]
-	my_collection_strength = game.active_stats[my_id][StatIDs.SAT_COLLECTION_STRENGTH]
+	my_gravity_strength = game.active_stats[my_id][StatIDs.SAT_GRAVITY_STRENGTH]
 	my_range = game.active_stats[my_id][StatIDs.RANGE]
 	collector_range.shape.radius = my_range
 
 
 func _physics_process(delta: float) -> void:
 	var caught_resources = get_overlapping_areas()
+	var current_frame = Engine.get_physics_frames()
 	
 	for resource in caught_resources:
 		
 		if "speed" in resource and "direction" in resource:
-			
-			var current_velocity = resource.direction * resource.speed
 			
 			# Adds slight variation between resources - prevents overlapping when released
 			var target_pos = global_position
 			if "swarm_offset" in resource:
 				target_pos += resource.swarm_offset
 			
+			var distance = global_position.distance_to(resource.global_position)
+			
+			if resource.claim_frame != current_frame or distance < resource.claim_distance:
+				resource.claimed_by = self
+				resource.claim_frame = current_frame
+				resource.claim_distance = distance
+			
+			if self != resource.claimed_by:
+				continue
+			
+			
 			# Calculate the direction towards the satellite
+			var current_velocity = resource.direction * resource.speed
 			var pull_direction = (target_pos - resource.global_position).normalized()
 			var desired_velocity = pull_direction * my_collection_speed
 			
 			# Smoothly moves the vector, even through 0- naturally reversing it.
-			var new_velocity = current_velocity.lerp(desired_velocity, my_collection_strength * delta)
+			var new_velocity = current_velocity.lerp(desired_velocity, my_gravity_strength * delta)
 			
 			# Smoothly increase or decrease its speed to match the satellite's pull
 			resource.speed = new_velocity.length()

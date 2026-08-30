@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://uv5gj1ayp8yt"]
+
+[ext_resource type="Script" uid="uid://b3n4xmqgxjhgf" path="res://Scripts/ResourceScripts/upgrade_data.gd" id="1_amkmk"]
+
+[resource]
+script = ExtResource("1_amkmk")
+id = "orbit_speed"
+display_name = "Collector Satellite Orbit Speed"
+target_category = "collector_satellite"
+description = "Each Upgrade:
+- Increases collector satellites' orbit speed around the planet."
+base_cost = 15
+cost_multiplier = 1.5
+base_value = 0.5
+val_up_per_level = 0.2
+metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"
