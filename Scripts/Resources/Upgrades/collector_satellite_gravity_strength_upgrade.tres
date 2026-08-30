@@ -12,5 +12,5 @@ description = "Each Upgrade:
 base_cost = 20
 cost_multiplier = 2.0
 base_value = 0.8
-val_up_per_level = 0.5
+val_per_level = 0.5
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

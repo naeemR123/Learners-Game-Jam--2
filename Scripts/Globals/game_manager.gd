@@ -7,7 +7,7 @@ extends Node
 # Holds the CURRENT value of ALL upgradable stats game-wide : populated via register_defense_stats()
 var active_stats: Dictionary = {
 	"global": {
-			"slow_down_amount": 1.00,
+			"slow_down_amount": 1.0,
 			"planet_shield": 10,
 	},
 }
@@ -54,16 +54,20 @@ func take_damage(damage_val: float) -> void:
 		return
 		
 	# Reduces shield based on damage value
-	active_stats["global"]["planet_shield"] -= damage_val
+	var shield = active_stats[StatIDs.GLOBAL][StatIDs.PLANET_SHIELD]
+	shield -= damage_val
 	
-	if active_stats["global"]["planet_shield"] < 0:		# Small correction
-		active_stats["global"]["planet_shield"] = 0
+	# Safety correction
+	if shield <= 0:
+		shield = 0
 	
 	# Tells UI to refresh
 	shield_changed.emit()
 	
+	print_rich(" [color=green][b][GAME][/b][/color] Planet hit for %.1f damage | Current Shield: %.1f" % [damage_val,shield])
+	
 	# If shield is 0, run game over function
-	if active_stats["global"]["planet_shield"] == 0:
+	if shield == 0:
 		trigger_game_over()
 
 
@@ -168,12 +172,6 @@ func purchase_defenses(defense: DefenseData) -> bool:
 	# Purchases Defense if player has enough resources and space
 	if resources >= cost and defense.amount_owned < defense.max_allowed:
 		
-		# Adds defense.id to 'owned_defenses' Array
-		owned_defenses.append(defense.id)
-		
-		# Register stats the first time it is purchased
-		register_defense_stats(defense)
-		
 		# - Generation of Orbit Rings (if necessary) -
 		var existing_rings = get_tree().current_scene.get_node("OrbitManager").get_children()	# Creates array of OrbitManager's children
 		var duplicate_ring : bool = false
@@ -192,9 +190,15 @@ func purchase_defenses(defense: DefenseData) -> bool:
 		
 		# Safety check
 		if correct_ring == null:
-			push_warning(" [GAME] Defense Purchase Unsuccessful | Ring Generation Failed , 'correct_ring' returns null value | Attempted to Purchase %s" % defense.id)
+			push_warning(" [GAME] Defense Purchase Unsuccessful | Ring Generation Failed , \
+			'correct_ring' returns null value | Attempted to Purchase %s" % defense.id)
 			return false
 		# -
+		# Adds defense.id to 'owned_defenses' Array
+		owned_defenses.append(defense.id)
+		
+		# Register stats the first time it is purchased
+		register_defense_stats(defense)
 		
 		# Instantiates the Defense and runs its initialize function
 		var new_defense = defense.defense_scene.instantiate()
@@ -212,9 +216,9 @@ func purchase_defenses(defense: DefenseData) -> bool:
 		# Tells UI to refresh
 		resources_changed.emit()
 		
-		print(" [GAME] Defense Purchase Successful | Purchased %s" % defense.id)
+		print_rich(" [color=green][b][GAME][/b][/color] Defense Purchase Successful | Purchased %s" % defense.id)
 		return true # Purchase successful
-	print(" [GAME] Defense Purchase Unsuccessful | Attempted to Purchase %s" % defense.id)
+	print_rich(" [color=green][b][GAME][/b][/color] Defense Purchase [u]Unsuccessful[/u] | Attempted to Purchase %s" % defense.id)
 	return false # Purchase unsuccessful : not enough resources or max amount owned
 
 
@@ -223,19 +227,34 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	
 	# Defines current cost of upgrade based on its criteria
 	var cost = upgrade.get_current_cost()
+	var next_level_cost = upgrade.get_current_cost(upgrade.current_level+1)
 	
+	if upgrade.max_cost > 0 and cost == upgrade.max_cost:
+		push_warning(" [GAME] Purchase_upgrade: UNSUCCESSFUL | Max cost reached: target_category '%s',\
+		 with current cost of %d, next cost of %d, and max cost of %d " % \
+		[upgrade.target_category, cost, next_level_cost, upgrade.max_value])
+		return false
+		
 	# Purchases if player has enough resources
 	if resources >= cost:
 		
 		# Safety check : Only upgrades if it is a valid, registered category and property
 		if active_stats.has(upgrade.target_category):
+			var current_value = upgrade.get_current_value()
+			var next_level_value = upgrade.get_current_value(upgrade.current_level+1)
+			
+			if  upgrade.max_value > 0 and upgrade.max_value == current_value:
+				push_warning(" [GAME] Puchase_upgrade: UNSUCCESSFUL | Max Upgrade Value reached: target_category '%s', \
+				with current value of %.1f, next value of %.1f, and max value of %.1f " % \
+				[upgrade.target_category, next_level_value, upgrade.current_level, upgrade.max_value])
+				return false
 			
 			resources -= cost
 			upgrade.level_up()	# Increases Upgrade level
 			
 			# Updates the dictionary using the UpgradeData's ID
 			# Upgrades the specified category and property of the targeted Defense
-			active_stats[upgrade.target_category][upgrade.id] = upgrade.get_current_value()
+			active_stats[upgrade.target_category][upgrade.id] = current_value
 			
 		else:
 			# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
@@ -247,7 +266,10 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 		resources_changed.emit()
 		stats_changed.emit()
 		
+		
+		print_rich(" [color=green][b][GAME][/b][/color] Upgrade Purchase Successful | Purchased %s at level %d" % [upgrade.id, upgrade.current_level])
 		return true # Purchase successful
+	print_rich(" [color=green][b][GAME][/b][/color] Upgrade Purchase [u]Unsuccessful[/u] | Attempted to Purchase %s at level %d" % [upgrade.id, upgrade.current_level])
 	return false # Purchase unsuccessful : not enough resources
 
 
@@ -259,7 +281,9 @@ func generate_orbit_ring(defense) -> Node2D:
 		get_tree().current_scene.get_node("OrbitManager").add_child(new_ring)
 		return new_ring
 	else:
-		push_error("[ERROR] Could not run 'initialize' on new orbit_ring -- function does not exist in node | Origin: Game_Manager/func purchase_defenses")
+		push_error("[ERROR] Could not run 'initialize' on new orbit_ring -- \
+		function does not exist in node | Origin: Game_Manager/func purchase_defenses")
+		new_ring.queue_free()
 		return null
 
 # Game over function
@@ -283,8 +307,8 @@ func game_reset() -> void:
 	print(" | GLOBAL STATE VARIABLES RESET | ")
 	
 	# Sets everything to default values
-	active_stats["global"]["slow_down_amount"] = 1.00
-	active_stats["global"]["planet_shield"] = max_planet_shield
+	active_stats[StatIDs.GLOBAL][StatIDs.SLOW_DOWN_AMOUNT] = 1.00
+	active_stats[StatIDs.GLOBAL][StatIDs.PLANET_SHIELD] = max_planet_shield
 	print(" | GLOBAL ACTIVE_STATS RESET | ")
 	
 	WaveManager.reset() 	# Resets Wave to 1
@@ -300,7 +324,7 @@ func game_reset() -> void:
 	
 	# Clears all data from Array, except 'global'
 	for key in active_stats.keys():
-		if key != "global":
+		if key != StatIDs.GLOBAL:
 			active_stats.erase(key)
 	
 	print(" | ACTIVE_STAT ARRAY RESET | ")

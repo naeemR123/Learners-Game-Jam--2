@@ -11,10 +11,7 @@
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
 wave_number = 30
-extra_resources = true
 extra_amount = 1000
-custom_shield = true
-custom_asteroid_speed = true
 custom_asteroid_speed_value = 140.0
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
@@ -44,6 +41,7 @@ position = Vector2(960, 540)
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)
 script = ExtResource("2_bo1nx")
+margin = 100.0
 
 [node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]
 

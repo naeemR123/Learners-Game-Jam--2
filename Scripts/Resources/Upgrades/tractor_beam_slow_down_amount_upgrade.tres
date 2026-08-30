@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3 uid="uid://bpsrd05ix3odd"]
+
+[ext_resource type="Script" uid="uid://b3n4xmqgxjhgf" path="res://Scripts/ResourceScripts/upgrade_data.gd" id="1_jysdn"]
+
+[resource]
+script = ExtResource("1_jysdn")
+id = "slow_down_amount"
+display_name = "Tractor Beam Slowness"
+target_category = "global"
+description = "Each Upgrade:
+- Increases slow effect on asteroids. (Some Asteroid types may have resistence to slowness)"
+base_cost = 30
+cost_multiplier = 2.0
+base_value = 1.0
+max_value = 0.1
+val_per_level = 0.1
+scaling_type = 2
+metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

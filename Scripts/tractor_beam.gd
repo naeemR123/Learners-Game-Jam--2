@@ -11,8 +11,8 @@ extends Area2D
 
 func _ready() -> void:
 	# Makes the radius of the collision shape 60% of the width of the sprite
-	var spriteradius = sprite.texture.get_size()
-	collision.shape.radius = ( spriteradius.x / 1.67)
+	var sprite_radius = sprite.texture.get_size()
+	collision.shape.radius = ( sprite_radius.x / 1.67)
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
 
@@ -70,10 +70,14 @@ func collect_resources(delta: float) -> void:
 
 
 #  - Controls SLOW-DOWN mechanic for asteroids - #
-func _on_area_entered(area: Area2D):
-	if area.is_in_group("Asteroids"):
-		area.local_time_scale = game.active_stats["global"]["slow_down_amount"]
+func _on_area_entered(asteroid: Area2D):
+	if asteroid.is_in_group("Asteroids"):
+		var slow_down_amount = game.active_stats[StatIDs.GLOBAL][StatIDs.SLOW_DOWN_AMOUNT]
+		asteroid.is_slowed = true
+		asteroid.local_time_scale = slow_down_amount
+		print("[DEBUG] Asteroid in Tractor Beam | Current Slow Down Value: %.1f | Asteroid time scale: %.1f, slow resistance: %.1f" % [slow_down_amount, asteroid.local_time_scale, asteroid.slow_resistance])
 
-func _on_area_exited(area: Area2D):
-	if area.is_in_group("Asteroids"):
-		area.local_time_scale = 1.0
+func _on_area_exited(asteroid: Area2D):
+	if asteroid.is_in_group("Asteroids"):
+		asteroid.is_slowed = false
+		

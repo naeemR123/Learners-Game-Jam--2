@@ -17,6 +17,6 @@ default_stats = {
 "orbit_speed": 0.5,
 "range": 100.0,
 "satellite_collection_speed": 100.0,
-"satellite_collection_strength": 0.8
+"satellite_gravity_strength": 0.8
 }
 metadata/_custom_type_script = "uid://bcoqkbjgfkbiv"

@@ -3,8 +3,16 @@ class_name StatIDs
 
 
 
-###################
-# Global Upgrades #
+########################
+# Global ID & Upgrades #
+const GLOBAL = "global"
+
+const SLOW_DOWN_AMOUNT = "slow_down_amount"
+const PLANET_SHIELD = "planet_shield"
+
+
+######################
+# Universal Upgrades #
 const FIRE_RATE = "fire_rate"
 const DAMAGE = "damage"
 const RANGE = "range"

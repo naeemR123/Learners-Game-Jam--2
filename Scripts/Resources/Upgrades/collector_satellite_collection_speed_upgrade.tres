@@ -9,4 +9,9 @@ display_name = "Collector Satellite Collection Speed"
 target_category = "collector_satellite"
 description = "Each Upgrade:
 - Increases max speed of collection for all collector satellites."
+base_cost = 20
+cost_multiplier = 1.8
+base_value = 100.0
+max_value = 1000.0
+val_per_level = 100.0
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

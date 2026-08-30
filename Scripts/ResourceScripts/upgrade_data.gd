@@ -2,7 +2,7 @@ extends Resource
 class_name UpgradeData
 
 
-enum ScalingType { ADDITIVE, MULTIPLICATIVE } 
+enum ScalingType { ADDITIVE, MULTIPLICATIVE, SUBTRACTIVE } 
 
 #############################
 # -= PROPERTY ASSIGNMENT =- #
@@ -15,11 +15,14 @@ enum ScalingType { ADDITIVE, MULTIPLICATIVE }
 
 @export_category("Economy")
 @export var base_cost: int = 1
+@export var max_cost: int = 0 # 0 == no max
 @export var cost_multiplier: float = 1.00
 
+
 @export_category("Effect")
-@export var base_value: float	# !!! Exported value in Inspector doesn't do anything : Auto-syncs with defense's base stat
-@export var val_up_per_level: float
+@export var base_value: float	# !!! Exported value in Inspector MAY not do anything : Auto-syncs with target_category's base stat
+@export var max_value: float	# 0 == no max
+@export var val_per_level: float
 @export var scaling_type: ScalingType = ScalingType.ADDITIVE	# Determines whether base_value is increased using a formula that adds or multiplies
 
 # State variables (Not exported; dynamic during gameplay)
@@ -33,8 +36,15 @@ var current_level: int = 1
 #################
 
 
-func get_current_cost() -> int:
-	return int(base_cost * pow(cost_multiplier, current_level - 1))
+func get_current_cost(level: float = current_level) -> int:
+	
+	var current_cost = int(base_cost * pow(cost_multiplier, level - 1))
+	
+	# If no max_cost set, then it skips
+	if max_cost > 0 and max_cost <= current_cost:
+		return max_cost
+	
+	return current_cost
 
 
 func get_current_value(level: float = current_level) -> float:
@@ -43,9 +53,25 @@ func get_current_value(level: float = current_level) -> float:
 	match scaling_type:
 		
 		ScalingType.ADDITIVE:
-			return base_value + (val_up_per_level * (level - 1))
+			
+			var current_value = base_value + (val_per_level * (level - 1))
+			if max_value > 0 and max_value <= current_value:
+				return max_value
+			return current_value
+		
 		ScalingType.MULTIPLICATIVE:
-			return base_value * pow(val_up_per_level, level - 1)
+			
+			var current_value = base_value * pow(val_per_level, level - 1)
+			if max_value > 0 and max_value <= current_value:
+				return max_value
+			return current_value
+		
+		ScalingType.SUBTRACTIVE:
+			
+			var current_value = base_value - (val_per_level * (level - 1))
+			if max_value > 0 and max_value >= current_value:
+				return max_value
+			return current_value
 		
 		# If no acceptable scaling_type selected, pushes warning and returns base_value
 		_:

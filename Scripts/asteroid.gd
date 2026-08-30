@@ -18,7 +18,10 @@ var damage_msgs : bool = false
 # - Properties -
 var damage : float = 3
 var current_health: float
+
 var local_time_scale : float = 1.0
+var slow_resistance : float = 1.0
+var is_slowed : bool = false
 
 var resource_min : int = 1
 var resource_max : int = 3
@@ -80,15 +83,16 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		# Assigns speed based on set min-max speed with speed_variance and wave's speed multiplier
 		speed = clampf((randf_range(data.max_speed - speed_variance, data.max_speed + speed_variance) * speed_multiplier) + (min_speed/2), min_speed, max_speed)
 	
-	
 	# Assigning properties
 	current_health = data.max_health * health_multiplier
+	# For Debugging
 	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
 	rotation_speed = randf_range(-0.8, 0.8)
 	sprite.texture = data.sprite_texture
 	damage = data.damage * damage_multiplier
 	resource_min = data.min_resources
 	resource_max = data.max_resources
+	slow_resistance = data.slow_resistance
 	
 	# Sets scale based on health and asteroid type's scale ratio
 	scale = Vector2(data.scale_ratio, data.scale_ratio)
@@ -114,9 +118,18 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 
 
 func _physics_process(delta: float) -> void:
+		
+	if is_slowed:
+		if slow_resistance > 0.0:
+			delta = delta*(local_time_scale*slow_resistance)
+		else:
+			delta = delta*local_time_scale
+	else:
+		delta = delta
+	
 	# Produces movement and rotation
-	global_position += direction * speed * local_time_scale * delta
-	rotation += rotation_speed * local_time_scale * delta
+	global_position += direction * speed * delta
+	rotation += rotation_speed * delta
 	
 	# Checks and despawns asteroid if off-screen by 'despawn_margin' amount
 	if \
@@ -139,7 +152,7 @@ func _on_area_entered(body: Area2D) -> void:
 		game.take_damage(damage)	# Runs function in Game_Manager, tracking Planet shield
 		wave.asteroid_death()		# Runs function in WaveManager, tracking asteroid death
 		despawn()				# Deletes this instance
-		print("Planet hit")
+		
 
 
 # Processes damage from Defenses
