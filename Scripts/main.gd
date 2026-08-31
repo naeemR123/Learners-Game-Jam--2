@@ -4,7 +4,8 @@ extends Node2D
 
 @onready var game := Game_Manager
 @onready var wave := WaveManager
-@onready var asteroid_spawner: Marker2D = $AsteroidSpawner
+@onready var asteroid_spawner : Marker2D = $AsteroidSpawner
+@onready var planet := get_tree().get_first_node_in_group("Planet")
 
 
 @export_category("Debug")
@@ -51,6 +52,19 @@ extends Node2D
 ## Player will spawn with this amount on Wave 1
 @export var starting_resources : int = 15
 
+
+func _enter_tree() -> void:
+	
+	# [CRITICAL] : DO NOT REMOVE FROM TOP OF FUNCTION
+	if Engine.is_editor_hint(): return
+	
+	if custom_shield:
+		
+		
+		Game_Manager.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = shield_amount
+		print_rich("[color=yellow][b][DEBUG][/b][/color] Custom Shield Debug: ENABLED \
+		| Max Planet Shield now set to %d" % [Game_Manager.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD]])
+	
 
 
 func _ready() -> void:
@@ -102,10 +116,6 @@ func debug_setup() -> void:
 		game.add_resource(extra_amount)
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Extra Resources Debug: ENABLED | Added %d resources" % extra_amount)
 	
-	if custom_shield:
-		game.active_stats["global"]["planet_shield"] = shield_amount
-		game.max_planet_shield = shield_amount
-		print_rich("[color=yellow][b][DEBUG][/b][/color] Custom Shield Debug: ENABLED | Added %d shield , Set max_planet_shield to %d" % [shield_amount, game.max_planet_shield])
 	
 	if custom_asteroid_speed:
 		asteroid_spawner.custom_asteroid_speed = true

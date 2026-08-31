@@ -7,8 +7,8 @@ extends Node
 # Holds the CURRENT value of ALL upgradable stats game-wide : populated via register_defense_stats()
 var active_stats: Dictionary = {
 	"global": {
-			"slow_down_amount": 1.0,
-			"max_planet_shield": 20,
+			"slow_strength": 0.0,
+			"max_planet_shield": 0,
 	},
 }
 var owned_defenses: Array[String] = []			# Stores all active defenses : populated via purchase_defenses()
@@ -239,15 +239,15 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 		[upgrade.target_category, cost, next_level_cost, upgrade.max_value])
 		return false
 		
-	# Purchases if player has enough resources
+	# Checks if player has enough resources
 	if resources >= cost:
 		
-		# Safety check : Only upgrades if it is a valid, registered category and property
+		# Safety check : Only upgrades if it is a valid registered category and property
 		if active_stats.has(upgrade.target_category):
-			var current_value = upgrade.get_current_value()
-			var next_level_value = upgrade.get_current_value(upgrade.current_level+1)
 			
-			if  upgrade.max_value > 0 and upgrade.max_value == current_value:
+			var next_level_value = upgrade.get_current_value(upgrade.current_level+1)
+			# Blocks purchase if max value is reached
+			if  upgrade.max_value > 0 and upgrade.max_value == upgrade.get_current_value():
 				push_warning(" [GAME] Puchase_upgrade: UNSUCCESSFUL | Max Upgrade Value reached: target_category '%s', \
 				with current value of %.1f, next value of %.1f, and max value of %.1f " % \
 				[upgrade.target_category, next_level_value, upgrade.current_level, upgrade.max_value])
@@ -255,6 +255,8 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 			
 			resources -= cost
 			upgrade.level_up()	# Increases Upgrade level
+			
+			var current_value = upgrade.get_current_value()
 			
 			# Updates the dictionary using the UpgradeData's ID
 			# Upgrades the specified category and property of the targeted Defense
@@ -313,7 +315,7 @@ func game_reset() -> void:
 	# Sets everything to default values
 	var planet = get_tree().get_first_node_in_group("Planet")
 	
-	active_stats[StatIDs.GLOBAL][StatIDs.SLOW_DOWN_AMOUNT] = 1.00
+	active_stats[StatIDs.GLOBAL][StatIDs.SLOW_STRENGTH] = 0.00
 	active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = planet.max_shield
 	print(" | GLOBAL ACTIVE_STATS RESET | ")
 	

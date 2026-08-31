@@ -4,15 +4,13 @@
 
 [resource]
 script = ExtResource("1_jysdn")
-id = "slow_down_amount"
+id = "slow_strength"
 display_name = "Tractor Beam Slowness"
 target_category = "global"
 description = "Each Upgrade:
 - Increases slow effect on asteroids. (Some Asteroid types may have resistence to slowness)"
 base_cost = 30
 cost_multiplier = 2.0
-base_value = 1.0
-max_value = 0.1
+max_value = 0.85
 val_per_level = 0.1
-scaling_type = 2
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

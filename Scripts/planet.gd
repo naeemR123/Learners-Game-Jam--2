@@ -5,27 +5,44 @@ extends Area2D
 
 @onready var shield_bar : ProgressBar = $ProgressBar
 
-@export var shield : float = 20.0
 @export var max_shield : float = 20.0
+
+# Variable always synced with Game_Manager's active_stats
+var active_max_shield: float:
+	get:
+		return game.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD]
+	set(value):
+		game.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = value
+
+var shield : float = 20.0
 
 
 func _ready() -> void:
 	
-	game.shield_changed.connect(_update_shield_ui)
-	shield_bar.step = 1
+	# Tells shield bar to update whenever damage is taken
+	game.shield_changed.connect(_update_shield)
+	shield_bar.step = 1	# Tells shield bar to move in increments of 1
 	
-	game.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = max_shield
-	shield = max_shield
-	_update_shield_ui.call_deferred()
+	# Checks if there was a value set for max shield in active_stats
+	# If not, writes the exported (default) value, then assigns it's own stats
+	if active_max_shield > 0:
+		max_shield = active_max_shield
+		shield = active_max_shield
+	else:
+		active_max_shield = max_shield
+		shield = max_shield
+	
+	_update_shield()
 
-func _update_shield_ui() -> void:
+# UI & Updates ONLY Max shield | Game_Manager handles damage dealth to shield
+func _update_shield() -> void:
 	
-	#print("[DEBUG] update_shield function fired.")
+	# Gets max shield value from active_stats Array in Game_Manager
+	max_shield = active_max_shield
+	shield_bar_update()	# Tells UI to update
+
+# Keeps shield bar UI visually up-to-date
+func shield_bar_update() -> void:
 	
-	# Gets shield value from active_stats Array in Game_Manager
-	max_shield = game.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD]
-	shield_bar.min_value = 0
-	shield_bar.max_value = max_shield
+	shield_bar.max_value = active_max_shield
 	shield_bar.value = shield
-	
-	#print("[DEBUG] current_shield reads: %d, shield_bar.value reads: %d" % [current_shield, shield_bar.value])

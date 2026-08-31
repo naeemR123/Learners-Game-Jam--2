@@ -7,7 +7,7 @@ class_name StatIDs
 # Global ID & Upgrades #
 const GLOBAL = "global"
 
-const SLOW_DOWN_AMOUNT = "slow_down_amount"
+const SLOW_STRENGTH = "slow_strength"
 const MAX_SHIELD = "max_planet_shield"
 
 

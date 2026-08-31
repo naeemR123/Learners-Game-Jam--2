@@ -12,7 +12,8 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var max_health : float
 @export var max_speed : float
 @export var damage : float
-@export var slow_resistance : float = 0.0
+## i.e. 'slow': 0.3
+@export var resistances : Dictionary[String, float] = {}
 
 @export_category("Spawning")
 @export var min_wave : int

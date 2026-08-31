@@ -24,7 +24,7 @@ class_name DefenseData
 @export var cost_multiplier : float = 1.5
 
 @export_category("Stats")
-@export var default_stats : Dictionary = {}		# Populated via Inspector
+@export var default_stats : Dictionary[String, float] = {}		# Populated via Inspector
 
 
 # State variables (Dynamic: saved during gameplay)

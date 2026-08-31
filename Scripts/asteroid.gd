@@ -17,12 +17,21 @@ var damage_msgs : bool = false
 # -
 
 # - Properties -
+# For Status Effect application
+const DATA = "data"
+const MAGNITUDE = "magnitude"
+const REMAINING = "remaining"
+const TICK_CLOCK = "tick_clock"
+
+# Logs the origin of the effect and its properties
+# source_key -> { DATA: StatusEffectData, MAGNITUDE: float, REMAINING: float, TICK_CLOCK: float }
+var status_effects : Dictionary = {}
+# Logs the effect and how much resistance
+# effect : value (i.e. {"slow": 0.25} means 25% resistance to slowness)
+var resistances : Dictionary = {}
+
 var damage : float = 3
 var current_health: float
-
-var local_time_scale : float = 1.0
-var slow_resistance : float = 1.0
-var is_slowed : bool = false
 
 var resource_min : int = 1
 var resource_max : int = 3
@@ -93,7 +102,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	damage = data.damage * damage_multiplier
 	resource_min = data.min_resources
 	resource_max = data.max_resources
-	slow_resistance = data.slow_resistance
+	resistances =  data.resistances.duplicate()
 	
 	# Sets scale based on health and asteroid type's scale ratio
 	scale = Vector2(data.scale_ratio, data.scale_ratio)
@@ -119,18 +128,15 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 
 
 func _physics_process(delta: float) -> void:
-		
-	if is_slowed:
-		if slow_resistance > 0.0:
-			delta = delta*(local_time_scale*slow_resistance)
-		else:
-			delta = delta*local_time_scale
-	else:
-		delta = delta
+	
+	_tick_effects(delta)	# ticks status effects
+	
+	# Applies Slowness effect if there is one
+	var scaled_delta = delta * (1.0 - get_modifier(EffectIDs.TIME_SCALE))
 	
 	# Produces movement and rotation
-	global_position += direction * speed * delta
-	rotation += rotation_speed * delta
+	global_position += direction * speed * scaled_delta
+	rotation += rotation_speed * scaled_delta
 	
 	# Checks and despawns asteroid if off-screen by 'despawn_margin' amount
 	if \
@@ -141,6 +147,56 @@ func _physics_process(delta: float) -> void:
 		print(self, " despawned | Too far off screen")
 		wave.asteroid_death()
 		despawn()
+
+# Counts down effects duration and deals PERIODIC Effects damage
+func _tick_effects(delta: float) -> void:
+	# .keys() creates a copy, so erasing is safe mid-loop
+	for key in status_effects.keys():
+		var effect = status_effects[key]	# A reference, not a copy
+		
+		# Counts down duration | if remaining <= 0 then it is permanent until remove_effect()
+		if effect[REMAINING] > 0.0:
+			effect[REMAINING] -= delta
+			if effect[REMAINING] <= 0.0:
+				status_effects.erase(key)
+				continue
+		
+		# Fires periodic damage based on tick_interval (for burn, acid, etc.)
+		if effect[DATA].family == StatusEffectsData.EffectsFamily.PERIODIC:
+			effect[TICK_CLOCK] += delta
+			if effect[TICK_CLOCK] >= effect[DATA].tick_interval:
+				effect[TICK_CLOCK] -= effect[DATA].tick_interval
+				take_damage(effect[MAGNITUDE], false)
+
+# Applies (stores) status effect in Dictionary with resource values | Calculates local resistance
+func apply_effect(source_key: String, effect_data:StatusEffectsData, magnitude: float, duration: float = -1.0) -> void:
+	
+	var resisted = magnitude * (1.0 - get_resistance(effect_data.id))
+	status_effects[source_key] = {
+		DATA: effect_data,
+		MAGNITUDE: resisted,
+		REMAINING: duration,
+		TICK_CLOCK: 0.0,
+	}
+
+# Removes selected status effect from asteroid
+func remove_effect(source_key: String) -> void:
+	status_effects.erase(source_key)
+
+# Retrieves resistance value for specified effect
+func get_resistance(id: String) -> float:
+	return resistances.get(id, 0.0)
+
+# ONLY For MODIFIER effects | Returns a 0-1 reduction fraction; consumer applies (1.0 - result)
+func get_modifier(stat_id: String) -> float:
+	var strongest : float = 0.0
+	for key in status_effects:
+		var effect = status_effects[key]
+		if effect[DATA].family == StatusEffectsData.EffectsFamily.MODIFIER\
+		and effect[DATA].target_stat == stat_id:
+			strongest = maxf(strongest, effect[MAGNITUDE])
+	
+	return strongest
 
 
 # Processes collision damage to Planet and destroys asteroid
@@ -157,7 +213,7 @@ func _on_area_entered(body: Area2D) -> void:
 
 
 # Processes damage from Defenses
-func take_damage(amount: float): 
+func take_damage(amount: float, particles: bool = true): 
 	current_health -= amount
 	print(" Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, current_health])
 	
@@ -172,14 +228,14 @@ func take_damage(amount: float):
 	var damage_node = DAMAGE_NUMBER.instantiate()
 	get_tree().current_scene.add_child(damage_node)
 	damage_node.start(amount, global_position)
-	
-	# Emits particles upon hit
-	var hit_particles = HIT_PARTICLES.instantiate()
-	get_tree().current_scene.call_deferred("add_child", hit_particles)
-	hit_particles.call_deferred("start", direction, global_position)
-	
 	if damage_msgs:
 		print("[DEBUG] Damage Number triggered | Displays: %.1f" % amount)
+	
+	# Emits particles upon hit
+	if particles:
+		var hit_particles = HIT_PARTICLES.instantiate()
+		get_tree().current_scene.call_deferred("add_child", hit_particles)
+		hit_particles.call_deferred("start", direction, global_position)
 	
 	if current_health <=0:
 		die()

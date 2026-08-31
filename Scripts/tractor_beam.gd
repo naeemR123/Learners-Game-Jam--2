@@ -2,6 +2,9 @@ extends Area2D
 
 @onready var game := Game_Manager
 
+const SLOW_EFFECT = preload("uid://b1hjfnwgatp5p")
+
+
 @export var pull_speed: float = 150.0
 @export var pull_strength: float = 10
 
@@ -37,7 +40,19 @@ func _physics_process(delta: float) -> void:
 	
 	if is_clicking:
 		collect_resources(delta)
-		
+
+
+#  - Controls SLOW-DOWN mechanic for asteroids - #
+func _on_area_entered(asteroid: Area2D):
+	if asteroid.is_in_group("Asteroids"):
+		var slow_strength = game.active_stats[StatIDs.GLOBAL][StatIDs.SLOW_STRENGTH]
+		asteroid.apply_effect(EffectIDs.TRACTOR_BEAM, SLOW_EFFECT, slow_strength)
+		print("[DEBUG] Asteroid in Tractor Beam | Current Slow Down Value: %.1f" % slow_strength)
+
+func _on_area_exited(asteroid: Area2D):
+	if asteroid.is_in_group("Asteroids"):
+		asteroid.remove_effect(EffectIDs.TRACTOR_BEAM)
+
 
 func collect_resources(delta: float) -> void:
 	
@@ -68,16 +83,4 @@ func collect_resources(delta: float) -> void:
 				# Smoothly bends the resource's current flying direction toward the satellite
 				resource.direction = (new_velocity).normalized()
 
-
-#  - Controls SLOW-DOWN mechanic for asteroids - #
-func _on_area_entered(asteroid: Area2D):
-	if asteroid.is_in_group("Asteroids"):
-		var slow_down_amount = game.active_stats[StatIDs.GLOBAL][StatIDs.SLOW_DOWN_AMOUNT]
-		asteroid.is_slowed = true
-		asteroid.local_time_scale = slow_down_amount
-		print("[DEBUG] Asteroid in Tractor Beam | Current Slow Down Value: %.1f | Asteroid time scale: %.1f, slow resistance: %.1f" % [slow_down_amount, asteroid.local_time_scale, asteroid.slow_resistance])
-
-func _on_area_exited(asteroid: Area2D):
-	if asteroid.is_in_group("Asteroids"):
-		asteroid.is_slowed = false
 		
