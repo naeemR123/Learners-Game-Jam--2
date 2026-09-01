@@ -2,11 +2,9 @@ extends Resource
 class_name DefenseData
 
 
-
 #############################
 # -= PROPERTY ASSIGNMENT =- #
 #############################
-
 
 @export var id: String 					# A unique name used by Game_Manager (e.g. turret_satellite)
 @export var display_name : String			# The name displayed for players (e.g. Turret)
@@ -26,21 +24,15 @@ class_name DefenseData
 @export_category("Stats")
 @export var default_stats : Dictionary[String, float] = {}		# Populated via Inspector
 
-
 # State variables (Dynamic: saved during gameplay)
 var is_purchased: bool = false
 var amount_owned: int = 0
 
 
-
-#################
 # - Functions - #
-#################
 
-
-func get_current_cost() -> int:
-	return int(base_cost * pow(cost_multiplier, amount_owned))
-
+func get_current_cost(owned: int = amount_owned) -> int:
+	return int(base_cost * pow(cost_multiplier, owned)) 
 
 func reset() -> void:
 	is_purchased = false

@@ -18,25 +18,19 @@ enum ScalingType { ADDITIVE, MULTIPLICATIVE, SUBTRACTIVE }
 @export var max_cost: int = 0 # 0 == no max
 @export var cost_multiplier: float = 1.00
 
-
 @export_category("Effect")
 @export var base_value: float	# !!! Exported value in Inspector MAY not do anything : Auto-syncs with target_category's base stat
 @export var max_value: float	# 0 == no max
 @export var val_per_level: float
 @export var scaling_type: ScalingType = ScalingType.ADDITIVE	# Determines whether base_value is increased using a formula that adds or multiplies
 
-# State variables (Not exported; dynamic during gameplay)
+# State variable (Not exported; dynamic during gameplay)
 var current_level: int = 1
 
 
-
-
-#################
 # - Functions - #
-#################
 
-
-func get_current_cost(level: float = current_level) -> int:
+func get_current_cost(level: int = current_level) -> int:
 	
 	var current_cost = int(base_cost * pow(cost_multiplier, level - 1))
 	
@@ -47,7 +41,7 @@ func get_current_cost(level: float = current_level) -> int:
 	return current_cost
 
 
-func get_current_value(level: float = current_level) -> float:
+func get_current_value(level: int = current_level) -> float:
 	
 	# Uses matching formula to selected scaling_type then uses val_up_per_level as the value increase
 	match scaling_type:
