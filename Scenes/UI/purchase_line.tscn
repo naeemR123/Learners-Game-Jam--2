@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cp6tj7w5vc06h"]
+
+[node name="PurchaseLine" type="HBoxContainer" unique_id=1210264046]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Name" type="Label" parent="." unique_id=1694396191]
+layout_mode = 2
+
+[node name="Value" type="Label" parent="." unique_id=911936443]
+layout_mode = 2
+
+[node name="Cost" type="Label" parent="." unique_id=327153602]
+layout_mode = 2
+
+[node name="Purchase" type="Button" parent="." unique_id=1417635859]
+layout_mode = 2

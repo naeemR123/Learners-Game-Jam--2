@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://br8qdqqge6hgr"]
+
+[node name="ShopAccordionRow" type="FoldableContainer" unique_id=1191766770]
+offset_right = 24.0
+offset_bottom = 32.0
+
+[node name="Description" type="Label" parent="." unique_id=539980191]
+layout_mode = 2
+
+[node name="PurchaseLines" type="VBoxContainer" parent="." unique_id=723655091]
+layout_mode = 2

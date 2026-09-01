@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://bb0s0w0mfpx5c" path="res://Scripts/main.gd" id="1_344ge"]
 [ext_resource type="PackedScene" uid="uid://clr4m10penbht" path="res://Scenes/planet.tscn" id="1_jjgbg"]
 [ext_resource type="PackedScene" uid="uid://c6swg3tohwufj" path="res://Scenes/starfield.tscn" id="2_6bp64"]
-[ext_resource type="Script" uid="uid://toxh3tv0bgmh" path="res://Scripts/camera.gd" id="2_21xkr"]
+[ext_resource type="Script" uid="uid://toxh3tv0bgmh" path="res://Scripts/UI/camera.gd" id="2_21xkr"]
 [ext_resource type="Script" uid="uid://m860hk5ygins" path="res://Scripts/asteroid_spawner.gd" id="2_bo1nx"]
 [ext_resource type="PackedScene" uid="uid://ct42g3vrmj7ac" path="res://Scenes/Defenses/tractor_beam.tscn" id="5_kry3j"]
-[ext_resource type="PackedScene" uid="uid://nphp6edurswp" path="res://Scenes/ui.tscn" id="7_6bp64"]
+[ext_resource type="PackedScene" uid="uid://nphp6edurswp" path="res://Scenes/UI/ui.tscn" id="7_6bp64"]
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
