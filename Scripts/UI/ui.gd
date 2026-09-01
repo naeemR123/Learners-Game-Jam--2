@@ -10,6 +10,7 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 
 # Nodes
 @onready var planet := get_tree().get_first_node_in_group("Planet")
+@onready var camera := get_tree().current_scene.get_node("Camera")
 
 # Labels
 @onready var resource_label: Label = $ResourceLabel
@@ -18,8 +19,9 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 @onready var planet_shield: Label = $PlanetShield
 
 # Buttons
-@onready var start_wave_button: Button = $StartWaveButton
 @onready var retry_button: Button = $GameOverScreen/VBoxContainer/RetryButton
+@onready var hide_button: Button = $ShopPanel/HideShopButton
+@onready var start_wave_button: Button = $StartWaveButton
 @onready var restart_button: Button = $RestartButton
 
 # Control Nodes
@@ -31,8 +33,13 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 @onready var drones_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Drones/VBoxContainer
 @onready var planet_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Planet/VBoxContainer
 
-var in_shop : bool
+@export var shop_slide_duration : float = 2
+@export var shop_hidden_margin : int = 1
 
+var shop_hidden_pos : Vector2
+var shop_origin : Vector2
+var manually_hidden : bool = false
+var shop_tween : Tween
 
 
 func _ready() -> void:
@@ -40,11 +47,15 @@ func _ready() -> void:
 	game.shield_changed.connect(_update_shield_ui)			# ^
 	game.game_over.connect(game_over_event)					# ^
 	
-	wave.wave_complete.connect(_shop_ui)						# signal from WaveManager
+	wave.wave_complete.connect(wave_tracker)						# signal from WaveManager
 	
 	retry_button.pressed.connect(_on_retry_button_pressed)	# signal from button in ui.tscn
 	start_wave_button.pressed.connect(_on_start_wave_button_pressed)
 	restart_button.pressed.connect(_on_restart_button_pressed)
+	
+	shop_origin = shop_panel.global_position
+	shop_hidden_pos = shop_origin + Vector2(-shop_panel.size.x - shop_hidden_margin, 0)
+	hide_button.pressed.connect(_on_hide_button_pressed)
 	
 	_populate_shop_panel()
 	
@@ -52,7 +63,7 @@ func _ready() -> void:
 	# Refresh ui with current stats upon loading
 	_update_r_ui.call_deferred()
 	_update_shield_ui.call_deferred()
-	_shop_ui.call_deferred()
+	wave_tracker.call_deferred()
 
 # Refreshes resource display ui
 func _update_r_ui() -> void:
@@ -80,7 +91,7 @@ func _on_restart_button_pressed() -> void:
 # Starts next wave and hides shop
 func _on_start_wave_button_pressed() -> void:
 	wave.start_wave()
-	_shop_ui()
+	wave_tracker()
 
 # Displays "Game Over" screen | Called from Game_Manager
 func game_over_event() -> void:
@@ -106,29 +117,46 @@ func _add_row(list: VBoxContainer, data) -> void:
 	elif data is UpgradeData:
 		row.setup_upgrade(data)
 
+func _on_hide_button_pressed() -> void:
+	manually_hidden = not manually_hidden
+	hide_button.text = "Show\nShop" if manually_hidden else "Hide\nShop"
+	_update_shop_visuals()
+
 # Displays and handles shop screen ui
-func _shop_ui() -> void:
+func _update_shop_visuals() -> void:
+	var should_show = not wave.wave_active and not manually_hidden
 	
-	# Displays Shop and UI info based on if the wave is active
-	if wave.wave_active:
-		in_shop = false
-		shop_panel.hide()
-		start_wave_button.hide()
+	shop_slide(should_show)
+	camera.set_shop_open(should_show)
+	start_wave_button.visible = not wave.wave_active
+	
+	# Displays next boss wave if current wave is within 5 waves
+	if not wave.wave_active and wave.current_wave + 4 >= wave.next_boss_wave:
+		bwave_label.show()
+		bwave_label.text = "Upcoming Boss: Wave " + str(wave.next_boss_wave)
+	else:
 		bwave_label.hide()
+
+# Toggles shop UI if there is no wave
+func wave_tracker() -> void:
+	if wave.wave_active:	# Displays Shop and UI info based on if the wave is active
+		hide_button.hide()
+		manually_hidden = false
 		wave_label.text = "Wave: " + str(wave.current_wave)
 	else:
-		in_shop = true
-		shop_panel.show()
-		start_wave_button.show()
+		hide_button.show()
 		wave_label.text = "Next Wave: " + str(wave.current_wave)
-		
-		# Displays next boss wave if current wave is within 5 waves
-		if wave.current_wave + 4 >= wave.next_boss_wave:
-			bwave_label.show()
-			bwave_label.text = "Upcoming Boss: Wave " + str(wave.next_boss_wave)
-		else:
-			bwave_label.hide()
+	
+	_update_shop_visuals()
 
-
-func camera_shift() -> void:
-	pass
+# Tweens the shop to hide/show it
+func shop_slide(should_show: bool) -> void:
+	var target = shop_origin if should_show else shop_hidden_pos
+	
+	if shop_tween:
+		shop_tween.kill()
+	
+	shop_tween = create_tween()
+	shop_tween.set_ease(Tween.EASE_IN_OUT)
+	shop_tween.set_trans(Tween.TRANS_QUINT)
+	shop_tween.tween_property(shop_panel, "position", target, shop_slide_duration)
