@@ -10,6 +10,15 @@ const PROJECTILE_SCENE = preload("uid://dp2nh1twswdbk")
 @onready var turret_range : CollisionShape2D = $Range/CollisionShape2D
 @onready var muzzle : Marker2D = $Muzzle
 @onready var firerate : Timer = $Firerate
+@onready var range_indicator: Line2D = $RangeIndicator
+@onready var preview_range_indicator: Line2D = $PreviewRangeIndicator
+
+@export_group("Range Preview")
+@export var preview_blink_duration : float = 1.0
+@export var preview_blink_min_alpha : float = 0.0
+@export var preview_blink_max_alpha : float = 0.50
+
+var preview_blink_tween : Tween
 
 # - Stat Properties -
 var my_id : String
@@ -39,7 +48,7 @@ func update_satellite_stats():
 	my_damage = game.active_stats[my_id][StatIDs.DAMAGE]
 	my_range = game.active_stats[my_id][StatIDs.RANGE]
 	turret_range.shape.radius = my_range
-
+	range_indicator.points = _build_range_circle(my_range)
 
 
 func _process(delta: float) -> void:
@@ -54,6 +63,29 @@ func _process(delta: float) -> void:
 			#print("[DEBUG] Turret Satellite can_shoot: true")
 			shoot(target)
 			firerate.start(my_firerate)
+
+# Builds an Array of points that create a circle | Called via update_satellite_stats()
+func _build_range_circle(radius: float, segments: int = 48) -> PackedVector2Array:
+	var points = PackedVector2Array()
+	for i in segments:
+		var angle = TAU * i/segments
+		points.append(Vector2(cos(angle),sin(angle)) * radius)
+	return points
+
+# Sets preview range_indicator's visibility
+func set_range_visible(can_see: bool) -> void:
+	range_indicator.visible = can_see
+
+
+func set_preview_range_visible(can_see: bool, preview_radius: float = 0.0) -> void:
+	preview_range_indicator.visible = can_see
+	
+	if can_see:
+		preview_range_indicator.points = _build_range_circle(preview_radius)
+		preview_blink_tween = create_tween()
+		preview_blink_tween.set_loops()
+		preview_blink_tween.tween_property(preview_range_indicator, "modulate:a", preview_blink_min_alpha, preview_blink_duration)
+		preview_blink_tween.tween_property(preview_range_indicator, "modulate:a", preview_blink_max_alpha, preview_blink_duration)
 
 
 func _on_firerate_timeout() -> void:

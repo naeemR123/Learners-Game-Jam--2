@@ -8,6 +8,12 @@ radius = 403.1935
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_6spbj"]
 size = Vector2(10, 10)
 
+[sub_resource type="Gradient" id="Gradient_84hyb"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0.002754821, 0.048710603, 0.100286536, 0.15789473, 0.21052632, 0.2631579, 0.31578946, 0.36842105, 0.42105263, 0.47368422, 0.5263158, 0.57894737, 0.6315789, 0.68421054, 0.7368421, 0.7894737, 0.84210527, 0.9025788, 0.96275073)
+colors = PackedColorArray(0, 0.63266677, 0.73, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157)
+metadata/_snap_count = 19
+
 [node name="Turret" type="Node2D" unique_id=1687788052]
 script = ExtResource("1_fcprl")
 
@@ -27,3 +33,15 @@ texture = SubResource("PlaceholderTexture2D_6spbj")
 [node name="Firerate" type="Timer" parent="." unique_id=1260779235]
 wait_time = 2.0
 one_shot = true
+
+[node name="RangeIndicator" type="Line2D" parent="." unique_id=771760219]
+visible = false
+closed = true
+default_color = Color(0, 0.7529412, 0.87058824, 0.61960787)
+texture_mode = 1
+
+[node name="PreviewRangeIndicator" type="Line2D" parent="." unique_id=491851659]
+visible = false
+closed = true
+default_color = Color(1, 1, 1, 0)
+gradient = SubResource("Gradient_84hyb")

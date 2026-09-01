@@ -37,3 +37,16 @@ func get_current_cost(owned: int = amount_owned) -> int:
 func reset() -> void:
 	is_purchased = false
 	amount_owned = 0
+
+
+func get_block_reason(resources: int = Game_Manager.resources, current_wave: int = WaveManager.current_wave) -> PurchaseBlock.Reason:
+	if unlock_wave > current_wave:
+		#print_rich(" [color=green][b][GAME][/b][/color] Purchase_defense: UNSUCCESSFUL | Unlock Wave not reached: '%s' unlock wave: " % [display_name, unlock_wave])
+		return PurchaseBlock.Reason.LOCKED
+	if amount_owned >= max_allowed:
+		#print_rich(" [color=green][b][GAME][/b][/color] Puchase_defense: UNSUCCESSFUL | Max owned reached: '%s', max owned allowed: %d, currently own: %d" % [display_name, max_allowed, amount_owned])
+		return PurchaseBlock.Reason.MAX_OWNED
+	if resources < get_current_cost():
+		#print_rich(" [color=green][b][GAME][/b][/color] Defense Purchase [u]UNSUCCESSFUL[/u] | Not Enought Resources: %s" % id)
+		return PurchaseBlock.Reason.NOT_ENOUGH_RESOURCES
+	return PurchaseBlock.Reason.NONE

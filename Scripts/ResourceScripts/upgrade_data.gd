@@ -30,6 +30,15 @@ var current_level: int = 1
 
 # - Functions - #
 
+
+func level_up() -> void:
+	current_level += 1
+
+
+func reset() -> void:
+	current_level = 1
+
+
 func get_current_cost(level: int = current_level) -> int:
 	
 	var current_cost = int(base_cost * pow(cost_multiplier, level - 1))
@@ -73,10 +82,23 @@ func get_current_value(level: int = current_level) -> float:
 			return base_value
 
 
-func level_up() -> void:
-	current_level += 1
-
-
-func reset() -> void:
-	current_level = 1
+func get_block_reason(resources: int = Game_Manager.resources) -> PurchaseBlock.Reason:
+	var cost = get_current_cost()
+	if max_cost > 0 and cost >= max_cost:
+		#print_rich(" [color=green][b][GAME][/b][/color] Purchase_upgrade: UNSUCCESSFUL | Max cost reached: target_category '%s', with current cost of %d, next cost of %d, and max cost of %d " % [target_category, cost, get_current_cost(current_level+1), max_value])
+		return PurchaseBlock.Reason.MAX_COST
 	
+	if max_value > 0:
+		var current = get_current_value()
+		var is_decreasing = scaling_type == ScalingType.SUBTRACTIVE
+		var capped = (is_decreasing and current <= max_value) or (not is_decreasing and current >= max_value)
+		if capped:
+			#print_rich(" [color=green][b][GAME][/b][/color] Puchase_upgrade: UNSUCCESSFUL | Max Upgrade Value reached: target_category '%s', with current value of %.1f, next value of %.1f, and max value of %.1f " % [target_category, get_current_value(current_level+1), current_level, max_value])
+			return PurchaseBlock.Reason.MAX_VALUE
+	
+	if resources < cost:
+		#print_rich(" [color=green][b][GAME][/b][/color] Upgrade Purchase [u]UNSUCCESSFUL[/u] | Not Enough Resources- %s at level %d for cost: %d resources" % [id, current_level, get_current_cost()])
+		return PurchaseBlock.Reason.NOT_ENOUGH_RESOURCES
+	
+	return PurchaseBlock.Reason.NONE
+		

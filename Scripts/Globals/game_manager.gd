@@ -243,119 +243,94 @@ func purchase_upgrade_bulk(upgrade: UpgradeData, amount: int = 10) -> int:
 # Purchase function for Defenses
 func purchase_defenses(defense: DefenseData) -> bool:
 	
+	if defense.get_block_reason() != PurchaseBlock.Reason.NONE:
+		return false
+	
 	# Defines current cost of defense based on its criteria
 	var cost = defense.get_current_cost()
 	
-	# Purchases Defense if player has enough resources and space
-	if resources >= cost and defense.amount_owned < defense.max_allowed:
-		
-		# - Generation of Orbit Rings (if necessary) -
-		var existing_rings = get_tree().current_scene.get_node("OrbitManager").get_children() # Creates array of OrbitManager's children
-		var duplicate_ring : bool = false
-		var correct_ring : Node2D = null	# If nothing assigns it will push error
-		
-		# If the id matches the incoming defense's id, then the generation 
-		# of a new ring is aborted and assigns that ring as the correct_ring
-		for ring in existing_rings: # Checks each existing ring's id
-			if ring.my_id == defense.id: 
-				duplicate_ring = true
-				correct_ring = ring
-				break
-		# Creates new ring if it doesn't already exist
-		if not duplicate_ring: 
-			correct_ring = generate_orbit_ring(defense)
-		
-		# Safety check
-		if correct_ring == null:
-			push_warning(" [GAME] Defense Purchase Unsuccessful | Ring Generation Failed , \
-			'correct_ring' returns null value | Attempted to Purchase %s" % defense.id)
-			return false
-		# -
-		# Adds defense.id to 'owned_defenses' Array
-		owned_defenses.append(defense.id)
-		
-		# Register stats the first time it is purchased
-		register_defense_stats(defense)
-		
-		# Instantiates the Defense and runs its initialize function
-		var new_defense = defense.defense_scene.instantiate()
-		if new_defense.has_method("initialize"):
-			new_defense.initialize(defense)
-		
-		# Adds Defense to scene tree under dedicated Orbit Ring
-		correct_ring.add_child(new_defense)
-		correct_ring.redistribute()
-		
-		resources -= cost
-		defense.amount_owned += 1
-		defense.is_purchased = true
-		
-		# Tells UI to refresh
-		resources_changed.emit()
-		
-		print_rich(" [color=green][b][GAME][/b][/color] Defense Purchase Successful | Purchased %s" % defense.id)
-		return true # Purchase successful
-	print_rich(" [color=green][b][GAME][/b][/color] Defense Purchase [u]Unsuccessful[/u] \
-	| Attempted to Purchase %s" % defense.id)
-	return false # Purchase unsuccessful : not enough resources or max amount owned
+	# Loads or makes an orbit ring
+	var ring = load_orbit_ring(defense)
+	if ring == null:	# Safety check
+		push_warning(" [GAME] Defense Purchase Unsuccessful | Ring Generation Failed , \
+		'correct_ring' returns null value | Attempted to Purchase %s" % defense.id)
+		return false
+	# -
+	
+	# Adds defense.id to 'owned_defenses' Array
+	owned_defenses.append(defense.id)
+	
+	# Register stats the first time it is purchased
+	register_defense_stats(defense)
+	
+	# Instantiates the Defense and runs its initialize function
+	var new_defense = defense.defense_scene.instantiate()
+	if new_defense.has_method("initialize"):
+		new_defense.initialize(defense)
+	
+	# Adds Defense to scene tree under dedicated Orbit Ring
+	ring.add_child(new_defense)
+	ring.redistribute()
+	
+	resources -= cost
+	defense.amount_owned += 1
+	defense.is_purchased = true
+	
+	# Tells UI to refresh
+	resources_changed.emit()
+	
+	print_rich(" [color=green][b][GAME][/b][/color] Defense Purchase Successful | Purchased %s" % defense.id)
+	return true # Purchase successful
 
 # Purchase function for Upgrades
 func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	
-	# Defines current cost of upgrade based on its criteria
-	var cost = upgrade.get_current_cost()
-	var next_level_cost = upgrade.get_current_cost(upgrade.current_level+1)
-	
-	if upgrade.max_cost > 0 and cost == upgrade.max_cost:
-		push_warning(" [GAME] Purchase_upgrade: UNSUCCESSFUL | Max cost reached: target_category '%s',\
-		 with current cost of %d, next cost of %d, and max cost of %d " % \
-		[upgrade.target_category, cost, next_level_cost, upgrade.max_value])
+	if upgrade.get_block_reason() != PurchaseBlock.Reason.NONE:
 		return false
+	
+	# Safety check : Only upgrades if it is a valid registered category and property
+	if active_stats.has(upgrade.target_category):
+		upgrade.level_up()
+		# Updates the dictionary using the UpgradeData's ID
+		# Upgrades the specified category and property of the targeted Defense
+		active_stats[upgrade.target_category][upgrade.id] = upgrade.get_current_value()
 		
-	# Checks if player has enough resources
-	if resources >= cost:
-		
-		# Safety check : Only upgrades if it is a valid registered category and property
-		if active_stats.has(upgrade.target_category):
-			
-			var next_level_value = upgrade.get_current_value(upgrade.current_level+1)
-			# Blocks purchase if max value is reached
-			if  upgrade.max_value > 0 and upgrade.max_value == upgrade.get_current_value():
-				push_warning(" [GAME] Puchase_upgrade: UNSUCCESSFUL | Max Upgrade Value reached: target_category '%s', \
-				with current value of %.1f, next value of %.1f, and max value of %.1f " % \
-				[upgrade.target_category, next_level_value, upgrade.current_level, upgrade.max_value])
-				return false
-			
-			resources -= cost
-			upgrade.level_up()	# Increases Upgrade level
-			
-			var current_value = upgrade.get_current_value()
-			
-			# Updates the dictionary using the UpgradeData's ID
-			# Upgrades the specified category and property of the targeted Defense
-			active_stats[upgrade.target_category][upgrade.id] = current_value
-			
-		else:
-			# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
-			push_warning("Purchase_upgrade: target_category '%s' not found in active_stats. \
-			Was it registered correctly?" % upgrade.target_category)
-			return false # Purchase unsuccessful : target_category not found in active_stats
-		
-		
-		# Tells UI to refresh
-		resources_changed.emit()
-		stats_changed.emit()
-		
-		
-		print_rich(" [color=green][b][GAME][/b][/color] Upgrade Purchase Successful | \
-		Purchased %s at level %d" % [upgrade.id, upgrade.current_level])
-		return true # Purchase successful
-	print_rich(" [color=green][b][GAME][/b][/color] Upgrade Purchase [u]Unsuccessful[/u] \
-	| Attempted to Purchase %s at level %d" % [upgrade.id, upgrade.current_level])
-	return false # Purchase unsuccessful : not enough resources
+		# Defines current cost of upgrade based on its criteria
+		var cost = upgrade.get_current_cost()
+		resources -= cost
+	else:
+		# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
+		push_warning("Purchase_upgrade: target_category '%s' not found in active_stats. Was it registered correctly?" % upgrade.target_category)
+		return false # Purchase unsuccessful : target_category not found in active_stats
+	
+	# Tells UI to refresh
+	resources_changed.emit()
+	stats_changed.emit()
+	
+	return true # Purchase successful
 
-# Loads and returns a newly generated Orbit Ring attached to the OrbitManager
-func generate_orbit_ring(defense) -> Node2D:
+# Loads a pre-existing orbit ring, or makes a new one if needed | Called via purchase_defenses()
+func load_orbit_ring(defense: DefenseData) -> Node2D:
+	
+	var existing_rings = get_tree().current_scene.get_node("OrbitManager").get_children() # Creates array of OrbitManager's children
+	var duplicate_ring : bool = false
+	var correct_ring : Node2D = null	# If nothing assigns it will push error
+	
+	# If the id matches the incoming defense's id, then the generation 
+	# of a new ring is aborted and assigns that ring as the correct_ring
+	for ring in existing_rings: # Checks each existing ring's id
+		if ring.my_id == defense.id: 
+			duplicate_ring = true
+			correct_ring = ring
+			break
+	# Creates new ring if it doesn't already exist
+	if not duplicate_ring: 
+		correct_ring = _orbit_ring_generator(defense)
+	
+	return correct_ring
+
+# Loads and returns a newly generated Orbit Ring attached to the OrbitManager | Called via load_orbit_ring()
+func _orbit_ring_generator(defense) -> Node2D:
 	var ring_scene = load("uid://d3a75aybwxj44")
 	var new_ring = ring_scene.instantiate()
 	if new_ring.has_method("initialize"):

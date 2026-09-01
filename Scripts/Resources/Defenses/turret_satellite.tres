@@ -11,10 +11,10 @@ display_name = "Turret Satellite"
 description = "Defensive satellite that orbits the planet, shooting Asteroids in its range."
 defense_scene = ExtResource("1_kx8qd")
 base_cost = 5
-default_stats = {
+default_stats = Dictionary[String, float]({
 "damage": 1.5,
 "fire_rate": 2.4,
 "orbit_speed": 1.0,
-"range": 400.0
-}
+"range": 250.0
+})
 metadata/_custom_type_script = "uid://bcoqkbjgfkbiv"

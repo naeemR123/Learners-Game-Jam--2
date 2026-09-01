@@ -11,6 +11,12 @@ radius = 100.0
 [sub_resource type="CircleShape2D" id="CircleShape2D_vva7h"]
 radius = 20.0
 
+[sub_resource type="Gradient" id="Gradient_diy38"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0.002754821, 0.048710603, 0.100286536, 0.15789473, 0.21052632, 0.2631579, 0.31578946, 0.36842105, 0.42105263, 0.47368422, 0.5263158, 0.57894737, 0.6315789, 0.68421054, 0.7368421, 0.7894737, 0.84210527, 0.9025788, 0.96275073)
+colors = PackedColorArray(0, 0.63266677, 0.73, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157, 1, 1, 1, 0, 0, 0.6313726, 0.7294118, 0.40392157)
+metadata/_snap_count = 19
+
 [node name="CollectorSatellite" type="Area2D" unique_id=1018827546]
 collision_layer = 0
 collision_mask = 8
@@ -28,3 +34,14 @@ collision_mask = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CollectionZone" unique_id=560020516]
 shape = SubResource("CircleShape2D_vva7h")
+
+[node name="RangeIndicator" type="Line2D" parent="." unique_id=510122832]
+visible = false
+closed = true
+default_color = Color(0, 0.7529412, 0.87058824, 0.61960787)
+
+[node name="PreviewRangeIndicator" type="Line2D" parent="." unique_id=1625966736]
+visible = false
+closed = true
+default_color = Color(1, 1, 1, 0)
+gradient = SubResource("Gradient_diy38")

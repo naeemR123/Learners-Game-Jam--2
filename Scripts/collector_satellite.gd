@@ -6,7 +6,15 @@ extends Area2D
 
 @onready var collector_range : CollisionShape2D = $Range
 @onready var collection_zone : Area2D = $CollectionZone
+@onready var range_indicator: Line2D = $RangeIndicator
+@onready var preview_range_indicator: Line2D = $PreviewRangeIndicator
 
+@export_group("Range Preview")
+@export var preview_blink_duration : float = 1.0
+@export var preview_blink_min_alpha : float = 0.0
+@export var preview_blink_max_alpha : float = 0.50
+
+var preview_blink_tween : Tween
 
 var my_id : String
 var my_range : float = 100.0
@@ -31,6 +39,31 @@ func update_satellite_stats():
 	my_gravity_strength = game.active_stats[my_id][StatIDs.SAT_GRAVITY_STRENGTH]
 	my_range = game.active_stats[my_id][StatIDs.RANGE]
 	collector_range.shape.radius = my_range
+	range_indicator.points = _build_range_circle(my_range)
+
+
+func _build_range_circle(radius: float, segments: int = 48) -> PackedVector2Array:
+	var points = PackedVector2Array()
+	for i in segments:
+		var angle = TAU * i/segments
+		points.append(Vector2(cos(angle),sin(angle)) * radius)
+	return points
+
+
+func set_range_visible(can_see: bool) -> void:
+	range_indicator.visible = can_see
+
+
+func set_preview_range_visible(can_see: bool, preview_radius: float = 0.0) -> void:
+	preview_range_indicator.visible = can_see
+	
+	if can_see:
+		preview_range_indicator.points = _build_range_circle(preview_radius)
+		preview_blink_tween = create_tween()
+		preview_blink_tween.set_loops()
+		preview_blink_tween.tween_property(preview_range_indicator, "modulate:a", preview_blink_min_alpha, preview_blink_duration)
+		preview_blink_tween.tween_property(preview_range_indicator, "modulate:a", preview_blink_max_alpha, preview_blink_duration)
+
 
 
 func _physics_process(delta: float) -> void:
