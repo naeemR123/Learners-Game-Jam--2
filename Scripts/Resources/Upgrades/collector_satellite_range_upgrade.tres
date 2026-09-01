@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_wtcmm")
 id = "range"
-display_name = "Collector Satellite Range"
+display_name = "Gravity Range"
 target_category = "collector_satellite"
 description = "Each Upgrade:
 - Increases collector satellites' gravity radius."

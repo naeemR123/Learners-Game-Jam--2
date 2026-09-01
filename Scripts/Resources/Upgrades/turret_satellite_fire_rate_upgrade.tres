@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_at6sj")
 id = "fire_rate"
-display_name = "Turret Satellite Fire Rate"
+display_name = "Fire Rate"
 target_category = "turret_satellite"
 description = "Each Upgrade:
 - Decreases time between shots for turret satellites."

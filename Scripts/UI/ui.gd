@@ -6,30 +6,32 @@ extends CanvasLayer
 
 
 # Constants
-const DEFENSE_BUTTON = preload("uid://c3qyfa3alxw6w")
-const UPGRADE_BUTTON = preload("uid://dqa3qsqv65vay")
+const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 
 # Nodes
 @onready var planet := get_tree().get_first_node_in_group("Planet")
 
 # Labels
-@onready var rlabel: Label = $ResourceLabel
-@onready var wlabel: Label = $WaveLabel
-@onready var bwave_label: Label = $ShopContainer/BossWaveLabel
+@onready var resource_label: Label = $ResourceLabel
+@onready var wave_label: Label = $WaveLabel
+@onready var bwave_label: Label = $BossWaveLabel
 @onready var planet_shield: Label = $PlanetShield
 
 # Buttons
-@onready var start_wave_button: Button = $ShopContainer/StartWaveButton
+@onready var start_wave_button: Button = $StartWaveButton
 @onready var retry_button: Button = $GameOverScreen/VBoxContainer/RetryButton
 @onready var restart_button: Button = $RestartButton
 
 # Control Nodes
 @onready var game_over_screen: Control = $GameOverScreen
-@onready var shop_container: Control = $ShopContainer
+@onready var shop_panel: PanelContainer = $ShopPanel
 
 # Shop Lists
-@onready var defenses_list: VBoxContainer = $ShopContainer/DefensesPanel/ScrollContainer/VBoxContainer/DefensesList
-@onready var upgrades_list: VBoxContainer = $ShopContainer/UpgradesPanel/ScrollContainer/VBoxContainer/UpgradesList
+@onready var satellites_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Satellites/VBoxContainer
+@onready var drones_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Drones/VBoxContainer
+@onready var planet_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Planet/VBoxContainer
+
+var in_shop : bool
 
 
 
@@ -44,6 +46,8 @@ func _ready() -> void:
 	start_wave_button.pressed.connect(_on_start_wave_button_pressed)
 	restart_button.pressed.connect(_on_restart_button_pressed)
 	
+	_populate_shop_panel()
+	
 	# Deferred so these read final values; waits for sibling's _ready() debug settings
 	# Refresh ui with current stats upon loading
 	_update_r_ui.call_deferred()
@@ -52,8 +56,7 @@ func _ready() -> void:
 
 # Refreshes resource display ui
 func _update_r_ui() -> void:
-	rlabel.text = "Resources: " + str(game.resources)
-
+	resource_label.text = "Resources: " + str(game.resources)
 
 # Refreshes Planet shield display ui
 func _update_shield_ui() -> void:
@@ -62,68 +65,70 @@ func _update_shield_ui() -> void:
 	var current_shield = planet.shield
 	planet_shield.text = "Shield: " + str(current_shield)
 
-
 # Runs reset function in Game_Manager
 func _on_retry_button_pressed() -> void:
 	game.game_reset()
 	# Reload the current active scene to wipe existing asteroids/resources from the field
 	get_tree().reload_current_scene()
-
-
+	
+# [DEBUGGING] Restart and reloads game
 func _on_restart_button_pressed() -> void:
 	print_rich(" [color=yellow][b][DEBUG][/b][/color] Game Manually Reset via 'Restart Game' Button ")
 	game.game_reset()
-	# Reload the current active scene to wipe existing asteroids/resources from the field
 	get_tree().reload_current_scene()
 
-
+# Starts next wave and hides shop
 func _on_start_wave_button_pressed() -> void:
 	wave.start_wave()
 	_shop_ui()
-
 
 # Displays "Game Over" screen | Called from Game_Manager
 func game_over_event() -> void:
 	game_over_screen.visible = true
 
+# Populates the entire shop panel with defenses and upgrades | Called via _ready()
+func _populate_shop_panel() -> void:
+	for defense in game.all_defenses:
+		var list = satellites_list if defense is SatelliteData else drones_list
+		_add_row(list, defense)
+	
+	for upgrade in game.all_upgrades:
+		if upgrade.target_category == StatIDs.GLOBAL:
+			_add_row(planet_list, upgrade)
+
+# Creates ShopAccordionRow under specified list | Called via _populate_shop_panel()
+func _add_row(list: VBoxContainer, data) -> void:
+	var row = SHOP_ACC_ROW.instantiate()
+	list.add_child(row)
+	
+	if data is DefenseData:
+		row.setup_defense(data)
+	elif data is UpgradeData:
+		row.setup_upgrade(data)
 
 # Displays and handles shop screen ui
 func _shop_ui() -> void:
 	
-	
 	# Displays Shop and UI info based on if the wave is active
 	if wave.wave_active:
-		shop_container.hide()
-		wlabel.text = "Wave: " + str(wave.current_wave)
+		in_shop = false
+		shop_panel.hide()
+		start_wave_button.hide()
+		bwave_label.hide()
+		wave_label.text = "Wave: " + str(wave.current_wave)
 	else:
-		shop_container.show()
-		wlabel.text = "Next Wave: " + str(wave.current_wave)
+		in_shop = true
+		shop_panel.show()
+		start_wave_button.show()
+		wave_label.text = "Next Wave: " + str(wave.current_wave)
 		
 		# Displays next boss wave if current wave is within 5 waves
-		if wave.current_wave + 5 >= wave.next_boss_wave:
+		if wave.current_wave + 4 >= wave.next_boss_wave:
+			bwave_label.show()
 			bwave_label.text = "Upcoming Boss: Wave " + str(wave.next_boss_wave)
 		else:
-			bwave_label.text = ""
-		
-		# Deletes any existing buttons in the Shop lists
-		for child in defenses_list.get_children():
-			child.queue_free()
-		
-		for child in upgrades_list.get_children():
-			child.queue_free()
-		
-		# Populates buttons in Defenses list in Shop with all available Defenses
-		for defense in game.all_defenses:
-			var button = DEFENSE_BUTTON.instantiate()
-			button.defense_data = defense
-			defenses_list.add_child(button)
-		
-		# Populates buttons in Upgrades list in Shop with all available Upgrades
-		for upgrade in game.all_upgrades:
-			var button = UPGRADE_BUTTON.instantiate()
-			button.upgrade_data = upgrade
-			upgrades_list.add_child(button)
-			
-		
-		
-		
+			bwave_label.hide()
+
+
+func camera_shift() -> void:
+	pass

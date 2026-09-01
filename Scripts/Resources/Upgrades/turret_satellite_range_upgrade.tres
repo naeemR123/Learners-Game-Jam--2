@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_ib32i")
 id = "range"
-display_name = "Turret Satellite Range"
+display_name = "Range"
 target_category = "turret_satellite"
 description = "Each Upgrade:
 - Increases turret satellites detection radius."

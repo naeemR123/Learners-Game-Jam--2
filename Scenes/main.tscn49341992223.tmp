@@ -11,16 +11,15 @@
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
 wave_number = 15
-custom_boss_wave = true
-bwave_number = 6
+bwave_number = 30
 extra_amount = 1000
 custom_asteroid_speed_value = 100.0
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
-offset_left = -1151.0
+offset_left = -301.0
 offset_top = -277.0
 offset_right = 2221.0
-offset_bottom = 1329.0
+offset_bottom = 1357.0
 color = Color(0.019607844, 0, 0.14117648, 1)
 
 [node name="Starfield" parent="." unique_id=1160965770 instance=ExtResource("2_6bp64")]

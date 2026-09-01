@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_ttrus")
 id = "damage"
-display_name = "Turret Satellite Damage"
+display_name = "Damage"
 target_category = "turret_satellite"
 description = "Each Upgrade:
 - Increases turret satellite damage."

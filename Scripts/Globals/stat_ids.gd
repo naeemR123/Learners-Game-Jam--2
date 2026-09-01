@@ -7,6 +7,7 @@ class_name StatIDs
 # Global ID & Upgrades #
 const GLOBAL = "global"
 
+const BEAM_SIZE = "beam_size"
 const SLOW_STRENGTH = "slow_strength"
 const MAX_SHIELD = "max_planet_shield"
 

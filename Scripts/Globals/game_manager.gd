@@ -9,6 +9,7 @@ var active_stats: Dictionary = {
 	"global": {
 			"slow_strength": 0.0,
 			"max_planet_shield": 0,
+			"beam_size": 50.0,
 	},
 }
 var owned_defenses: Array[String] = []			# Stores all active defenses : populated via purchase_defenses()
@@ -388,6 +389,7 @@ func game_reset() -> void:
 	var planet = get_tree().get_first_node_in_group("Planet")
 	active_stats[StatIDs.GLOBAL][StatIDs.SLOW_STRENGTH] = 0.00
 	active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = planet.max_shield
+	active_stats[StatIDs.GLOBAL][StatIDs.BEAM_SIZE] = 50.0
 	print(" | GLOBAL ACTIVE_STATS RESET | ")
 	
 	WaveManager.reset() 	# Resets Wave to 1
@@ -416,6 +418,9 @@ func game_reset() -> void:
 	register_all_defenses()
 	register_all_upgrades()
 	register_all_perks()
+	
+	resources_changed.emit()
+	stats_changed.emit()
 	
 	get_tree().paused = false	# Unpauses game
 	

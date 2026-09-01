@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_amkmk")
 id = "orbit_speed"
-display_name = "Collector Satellite Orbit Speed"
+display_name = "Orbit Speed"
 target_category = "collector_satellite"
 description = "Each Upgrade:
 - Increases collector satellites' orbit speed around the planet."

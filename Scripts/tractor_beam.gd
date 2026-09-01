@@ -2,14 +2,15 @@ extends Area2D
 
 @onready var game := Game_Manager
 
-const SLOW_EFFECT = preload("uid://b1hjfnwgatp5p")
+@onready var sprite: Sprite2D = $Sprite2D
+@onready var collision: CollisionShape2D = $CollisionShape2D
 
+const SLOW_EFFECT = preload("uid://b1hjfnwgatp5p")
 
 @export var pull_speed: float = 150.0
 @export var pull_strength: float = 10
 
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var collision: CollisionShape2D = $CollisionShape2D
+var beam_size : float = 50.0
 
 
 func _ready() -> void:
@@ -18,7 +19,15 @@ func _ready() -> void:
 	collision.shape.radius = ( sprite_radius.x / 1.67)
 	area_entered.connect(_on_area_entered)
 	area_exited.connect(_on_area_exited)
+	
+	game.stats_changed.connect(update_stats)
+	update_stats()
 
+
+func update_stats() -> void:
+	beam_size = game.active_stats[StatIDs.GLOBAL][StatIDs.BEAM_SIZE]
+	collision.shape.radius = beam_size
+	sprite.texture.size = Vector2(beam_size,beam_size)*2
 
 
 func _process(_delta: float) -> void:
