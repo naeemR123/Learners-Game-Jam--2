@@ -6,6 +6,7 @@ class_name StatIDs
 ########################
 # Global ID & Upgrades #
 const GLOBAL = "global"
+const ALL = "all"
 
 const BEAM_SIZE = "beam_size"
 const SLOW_STRENGTH = "slow_strength"

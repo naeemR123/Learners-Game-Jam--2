@@ -43,7 +43,6 @@ func _ready() -> void:
 	WaveManager.wave_complete.connect(update_display)
 	game.resources_changed.connect(update_display)
 	game.stats_changed.connect(update_display)
-	game.perks_changed.connect(update_display)
 
 # Stores defense for this purchase line
 func setup_defense(data: DefenseData) -> void:
@@ -112,27 +111,27 @@ func _set_satellite_range_visible(can_see: bool, next_range: float = 0.0) -> voi
 		if ring.my_id != upgrade_data.target_category:
 			continue
 			
-			var all_sats = ring.get_children()	# Stores those satellites
-			if not can_see: # If can't see, tells ALL satellites to turn off their range previews (prevents bug)
-				for sat in all_sats:
-					if sat.has_method("set_preview_range_visible"):
-						sat.set_preview_range_visible(false)
-					if sat.has_method("set_range_visible"):
-						sat.set_range_visible(false)
-				previewed_satellite = null
-				return
-			
-			if all_sats.is_empty(): return
-			
-			# If can see, tells one random satellite to enable range preview  
-			if not is_instance_valid(previewed_satellite) or previewed_satellite.get_parent() != ring:
-				previewed_satellite = all_sats.pick_random()
-			
-			if previewed_satellite.has_method("set_range_visible"):
-				previewed_satellite.set_range_visible(true)
-			if previewed_satellite.has_method("set_preview_range_visible"):
-				previewed_satellite.set_preview_range_visible(true, next_range)
+		var all_sats = ring.get_children()	# Stores those satellites
+		if not can_see: # If can't see, tells ALL satellites to turn off their range previews (prevents bug)
+			for sat in all_sats:
+				if sat.has_method("set_preview_range_visible"):
+					sat.set_preview_range_visible(false)
+				if sat.has_method("set_range_visible"):
+					sat.set_range_visible(false)
+			previewed_satellite = null
 			return
+		
+		if all_sats.is_empty(): return
+		
+		# If can see, tells one random satellite to enable range preview  
+		if not is_instance_valid(previewed_satellite) or previewed_satellite.get_parent() != ring:
+			previewed_satellite = all_sats.pick_random()
+		
+		if previewed_satellite.has_method("set_range_visible"):
+			previewed_satellite.set_range_visible(true)
+		if previewed_satellite.has_method("set_preview_range_visible"):
+			previewed_satellite.set_preview_range_visible(true, next_range)
+		return
 
 # Checks if self is RANGE Upgrade, then refreshes RANGE Preview
 func _refresh_range_preview(refresh: bool) -> void:

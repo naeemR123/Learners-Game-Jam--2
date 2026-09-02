@@ -23,18 +23,12 @@ func _ready() -> void:
 	game.shield_changed.connect(_update_shield)
 	shield_bar.step = 1	# Tells shield bar to move in increments of 1
 	
-	# Checks if there was a value set for max shield in active_stats
-	# If not, writes the exported (default) value, then assigns it's own stats
-	if active_max_shield > 0:
-		max_shield = active_max_shield
-		shield = active_max_shield
-	else:
-		active_max_shield = max_shield
-		shield = max_shield
-	
+	# Pulls value set for max shield in active_stats
+	max_shield = active_max_shield
+	shield = active_max_shield
 	_update_shield()
 
-# UI & Updates ONLY Max shield | Game_Manager handles damage dealth to shield
+# UI & Updates Max shield | Game_Manager handles damage dealth to shield
 func _update_shield() -> void:
 	
 	# Gets max shield value from active_stats Array in Game_Manager
@@ -46,3 +40,21 @@ func shield_bar_update() -> void:
 	
 	shield_bar.max_value = active_max_shield
 	shield_bar.value = shield
+
+# Increases shield by amount
+func heal(amount: int) -> void:
+	shield += amount
+	if shield > max_shield:
+		shield = max_shield
+	
+	shield_bar_update()	# Tells UI to update
+
+# Increases max_shield by amount
+func increase_max_shield(amount: int) -> void:
+	max_shield += amount
+	shield += amount
+	
+	if shield > max_shield:
+		shield = max_shield
+	
+	shield_bar_update()	# Tells UI to update

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PerkData" format=3 uid="uid://dcv05at0llxxd"]
+
+[ext_resource type="Script" uid="uid://d1tn35sg1esit" path="res://Scripts/ResourceScripts/perk_data.gd" id="1_oh6hx"]
+
+[resource]
+script = ExtResource("1_oh6hx")
+id = "max_shield_1"
+display_name = "Hardened Plating"
+description = "Permanently inceases Max Shield by 15%"
+cost = 50
+target_category = "global"
+stat_id = "max_planet_shield"
+value = 0.15
+metadata/_custom_type_script = "uid://d1tn35sg1esit"
