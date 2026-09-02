@@ -4,6 +4,8 @@ extends FoldableContainer
 const PURCHASE_LINE = preload("uid://cp6tj7w5vc06h")
 
 @onready var game := Game_Manager
+
+
 @onready var desc_label: Label = $PurchaseLines/Description
 @onready var purchase_vbox: VBoxContainer = $PurchaseLines
 
@@ -26,6 +28,13 @@ func setup_upgrade(data: UpgradeData) -> void:
 	
 	_add_upgrade_line(data)
 
+# Used to create Perk Tier grouping - temp until tree
+func setup_perk_tier(tier: int, perks: Array) -> void:
+	title = "Tier %d" % tier
+	desc_label.text = ""
+	for perk in perks:
+		add_perk_line(perk)
+
 # Creates and sets up purchase line for defenses
 func _add_defense_line(data: DefenseData) -> void:
 	var purchase_line = PURCHASE_LINE.instantiate()
@@ -37,3 +46,9 @@ func _add_upgrade_line(data: UpgradeData) -> void:
 	var purchase_line = PURCHASE_LINE.instantiate()
 	purchase_vbox.add_child(purchase_line)
 	purchase_line.setup_upgrade(data)
+
+# Creates and sets up purchase line for perks
+func add_perk_line(data: PerkData) -> void:
+	var purchase_line = PURCHASE_LINE.instantiate()
+	purchase_vbox.add_child(purchase_line)
+	purchase_line.setup_perk(data)

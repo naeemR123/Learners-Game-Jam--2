@@ -4,10 +4,12 @@ extends HBoxContainer
 
 const REASON_TEXT := {
 	PurchaseBlock.Reason.LOCKED: "Locked!",
+	PurchaseBlock.Reason.ALREADY_OWNED: "Already Owned!",
 	PurchaseBlock.Reason.MAX_OWNED: "Max Amount Owned!",
 	PurchaseBlock.Reason.MAX_COST: "Max Cost Reached!",
 	PurchaseBlock.Reason.MAX_VALUE: "Max Value Reached!",
 	PurchaseBlock.Reason.NOT_ENOUGH_RESOURCES: "Not Enough Resources!",
+	PurchaseBlock.Reason.PREREQS_NOT_MET: "Requires: %s",
 }
 
 
@@ -16,6 +18,7 @@ const REASON_TEXT := {
 
 # - Node References -
 @onready var name_label: Label = $Name
+@onready var owned_label: Label = $Owned
 @onready var value_label: Label = $Value
 @onready var cost_label: Label = $Cost
 @onready var purchase_button: Button = $Purchase
@@ -24,6 +27,9 @@ const REASON_TEXT := {
 # State Variables | Universal storage
 var defense_data : DefenseData
 var upgrade_data : UpgradeData
+var perk_data : PerkData
+
+var previewed_satellite : Node2D
 
 
 func _ready() -> void:
@@ -37,6 +43,7 @@ func _ready() -> void:
 	WaveManager.wave_complete.connect(update_display)
 	game.resources_changed.connect(update_display)
 	game.stats_changed.connect(update_display)
+	game.perks_changed.connect(update_display)
 
 # Stores defense for this purchase line
 func setup_defense(data: DefenseData) -> void:
@@ -48,57 +55,10 @@ func setup_upgrade(data: UpgradeData) -> void:
 	upgrade_data = data
 	update_display()
 
-# Attempts to purchase based on data source
-func _on_purchase_pressed() -> void:
-	if defense_data:
-		game.purchase_defenses(defense_data)
-	elif upgrade_data:
-		game.purchase_upgrade(upgrade_data)
-
-
-func _on_bulk_purchase_pressed() -> void:
-	var amount = -1 if Input.is_key_pressed(KEY_SHIFT) else 10
-	
-	if defense_data:
-		game.purchase_defenses_bulk(defense_data, amount)
-	elif upgrade_data:
-		game.purchase_upgrade_bulk(upgrade_data, amount)
-
-
-func _process(_delta: float) -> void:
-	var new_text = "Max" if Input.is_key_pressed(KEY_SHIFT) else "x10"
-	if bulk_button.text != new_text:
-		bulk_button.text = new_text
-
-
-func _on_mouse_entered() -> void:
-	if upgrade_data and upgrade_data.id == StatIDs.RANGE:
-		var next_range = upgrade_data.get_current_value(upgrade_data.current_level+1)
-		_set_satellite_range_visible(true, next_range)
-
-
-func _on_mouse_exited() -> void:
-	if upgrade_data and upgrade_data.id == StatIDs.RANGE:
-		_set_satellite_range_visible(false)
-
-
-func _set_satellite_range_visible(can_see: bool, next_range: float = 0.0) -> void:
-	for ring in orbit_manager.get_children():
-		if ring.my_id == upgrade_data.target_category:
-			var all_sats = ring.get_children()
-			
-			if not can_see:
-				for sat in all_sats:
-					sat.range_indicator.visible = false
-					if sat.has_method("set_preview_range_visible"):
-						sat.set_preview_range_visible(false)
-				return
-			var rand_sat = all_sats.pick_random()
-			if rand_sat.has_method("set_range_visible"):
-				rand_sat.set_range_visible(true)
-			if rand_sat.has_method("set_preview_range_visible"):
-				rand_sat.set_preview_range_visible(true, next_range)
-			return
+# Stores perk for this purchase line
+func setup_perk(data: PerkData) -> void:
+	perk_data = data
+	update_display()
 
 # Refreshes UI
 func update_display() -> void:
@@ -106,6 +66,80 @@ func update_display() -> void:
 		_update_defense_display()
 	elif upgrade_data:
 		_update_upgrade_display()
+	elif perk_data:
+		_update_perk_display()
+
+# Attempts to purchase based on data source
+func _on_purchase_pressed() -> void:
+	if defense_data:
+		game.purchase_defenses(defense_data)
+	elif upgrade_data:
+		game.purchase_upgrade(upgrade_data)
+		
+		# Immediately updates range preview when purchased
+		_refresh_range_preview(true)
+		
+	elif perk_data:
+		game.purchase_perk(perk_data)
+
+# Attempts to bulk purchase based on data source
+func _on_bulk_purchase_pressed() -> void:
+	var amount = -1 if Input.is_key_pressed(KEY_SHIFT) else 10
+	if defense_data:
+		game.purchase_defenses_bulk(defense_data, amount)
+	elif upgrade_data:
+		game.purchase_upgrade_bulk(upgrade_data, amount)
+
+
+func _process(_delta: float) -> void:
+	# If 'SHIFT' is held, swaps 'x10' for 'MAX' button
+	var new_text = "Max" if Input.is_key_pressed(KEY_SHIFT) else "x10"
+	if bulk_button.text != new_text:
+		bulk_button.text = new_text
+
+# When mouse enters range label, visually displays Satellite's current and next level range
+func _on_mouse_entered() -> void:
+	_refresh_range_preview(true)
+
+# When mouse exits range label, stops Satellite's range display
+func _on_mouse_exited() -> void:
+	_refresh_range_preview(false)
+
+# Visually displays Satellite's current and next level range  based on parameters
+func _set_satellite_range_visible(can_see: bool, next_range: float = 0.0) -> void:
+	# Checks if there is a ring that has range stat 
+	for ring in orbit_manager.get_children():
+		if ring.my_id != upgrade_data.target_category:
+			continue
+			
+			var all_sats = ring.get_children()	# Stores those satellites
+			if not can_see: # If can't see, tells ALL satellites to turn off their range previews (prevents bug)
+				for sat in all_sats:
+					if sat.has_method("set_preview_range_visible"):
+						sat.set_preview_range_visible(false)
+					if sat.has_method("set_range_visible"):
+						sat.set_range_visible(false)
+				previewed_satellite = null
+				return
+			
+			if all_sats.is_empty(): return
+			
+			# If can see, tells one random satellite to enable range preview  
+			if not is_instance_valid(previewed_satellite) or previewed_satellite.get_parent() != ring:
+				previewed_satellite = all_sats.pick_random()
+			
+			if previewed_satellite.has_method("set_range_visible"):
+				previewed_satellite.set_range_visible(true)
+			if previewed_satellite.has_method("set_preview_range_visible"):
+				previewed_satellite.set_preview_range_visible(true, next_range)
+			return
+
+# Checks if self is RANGE Upgrade, then refreshes RANGE Preview
+func _refresh_range_preview(refresh: bool) -> void:
+	if not upgrade_data: return # Crashes without this
+	if upgrade_data.id == StatIDs.RANGE:
+		var next_range = upgrade_data.get_current_value(upgrade_data.current_level+1)
+		_set_satellite_range_visible(refresh, next_range)
 
 # Refreshes the displayed text and values
 func _update_defense_display() -> void:
@@ -115,8 +149,9 @@ func _update_defense_display() -> void:
 	var owned: int = defense_data.amount_owned
 	# Refreshes text and values
 	name_label.text = "Buy " + defense_data.display_name
-	value_label.text = ""
-	tooltip_text = "%d %s owned" % [owned, defense_data.display_name] 	# Allows desc. to display on mouse hover
+	value_label.visible = false 	# Value label is hidden for defenses (no value)
+	owned_label.text = "%d owned" % owned 	# Allows defenses owned to display
+	owned_label.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
 	mouse_filter = Control.MOUSE_FILTER_PASS	# Enables mouse hover
 	
 	if reason == PurchaseBlock.Reason.MAX_OWNED:
@@ -126,7 +161,7 @@ func _update_defense_display() -> void:
 	else:
 		cost_label.text = str(cost) + " resources"
 	
-	purchase_button.tooltip_text = REASON_TEXT.get(reason, "")
+	purchase_button.tooltip_text = _get_reason_text(reason)
 	bulk_button.tooltip_text = purchase_button.tooltip_text
 	
 	# Disables button if not enough resources or max amount of defenses already owned
@@ -149,9 +184,52 @@ func _update_upgrade_display() -> void:
 	var is_maxed = reason == PurchaseBlock.Reason.MAX_COST or reason == PurchaseBlock.Reason.MAX_VALUE
 	cost_label.text = "MAXED" if is_maxed else str(cost) + " resources"
 	
-	purchase_button.tooltip_text = REASON_TEXT.get(reason, "")
+	# If assigned to Planet tab, applies 'owned' label, otherwise hides
+	if upgrade_data.target_category == StatIDs.GLOBAL:
+		owned_label.text = "Level: %d" % upgrade_data.current_level
+		owned_label.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
+	else:
+		owned_label.visible = false
+	
+	purchase_button.tooltip_text = _get_reason_text(reason)
 	bulk_button.tooltip_text = purchase_button.tooltip_text
 	
 	var blocked: bool = reason != PurchaseBlock.Reason.NONE
 	purchase_button.disabled = blocked	# Disables button if not enough resources
 	bulk_button.disabled = blocked
+
+# Refreshes the displayed text and values
+func _update_perk_display() -> void:
+	var reason = perk_data.get_block_reason()
+	var cost: int = perk_data.get_current_cost()
+	
+	name_label.text = perk_data.display_name
+	value_label.text = "%.1f" % perk_data.value
+	owned_label.visible = false 	# Owned label is hidden for perks (cost label handles it)
+	tooltip_text = perk_data.description
+	mouse_filter = Control.MOUSE_FILTER_PASS	# Enables mouse hover
+	
+	var owned = reason == PurchaseBlock.Reason.ALREADY_OWNED
+	cost_label.text = "OWNED" if owned else str(cost) + " resources"
+	
+	purchase_button.tooltip_text = _get_reason_text(reason)
+	purchase_button.disabled = reason != PurchaseBlock.Reason.NONE
+	
+	bulk_button.visible = false
+
+# Pulls reason for PurchaseBlock and lists the String from REASON_TEXT
+func _get_reason_text(reason: PurchaseBlock.Reason) -> String:
+	var text: String = REASON_TEXT.get(reason, "")
+	
+	if reason == PurchaseBlock.Reason.PREREQS_NOT_MET and perk_data:
+		text = text % _missing_prereq_names()
+	
+	return text
+
+# Prints prerequisites for PerkDatas as Strings
+func _missing_prereq_names() -> String:
+	var names: PackedStringArray = []
+	for perk in perk_data.prerequisites:
+		if not perk.is_purchased:
+			names.append(perk.display_name)
+	return ", ".join(names)

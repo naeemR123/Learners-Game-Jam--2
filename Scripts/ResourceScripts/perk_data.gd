@@ -24,6 +24,8 @@ class_name PerkData
 var is_purchased : bool = false
 
 
+# - Functions - 
+
 # Determines if this perk should be unlocked based on if it's prerequisites are
 func is_unlocked() -> bool:
 	for perk in prerequisites:
@@ -33,3 +35,18 @@ func is_unlocked() -> bool:
 
 func reset() -> void:
 	is_purchased = false
+
+func get_current_cost() -> int:
+	return cost
+
+func get_block_reason(resources: int = Game_Manager.resources) -> PurchaseBlock.Reason:
+	if is_purchased:
+		return PurchaseBlock.Reason.ALREADY_OWNED
+	
+	if not is_unlocked():
+		return PurchaseBlock.Reason.PREREQS_NOT_MET
+	
+	if resources < cost:
+		return PurchaseBlock.Reason.NOT_ENOUGH_RESOURCES
+	
+	return PurchaseBlock.Reason.NONE

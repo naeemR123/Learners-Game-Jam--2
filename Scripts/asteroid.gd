@@ -45,7 +45,7 @@ var direction : Vector2
 
 # - Despawning -
 @onready var screen_size : Vector2 = get_viewport_rect().size
-var despawn_margin : float = 200
+var despawn_margin : float = 350
 # -
 
 var hit_flash_tween : Tween

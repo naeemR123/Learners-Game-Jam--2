@@ -15,9 +15,16 @@ size_flags_vertical = 3
 script = ExtResource("1_1keq7")
 
 [node name="Name" type="Label" parent="." unique_id=1694396191]
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(172, 0)
 layout_mode = 2
-size_flags_horizontal = 2
+size_flags_horizontal = 0
+
+[node name="Owned" type="Label" parent="." unique_id=1698064063]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Value" type="Label" parent="." unique_id=911936443]
 layout_mode = 2
@@ -28,7 +35,7 @@ vertical_alignment = 1
 [node name="Cost" type="Label" parent="." unique_id=327153602]
 layout_mode = 2
 size_flags_horizontal = 8
-horizontal_alignment = 2
+horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Purchase" type="Button" parent="." unique_id=1417635859]

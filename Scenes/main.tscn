@@ -10,8 +10,10 @@
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
-wave_number = 15
+custom_wave = true
+wave_number = 25
 custom_boss_wave = true
+bwave_number = 26
 extra_resources = true
 extra_amount = 1000
 custom_asteroid_speed_value = 100.0

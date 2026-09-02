@@ -32,6 +32,7 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 @onready var satellites_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Satellites/VBoxContainer
 @onready var drones_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Drones/VBoxContainer
 @onready var planet_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Planet/VBoxContainer
+@onready var perks_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Perks/VBoxContainer
 
 @export var shop_slide_duration : float = 2
 @export var shop_hidden_margin : int = 1
@@ -106,6 +107,21 @@ func _populate_shop_panel() -> void:
 	for upgrade in game.all_upgrades:
 		if upgrade.target_category == StatIDs.GLOBAL:
 			_add_row(planet_list, upgrade)
+	
+	for perk in game.all_perks:
+		
+		var perks_by_tier : Dictionary = {}
+		for p in game.all_perks:
+			if not perks_by_tier.has(p.tier):
+				perks_by_tier[p.tier] = []
+			perks_by_tier[p.tier].append(p)
+		
+		var tiers = perks_by_tier.keys()
+		tiers.sort()
+		for tier in tiers:
+			var row = SHOP_ACC_ROW.instantiate()
+			perks_list.add_child(row)
+			row.setup_perk_tier(tier, perks_by_tier[tier])
 
 # Creates ShopAccordionRow under specified list | Called via _populate_shop_panel()
 func _add_row(list: VBoxContainer, data) -> void:
@@ -116,7 +132,8 @@ func _add_row(list: VBoxContainer, data) -> void:
 		row.setup_defense(data)
 	elif data is UpgradeData:
 		row.setup_upgrade(data)
-
+		
+# Shifts the shop off-screen and centers planet
 func _on_hide_button_pressed() -> void:
 	manually_hidden = not manually_hidden
 	hide_button.text = "Show\nShop" if manually_hidden else "Hide\nShop"
@@ -124,8 +141,9 @@ func _on_hide_button_pressed() -> void:
 
 # Displays and handles shop screen ui
 func _update_shop_visuals() -> void:
-	var should_show = not wave.wave_active and not manually_hidden
+	var should_show = not wave.wave_active and not manually_hidden	# Toggle criteria
 	
+	# Toggle: Shifts the shop off-screen and centers planet
 	shop_slide(should_show)
 	camera.set_shop_open(should_show)
 	start_wave_button.visible = not wave.wave_active

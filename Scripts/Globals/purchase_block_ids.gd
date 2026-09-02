@@ -4,8 +4,10 @@ class_name PurchaseBlock
 enum Reason {
 	NONE,
 	LOCKED,
+	ALREADY_OWNED,
 	MAX_OWNED,
 	MAX_COST,
 	MAX_VALUE,
 	NOT_ENOUGH_RESOURCES,
+	PREREQS_NOT_MET,
 }

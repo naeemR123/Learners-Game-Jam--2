@@ -23,8 +23,8 @@ var all_perks : Array[PerkData] = []			# Stores all perks : populated via regist
 var resources : int = 0
 var planet_destroyed : bool = false
 
-
 # Signals
+signal perks_changed()
 signal stats_changed()
 signal resources_changed()
 signal shield_changed()
@@ -38,9 +38,8 @@ signal game_over()
 
 func _ready() -> void:
 	register_all_defenses()		# CRITICAL : needs to run on game startup
-	register_all_upgrades()		# CRITICAL : ^
-	register_all_perks()		# CRITICAL : ^
-
+	register_all_upgrades()		# CRITICAL : ^ Upgrades after defenses
+	register_all_perks()		# CRITICAL : ^ Perks after upgrades
 
 # Adds resource to inventory and updates ui
 func add_resource(amount: int) -> void:
@@ -74,38 +73,6 @@ func take_damage(damage_val: float) -> void:
 	# If shield is 0, run game over function
 	if planet.shield == 0:
 		trigger_game_over()
-
-# Scans the Perks folder and registers stats for every PerkData it finds
-func register_all_perks() -> void:
-	
-	# Routes access to Perks Resource folder, and returns if there is no folder
-	var dir = DirAccess.open("res://Scripts/Resources/Perks/")
-	if dir == null:	# Safety check : If folder unavailable, aborts with warning
-		push_error("[color=red][b][ERROR][/b][/color] Could not open Perks resource folder | \
-		register_all_perks() aborted")
-		return
-	
-	dir.list_dir_begin()	# Start iterating over folder contents
-	var file_name = dir.get_next()
-	
-	while file_name != "":	# Loops while there are non-blank files
-		# Only processes .tres files, skipping other file types
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			# Creates a file path with the specific resource file's name
-			var path = "res://Scripts/Resources/Perks/" + file_name
-			var resource = load(path)	# Loads that path
-			
-			if resource is PerkData:	# Safety check: makes sure it is a PerkData Resource
-				register_perk_stats(resource)	# Registers resource to all_perks Array
-			else:
-				push_warning("[color=red][b][ERROR][/b][/color] Perk not registered | \
-				Unexpected resource type in Perks folder: " + path)
-		
-		file_name = dir.get_next()	# Moves to next file
-		
-	dir.list_dir_end()	# CRITICAL : always needs to be called when done iterating
-	
-	print(" | PERKS REGISTERED | ")
 
 # Scans the Defenses folder and registers stats for every DefenseData it finds
 func register_all_defenses() -> void:
@@ -172,16 +139,37 @@ func register_all_upgrades() -> void:
 	dir.list_dir_end()	# CRITICAL 
 	print(" | UPGRADES REGISTERED | ")
 
-# Checks arrays for perk , if not found , adds it 
-# Called by register_all_perks()
-func register_perk_stats(perk: PerkData) -> void:
-	# Safety Checks : aborts if already registered or if perk's target category is not found in active_stats
-	if all_perks.has(perk): return
-	if active_stats.has(perk.target_category):
-		all_perks.append(perk)
-	else:
-		push_warning("[color=red][b][ERROR][/b][/color] Perk not registered correctly | \
-		active_stats does not contain '%s' perk's target_category: '%s'" % [perk.id, perk.target_category])
+# Scans the Perks folder and registers stats for every PerkData it finds
+func register_all_perks() -> void:
+	
+	# Routes access to Perks Resource folder, and returns if there is no folder
+	var dir = DirAccess.open("res://Scripts/Resources/Perks/")
+	if dir == null:	# Safety check : If folder unavailable, aborts with warning
+		push_error("[color=red][b][ERROR][/b][/color] Could not open Perks resource folder | \
+		register_all_perks() aborted")
+		return
+	
+	dir.list_dir_begin()	# Start iterating over folder contents
+	var file_name = dir.get_next()
+	
+	while file_name != "":	# Loops while there are non-blank files
+		# Only processes .tres files, skipping other file types
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			# Creates a file path with the specific resource file's name
+			var path = "res://Scripts/Resources/Perks/" + file_name
+			var resource = load(path)	# Loads that path
+			
+			if resource is PerkData:	# Safety check: makes sure it is a PerkData Resource
+				register_perk_stats(resource)	# Registers resource to all_perks Array
+			else:
+				push_warning("[color=red][b][ERROR][/b][/color] Perk not registered | \
+				Unexpected resource type in Perks folder: " + path)
+		
+		file_name = dir.get_next()	# Moves to next file
+		
+	dir.list_dir_end()	# CRITICAL : always needs to be called when done iterating
+	
+	print(" | PERKS REGISTERED | ")
 
 # Checks arrays for defense , if not found, adds or duplicates it under it's id
 # Called by register_all_defenses()
@@ -211,6 +199,21 @@ func register_upgrade_array(upgrade: UpgradeData) -> void:
 			Check the UpgradeData's fields" % [upgrade.target_category, upgrade.id])
 		# References original data in Array
 		all_upgrades.append(upgrade)
+
+# Checks arrays for perk , if not found , adds it 
+# Called by register_all_perks()
+func register_perk_stats(perk: PerkData) -> void:
+	# Safety Checks : aborts if already registered or if perk's target category is not found in active_stats
+	if all_perks.has(perk): return
+	if not active_stats.has(perk.target_category): 
+		push_warning("[color=red][b][ERROR][/b][/color] Perk not registered correctly | \
+		active_stats does not contain '%s' perk's target_category: '%s'" % [perk.id, perk.target_category])
+		return
+	if not active_stats[perk.target_category].has(perk.stat_id):
+		push_warning("[color=red][b][GAME ERROR][/b][/color] register_perk_stats: stat_id '%s' not found in active_stats['%s'] | \
+		Check the PerkData's fields" % [perk.stat_id, perk.target_category])
+		return
+	all_perks.append(perk)
 
 # Bulks purchases defenses | Defaults at 10x
 func purchase_defenses_bulk(defense: DefenseData, amount: int = 10) -> int:
@@ -252,7 +255,7 @@ func purchase_defenses(defense: DefenseData) -> bool:
 	# Loads or makes an orbit ring
 	var ring = load_orbit_ring(defense)
 	if ring == null:	# Safety check
-		push_warning(" [GAME] Defense Purchase Unsuccessful | Ring Generation Failed , \
+		push_warning(" [color=green][b][GAME][/b][/color] Defense Purchase Unsuccessful | Ring Generation Failed , \
 		'correct_ring' returns null value | Attempted to Purchase %s" % defense.id)
 		return false
 	# -
@@ -290,14 +293,15 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	
 	# Safety check : Only upgrades if it is a valid registered category and property
 	if active_stats.has(upgrade.target_category):
-		upgrade.level_up()
-		# Updates the dictionary using the UpgradeData's ID
-		# Upgrades the specified category and property of the targeted Defense
-		active_stats[upgrade.target_category][upgrade.id] = upgrade.get_current_value()
-		
-		# Defines current cost of upgrade based on its criteria
+		# Defines current cost value of upgrade
 		var cost = upgrade.get_current_cost()
 		resources -= cost
+		upgrade.level_up()
+		
+		# Updates the dictionary using the UpgradeData's ID
+		# Upgrades the specified category and property of the targeted Defense
+		var value = upgrade.get_current_value()	# Applies the upgraded value
+		active_stats[upgrade.target_category][upgrade.id] = value
 	else:
 		# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
 		push_warning("Purchase_upgrade: target_category '%s' not found in active_stats. Was it registered correctly?" % upgrade.target_category)
@@ -308,6 +312,38 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	stats_changed.emit()
 	
 	return true # Purchase successful
+
+# Purchase function for Perks
+func purchase_perk(perk: PerkData) -> bool:
+	
+	if perk.get_block_reason() != PurchaseBlock.Reason.NONE:
+		return false
+	
+	# Safety check : Only upgrades if it is a valid registered category and property
+	if not active_stats.has(perk.target_category):
+		push_warning("[color=red][b][GAME ERROR][/b][/color] purchase_perk: target_category '%s' not found in active_stats | \
+		Was it registered correctly?" % perk.target_category)
+		return false
+	if not active_stats[perk.target_category].has(perk.stat_id):
+		push_warning("[color=red][b][GAME ERROR][/b][/color] purchase_perk: stat_id '%s' not found in active_stats['%s'] | \
+		Check the PerkData's fields" % [perk.stat_id, perk.target_category])
+		return false
+	
+	resources -= perk.get_current_cost()
+	perk.is_purchased = true
+	
+	active_stats[perk.target_category][perk.stat_id] += perk.value
+	
+	for upgrade in all_upgrades:
+		if upgrade.target_category == perk.target_category and upgrade.id == perk.stat_id:
+			upgrade.base_value += perk.value
+
+	perks_changed.emit()
+	resources_changed.emit()
+	stats_changed.emit()
+	
+	print_rich(" [color=green][b][GAME][/b][/color] Perk Purchase SUCCESSFUL | Purchased '%s'" % perk.id)
+	return true
 
 # Loads a pre-existing orbit ring, or makes a new one if needed | Called via purchase_defenses()
 func load_orbit_ring(defense: DefenseData) -> Node2D:
@@ -390,6 +426,9 @@ func game_reset() -> void:
 	print(" | ACTIVE_STATS ARRAY RESET | ")
 	
 	# Rebuilds stat library arrays
+	all_defenses.clear()
+	all_upgrades.clear()
+	all_perks.clear()
 	register_all_defenses()
 	register_all_upgrades()
 	register_all_perks()
