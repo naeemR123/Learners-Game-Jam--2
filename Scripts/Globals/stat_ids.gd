@@ -4,13 +4,15 @@ class_name StatIDs
 
 
 ########################
-# Global ID & Upgrades #
+# GAME IDs & Upgrades #
+const PLANET = "planet"
+const TRACTOR_BEAM = "tractor_beam"
 const GLOBAL = "global"
 const ALL = "all"
 
 const BEAM_SIZE = "beam_size"
 const SLOW_STRENGTH = "slow_strength"
-const MAX_SHIELD = "max_planet_shield"
+const MAX_SHIELD = "shield"
 
 
 ######################

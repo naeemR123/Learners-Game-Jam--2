@@ -6,7 +6,7 @@
 script = ExtResource("1_wct7s")
 id = "slow_strength"
 display_name = "Beam Slowness"
-target_category = "global"
+target_category = "tractor_beam"
 description = "Each Upgrade:
 - Increases slow effect on asteroids. (Some Asteroid types may have resistence to slowness)"
 base_cost = 30

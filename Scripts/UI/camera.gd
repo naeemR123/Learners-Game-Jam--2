@@ -29,11 +29,11 @@ var shop_tween : Tween
 
 func _ready() -> void:
 	
-	game.shield_changed.connect(_on_shield_changed)
+	game.planet_hit.connect(_on_planet_hit)
 	shop_offset = _get_shop_slide_target()
 
-func _on_shield_changed() -> void:
-	shake_strength = shake_amount
+func _on_planet_hit(damage: float) -> void:
+	shake_strength = shake_amount * clampf(damage/5.0, 0.5, 2.0)
 
 
 func _process(delta: float) -> void:

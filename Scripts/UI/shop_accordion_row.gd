@@ -21,17 +21,17 @@ func setup_defense(data: DefenseData) -> void:
 		if upgrade.target_category == data.id:
 			_add_upgrade_line(upgrade)
 
-# Used for Planet tab (no parent, just 'global')
-func setup_upgrade(data: UpgradeData) -> void:
-	title = data.display_name
-	desc_label.text = data.description
-	
-	_add_upgrade_line(data)
+# For the Planet Tab : One row per category
+func setup_upgrade_group(group_name: String, upgrades: Array) -> void:
+	title = group_name
+	desc_label.hide()
+	for upgrade in upgrades:
+		_add_upgrade_line(upgrade)
 
 # Used to create Perk Tier grouping - temp until tree
 func setup_perk_tier(tier: int, perks: Array) -> void:
 	title = "Tier %d" % tier
-	desc_label.text = ""
+	desc_label.hide()
 	for perk in perks:
 		add_perk_line(perk)
 

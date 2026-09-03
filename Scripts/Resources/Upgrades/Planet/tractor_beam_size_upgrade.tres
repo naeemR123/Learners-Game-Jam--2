@@ -6,7 +6,7 @@
 script = ExtResource("1_1pdid")
 id = "beam_size"
 display_name = "Beam Size"
-target_category = "global"
+target_category = "tractor_beam"
 description = "Each Upgrade:
 - Increases the radius of the Tractor Beam's area of effect."
 base_cost = 35

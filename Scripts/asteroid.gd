@@ -2,6 +2,7 @@ extends Area2D
 
 @onready var game := Game_Manager
 @onready var wave := WaveManager
+@onready var tracker := StatsManager
 
 @onready var sprite : Sprite2D = $Sprite2D
 
@@ -206,6 +207,7 @@ func _on_area_entered(body: Area2D) -> void:
 	if body != planet:
 		return
 	else:
+		tracker.increment(CounterIDs.ASTEROIDS_MISSED)
 		game.take_damage(damage)	# Runs function in Game_Manager, tracking Planet shield
 		wave.asteroid_death()		# Runs function in WaveManager, tracking asteroid death
 		despawn()				# Deletes this instance
@@ -214,6 +216,8 @@ func _on_area_entered(body: Area2D) -> void:
 
 # Processes damage from Defenses
 func take_damage(amount: float, particles: bool = true): 
+	# Increments Stat Tracker
+	tracker.increment(CounterIDs.DAMAGE_DEALT, minf(amount, current_health))
 	current_health -= amount
 	print(" Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, current_health])
 	
@@ -237,6 +241,7 @@ func take_damage(amount: float, particles: bool = true):
 		get_tree().current_scene.call_deferred("add_child", hit_particles)
 		hit_particles.call_deferred("start", direction, global_position)
 	
+	
 	if current_health <=0:
 		die()
 
@@ -258,6 +263,7 @@ func die():
 	get_tree().current_scene.call_deferred("add_child", particles)
 	particles.call_deferred("start", direction, global_position)
 	
+	tracker.increment(CounterIDs.ASTEROIDS_DESTROYED)
 	wave.asteroid_death()	# Runs function in WaveManager, tracking asteroid death
 	despawn()	# Deletes this instance
 

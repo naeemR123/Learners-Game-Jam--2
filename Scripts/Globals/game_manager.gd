@@ -4,15 +4,14 @@ extends Node
 
 #  = Arrays - Dictionaries = #
 
-# Game Start Global Defaults
-const DEFAULT_GLOBAL_STATS := {
-	"slow_strength": 0.0,
-	"max_planet_shield": 20.0,
-	"beam_size": 50.0,
+# Game Start Defaults
+const NON_DEFENSE_DEFAULTS := {
+	"planet": {"shield": 20.0},
+	"tractor_beam": {"slow_strength": 0.0, "beam_size": 50.0},
 }
 
 # Holds the CURRENT value of ALL upgradable stats game-wide : populated via register_defense_stats()
-var active_stats: Dictionary = { StatIDs.GLOBAL: DEFAULT_GLOBAL_STATS.duplicate() }
+var active_stats: Dictionary = {}
 var owned_defenses: Array[String] = []			# Stores all active defenses : populated via purchase_defenses()
 var all_defenses : Array[DefenseData] = []		# Stores all defenses : populated via register_all_defenses()
 var all_upgrades : Array[UpgradeData] = []		# Stores all upgrades : populated via register_all_defenses()
@@ -32,6 +31,7 @@ var planet_destroyed : bool = false
 signal stats_changed()
 signal resources_changed()
 signal shield_changed()
+signal planet_hit(damage: float)
 signal game_over()
 
 
@@ -41,12 +41,17 @@ signal game_over()
 
 
 func _ready() -> void:
-	register_all_defenses()		# CRITICAL : needs to run on game startup
-	register_all_upgrades()		# CRITICAL : ^ Upgrades after defenses
-	register_all_perks()		# CRITICAL : ^ Perks after upgrades
+	_reset_non_defense_stats()  # CRITICAL : ORDER MATTERS: needs to run 1st on game startup
+	register_all_defenses()		# CRITICAL : ^ Defenses after category reset
+	register_all_upgrades()		# CRITICAL : 	^ Upgrades after defenses
+	register_all_perks()		# CRITICAL : 		^ Perks after upgrades
+	
+	StatsManager.increment(CounterIDs.RUNS_STARTED)
+	print(" | INCREMENTED RUNS STARTED STAT | ")
 
 # Adds resource to inventory and updates ui
 func add_resource(amount: int) -> void:
+	StatsManager.increment(CounterIDs.RESOURCES_EARNED, amount)
 	resources += amount
 	resources_changed.emit()
 
@@ -63,12 +68,14 @@ func take_damage(damage_val: float) -> void:
 		push_warning(" [GAME] Could not run take_damage() due to planet == null | Game_Manager ")
 		return
 	
+	StatsManager.increment(CounterIDs.PLANET_DAMAGE_TAKEN, damage_val)
 	planet.shield -= damage_val # Deals damage
 	
 	# Safety correction
 	if planet.shield <= 0: planet.shield = 0
 	
 	# Tells UI to refresh
+	planet_hit.emit(damage_val)
 	shield_changed.emit()
 	
 	print_rich(" [color=green][b][GAME][/b][/color] Planet hit for %.1f damage | \
@@ -80,48 +87,15 @@ func take_damage(damage_val: float) -> void:
 
 # Scans the Defenses resource folder and registers stats for every DefenseData it finds
 func register_all_defenses() -> void:
-	_register_folder("res://Scripts/Resources/Defenses/", DefenseData, register_defense_stats, "DEFENSES")
+	ResourceScanner._register_folder("res://Scripts/Resources/Defenses/", DefenseData, register_defense_stats, "DEFENSES")
 
 # Scans the Upgrades resource folder and registers stats for every UpgradeData it finds
 func register_all_upgrades() -> void:
-	_register_folder("res://Scripts/Resources/Upgrades/", UpgradeData, register_upgrade_array, "UPGRADES")
+	ResourceScanner._register_folder("res://Scripts/Resources/Upgrades/", UpgradeData, register_upgrade_array, "UPGRADES")
 
 # Scans the Perks resource folder and registers stats for every PerkData it finds
 func register_all_perks() -> void:
-	_register_folder("res://Scripts/Resources/Perks/", PerkData, register_perk_stats, "PERKS")
-
-# Scans Resources folder for files (by scanning subfolders using _scan_resource_folder()) then hands it to a registrar 
-func _register_folder(path: String, expected_type, registrar: Callable, label: String) -> void:
-	var paths := _scan_resource_folder(path)
-	
-	if paths.is_empty():
-		push_warning("[color=red][b][ERROR][/b][/color] No resources found under %s | %s registration aborted" % [path, label])
-		return
-	
-	for file_path in paths:
-		var resource = load(file_path)
-		if is_instance_of(resource, expected_type):
-			registrar.call(resource)
-		else:
-			push_warning("[color=red][b][ERROR][/b][/color] Unexpected resource type in %s folder: %s" % [label, file_path])
-		
-	print(" | %s REGISTERED | " % label)
-
-# Scans Folder for resource files and returns array of them
-func _scan_resource_folder(path: String) -> Array[String]:
-	var found: Array[String] = []
-	
-	for file_name in DirAccess.get_files_at(path):
-		if file_name.ends_with(".remap"):
-			file_name = file_name.trim_suffix(".remap")
-		
-		if file_name.ends_with(".tres") or file_name.ends_with(".res"):
-			found.append(path.path_join(file_name))
-		
-	for folder_name in DirAccess.get_directories_at(path):
-		found.append_array(_scan_resource_folder(path.path_join(folder_name)))
-	
-	return found
+	ResourceScanner._register_folder("res://Scripts/Resources/Perks/", PerkData, register_perk_stats, "PERKS")
 
 # Checks arrays for defense , if not found, adds or duplicates it under it's id
 # Called by register_all_defenses()
@@ -160,7 +134,7 @@ func register_perk_stats(perk: PerkData) -> void:
 	
 	if perk.target_category == StatIDs.ALL:
 		for category in active_stats:
-			if category != StatIDs.GLOBAL and active_stats[category].has(perk.stat_id):
+			if not NON_DEFENSE_DEFAULTS.has(category) and active_stats[category].has(perk.stat_id):
 				all_perks.append(perk)
 				return
 		
@@ -183,8 +157,8 @@ func get_base_stat(category: String, stat_id: String) -> float:
 		if upgrade.target_category == category and upgrade.id == stat_id:
 			return upgrade.get_current_value()
 	
-	if category == StatIDs.GLOBAL:
-		return DEFAULT_GLOBAL_STATS.get(stat_id, 0.0)
+	if NON_DEFENSE_DEFAULTS.has(category):
+		return NON_DEFENSE_DEFAULTS[category].get(stat_id, 0.0)
 	
 	for defense in all_defenses:
 		if defense.id == category:
@@ -206,7 +180,7 @@ func _resolve_perk_categories(perk: PerkData) -> Array[String]:
 	
 	if perk.target_category == StatIDs.ALL:
 		for category in active_stats:
-			if category == StatIDs.GLOBAL:
+			if NON_DEFENSE_DEFAULTS.has(category):
 				continue
 			if active_stats[category].has(perk.stat_id):
 				categories.append(category)
@@ -215,6 +189,17 @@ func _resolve_perk_categories(perk: PerkData) -> Array[String]:
 		categories.append(perk.target_category)
 	
 	return categories
+
+
+func _apply_shield_gain(before: float) -> void:
+	var gained : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] - before
+	if is_zero_approx(gained): return
+	
+	# Heals the shield increase difference
+	var planet = get_tree().get_first_node_in_group("Planet")
+	if planet:
+		planet.heal(gained)
+	shield_changed.emit()
 
 # Purchase function for Defenses
 func purchase_defenses(defense: DefenseData) -> bool:
@@ -248,6 +233,9 @@ func purchase_defenses(defense: DefenseData) -> bool:
 	ring.add_child(new_defense)
 	ring.redistribute()
 	
+	StatsManager.increment(CounterIDs.DEFENSES_PURCHASED)
+	StatsManager.increment(CounterIDs.RESOURCES_SPENT, cost)
+	
 	resources -= cost
 	defense.amount_owned += 1
 	defense.is_purchased = true
@@ -264,19 +252,26 @@ func purchase_upgrade(upgrade: UpgradeData) -> bool:
 	if upgrade.get_block_reason() != PurchaseBlock.Reason.NONE:
 		return false
 	
+	var is_shield_upgrade := upgrade.target_category == StatIDs.PLANET and upgrade.id == StatIDs.MAX_SHIELD
+	var shield_before : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] if is_shield_upgrade else 0.0
+	
 	# Safety check : Only upgrades if it is a valid registered category and property
-	if active_stats.has(upgrade.target_category):
-		# Defines current cost value of upgrade
-		var cost = upgrade.get_current_cost()
-		resources -= cost
-		upgrade.level_up()
-		recalculate_stat(upgrade.target_category, upgrade.id)
-		
-	else:
+	if not active_stats.has(upgrade.target_category):
 		# Pushes if upgrade's target_category doesn't exist - meaning the category was never registered, or it is incorrect
 		push_warning("Purchase_upgrade: target_category '%s' not found in active_stats. Was it registered correctly?" % upgrade.target_category)
 		return false # Purchase unsuccessful : target_category not found in active_stats
 	
+	# Defines current cost value of upgrade
+	var cost = upgrade.get_current_cost()
+	
+	StatsManager.increment(CounterIDs.UPGRADES_PURCHASED)
+	StatsManager.increment(CounterIDs.RESOURCES_SPENT, cost)
+	
+	resources -= cost
+	upgrade.level_up()
+	recalculate_stat(upgrade.target_category, upgrade.id)
+	
+	if is_shield_upgrade: _apply_shield_gain(shield_before)
 	# Tells UI to refresh
 	resources_changed.emit()
 	stats_changed.emit()
@@ -295,9 +290,16 @@ func purchase_perk(perk: PerkData) -> bool:
 		push_warning("[color=red][b][GAME ERROR][/b][/color] purchase_perk: '%s' resolved to no categories for stat '%s'" % [perk.id, perk.stat_id])
 		return false
 	
-	resources -= perk.get_current_cost()
+	var cost = perk.get_current_cost()
+	
+	StatsManager.increment(CounterIDs.PERKS_PURCHASED)
+	StatsManager.increment(CounterIDs.RESOURCES_SPENT, cost)
+	
+	resources -= cost
 	perk.is_purchased = true
 	
+	var is_shield_perk := perk.stat_id == StatIDs.MAX_SHIELD
+	var shield_before : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] if is_shield_perk else 0.0
 	
 	for cat in categories:
 		var stat := perk.stat_id
@@ -311,6 +313,9 @@ func purchase_perk(perk: PerkData) -> bool:
 				perk_mult[cat][stat] = perk_mult[cat].get(stat,1.0) * (1.0 + perk.value)
 		
 		recalculate_stat(cat, stat)
+	
+	# Heals the shield increase difference
+	if is_shield_perk: _apply_shield_gain(shield_before)
 	resources_changed.emit()
 	stats_changed.emit()
 	
@@ -379,6 +384,11 @@ func _orbit_ring_generator(defense) -> Node2D:
 		new_ring.queue_free()
 		return null
 
+# Rebuilds each non-defense category to its default | Called via _ready() and game_reset()
+func _reset_non_defense_stats() -> void:
+	for category in NON_DEFENSE_DEFAULTS:
+		active_stats[category] = NON_DEFENSE_DEFAULTS[category].duplicate()
+
 # Game over function
 func trigger_game_over() -> void:
 	print(" ~ GAME OVER ~ ")
@@ -394,21 +404,20 @@ func game_reset() -> void:
 	# Resets values and properties
 	resources = 0
 	planet_destroyed = false
-	print(" | GLOBAL STATE VARIABLES RESET | ")
+	print(" | GAME STATE VARIABLES RESET | ")
 	
-	# Clears active_stats
+	# Resets active_stats
 	active_stats.clear()
 	print(" | ACTIVE_STATS ARRAY CLEARED | ")
-	
-	# Sets global to default values
-	var planet = get_tree().get_first_node_in_group("Planet")
-	active_stats[StatIDs.GLOBAL] = DEFAULT_GLOBAL_STATS.duplicate()
-	print(" | PLANET SHIELD RESET | ")
-	print(" | GLOBAL ACTIVE_STATS RESET | ")
+	_reset_non_defense_stats()
+	print(" | NON-DEFENSE ACTIVE_STATS RESET | ")
 	
 	# Resets WaveManager
 	WaveManager.reset() 	# Resets Wave to 1
 	print(" | WAVE MANAGER RESET | ")
+	
+	StatsManager.reset_run()
+	print(" | STATS MANAGER RESET | ")
 	
 	# Runs reset() for all current perks,defenses, and upgrades: sets level to 1
 	for perk in all_perks:
@@ -438,6 +447,8 @@ func game_reset() -> void:
 	register_all_upgrades()
 	register_all_perks()
 	
+	
+	# Updates UI
 	resources_changed.emit()
 	stats_changed.emit()
 	

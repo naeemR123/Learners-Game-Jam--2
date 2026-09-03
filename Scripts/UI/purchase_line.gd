@@ -184,7 +184,7 @@ func _update_upgrade_display() -> void:
 	cost_label.text = "MAXED" if is_maxed else str(cost) + " resources"
 	
 	# If assigned to Planet tab, applies 'owned' label, otherwise hides
-	if upgrade_data.target_category == StatIDs.GLOBAL:
+	if upgrade_data.target_category == StatIDs.PLANET:
 		owned_label.text = "Level: %d" % upgrade_data.current_level
 		owned_label.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
 	else:
@@ -203,13 +203,14 @@ func _update_perk_display() -> void:
 	var cost: int = perk_data.get_current_cost()
 	
 	name_label.text = perk_data.display_name
-	value_label.text = "%.1f" % perk_data.value
+	value_label.visible = false
 	owned_label.visible = false 	# Owned label is hidden for perks (cost label handles it)
 	tooltip_text = perk_data.description
 	mouse_filter = Control.MOUSE_FILTER_PASS	# Enables mouse hover
 	
 	var owned = reason == PurchaseBlock.Reason.ALREADY_OWNED
 	cost_label.text = "OWNED" if owned else str(cost) + " resources"
+	cost_label.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 	
 	purchase_button.tooltip_text = _get_reason_text(reason)
 	purchase_button.disabled = reason != PurchaseBlock.Reason.NONE

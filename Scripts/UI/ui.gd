@@ -6,6 +6,10 @@ extends CanvasLayer
 
 
 # Constants
+const CATEGORY_NAMES := {	# Display titles for non-defense upgrade categories
+	"planet": "Planet",
+	"tractor_beam": "Tractor Beam",
+}
 const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 
 # Nodes
@@ -72,10 +76,9 @@ func _update_r_ui() -> void:
 
 # Refreshes Planet shield display ui
 func _update_shield_ui() -> void:
-	
 	# Gets shield value from active_stats Array in Game_Manager
 	var current_shield = planet.shield
-	planet_shield.text = "Shield: " + str(current_shield)
+	planet_shield.text = "Shield: %d" % current_shield
 
 # Runs reset function in Game_Manager
 func _on_retry_button_pressed() -> void:
@@ -104,24 +107,35 @@ func _populate_shop_panel() -> void:
 		var list = satellites_list if defense is SatelliteData else drones_list
 		_add_row(list, defense)
 	
+	# Splits non-defense upgrades by category so each gets one accoridon row
+	var upgrades_by_category : Dictionary = {}
 	for upgrade in game.all_upgrades:
-		if upgrade.target_category == StatIDs.GLOBAL:
-			_add_row(planet_list, upgrade)
+		if not game.NON_DEFENSE_DEFAULTS.has(upgrade.target_category):
+			continue
+		if not upgrades_by_category.has(upgrade.target_category):
+			upgrades_by_category[upgrade.target_category] = []
+		upgrades_by_category[upgrade.target_category].append(upgrade)
 	
-	for perk in game.all_perks:
-		
-		var perks_by_tier : Dictionary = {}
-		for p in game.all_perks:
-			if not perks_by_tier.has(p.tier):
-				perks_by_tier[p.tier] = []
-			perks_by_tier[p.tier].append(p)
-		
-		var tiers = perks_by_tier.keys()
-		tiers.sort()
-		for tier in tiers:
-			var row = SHOP_ACC_ROW.instantiate()
-			perks_list.add_child(row)
-			row.setup_perk_tier(tier, perks_by_tier[tier])
+	# Iterates the const, so categories are declared in NON_DEFENSE_DEFAULTS order
+	for category in game.NON_DEFENSE_DEFAULTS:
+		if not upgrades_by_category.has(category):
+			continue
+		var row = SHOP_ACC_ROW.instantiate()
+		planet_list.add_child(row)
+		row.setup_upgrade_group(CATEGORY_NAMES.get(category, category), upgrades_by_category[category])
+	
+	var perks_by_tier : Dictionary = {}
+	for p in game.all_perks:
+		if not perks_by_tier.has(p.tier):
+			perks_by_tier[p.tier] = []
+		perks_by_tier[p.tier].append(p)
+	
+	var tiers = perks_by_tier.keys()
+	tiers.sort()
+	for tier in tiers:
+		var row = SHOP_ACC_ROW.instantiate()
+		perks_list.add_child(row)
+		row.setup_perk_tier(tier, perks_by_tier[tier])
 
 # Creates ShopAccordionRow under specified list | Called via _populate_shop_panel()
 func _add_row(list: VBoxContainer, data) -> void:
@@ -130,9 +144,7 @@ func _add_row(list: VBoxContainer, data) -> void:
 	
 	if data is DefenseData:
 		row.setup_defense(data)
-	elif data is UpgradeData:
-		row.setup_upgrade(data)
-		
+
 # Shifts the shop off-screen and centers planet
 func _on_hide_button_pressed() -> void:
 	manually_hidden = not manually_hidden

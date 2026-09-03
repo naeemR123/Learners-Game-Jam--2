@@ -23,7 +23,7 @@ extends Node2D
 		notify_property_list_changed()
 @export var bwave_number : int = 3
 
-@export_group("Global Stats")
+@export_group("Stats")
 
 @export var extra_resources: bool = false:
 	set(value):
@@ -61,9 +61,9 @@ func _enter_tree() -> void:
 	if custom_shield:
 		
 		
-		Game_Manager.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD] = shield_amount
+		Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] = shield_amount
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Custom Shield Debug: ENABLED \
-		| Max Planet Shield now set to %d" % [Game_Manager.active_stats[StatIDs.GLOBAL][StatIDs.MAX_SHIELD]])
+		| Max Planet Shield now set to %d" % [Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD]])
 	
 
 

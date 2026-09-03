@@ -30,33 +30,7 @@ func _ready() -> void:
 
 # Scans the Asteroids folder and registers stats for every AsteroidData it find
 func register_all_asteroids() -> void:
-	
-	# Routes access to Asteroids Resource folder, and returns if there is no folder
-	var dir = DirAccess.open("res://Scripts/Resources/Asteroids/")
-	if dir == null:
-		push_error("Could not open Asteroids resource folder")
-		return
-	
-	dir.list_dir_begin() # Start iterating over folder contents
-	var file_name = dir.get_next()
-	
-	# Loops while there are non-blank files
-	while file_name != "":
-		# Only processes .tres files, skipping other file types
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			# Creates a file path with the specific resource file
-			var path = "res://Scripts/Resources/Asteroids/" + file_name
-			var resource = load(path)	# Loads that path
-			
-			# Safety check: makes sure it is a AsteroidData Resource
-			if resource is AsteroidData:
-				register_asteroids_stats(resource)	# Upon success, runs function to register it
-			else:
-				push_warning("Unexpected resource type in Asteroids folder: " + path)
-			
-		file_name = dir.get_next()
-		
-	dir.list_dir_end()	# CRITICAL : always needs to be called when done iterating
+	ResourceScanner._register_folder("res://Scripts/Resources/Asteroids/", AsteroidData, register_asteroids_stats, "ASTEROIDS")
 
 
 # Checks 'all_asteroids' for resource , if not found, adds it
@@ -204,6 +178,10 @@ func asteroid_death() -> void:
 	# asteroids have been spawned, then the wave ends
 	if asteroids_alive <= 0 and asteroids_spawned == max_asteroids:
 		print("~ WAVE %d ENDED | WAVE %d NEXT" % [current_wave,current_wave+1])
+		
+		StatsManager.increment(CounterIDs.WAVES_SURVIVED)
+		StatsManager.record_max(CounterIDs.HIGHEST_WAVE, current_wave)
+		
 		wave_active = false
 		current_wave += 1
 		wave_complete.emit()

@@ -1,8 +1,6 @@
 [gd_resource type="Resource" script_class="PerkData" format=3 uid="uid://d4fmiplgwosr5"]
 
 [ext_resource type="Script" uid="uid://d1tn35sg1esit" path="res://Scripts/ResourceScripts/perk_data.gd" id="1_r01ug"]
-[ext_resource type="Script" uid="uid://cae24x7wnvda8" path="res://Scripts/ResourceScripts/defenses_data.gd" id="2_5fbyx"]
-[ext_resource type="Resource" uid="uid://doyfo336gdf5o" path="res://Scripts/Resources/Defenses/turret_satellite.tres" id="3_tq08b"]
 
 [resource]
 script = ExtResource("1_r01ug")
@@ -10,10 +8,7 @@ id = "damage_1"
 display_name = "High Caliber Bullets"
 description = "Permanently increases ALL damage by 10%"
 cost = 50
-target_category = Array[ExtResource("2_5fbyx")]([ExtResource("3_tq08b")])
+target_category = "all"
 stat_id = "damage"
-perk_type = null
 value = 0.1
-prerequisites = null
-tier = null
 metadata/_custom_type_script = "uid://d1tn35sg1esit"

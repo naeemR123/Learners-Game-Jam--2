@@ -30,12 +30,43 @@ Tiers are about *scope and ordering*, not importance:
 - [x] `game_reset()` rebuilds registries instead of leaving holes in `active_stats`
 - [x] `StatIDs` constants migration (raw strings removed)
 - [x] `@tool` debug settings in `main.gd` with `_validate_property()` hiding
+- [x] **Recursive resource folder scanning** — `_scan_resource_folder()` walks subfolders via
+      `DirAccess.get_files_at()` / `get_directories_at()`, handling `.remap` and `.res`
+      export-build suffixes. Resource folders can be organised into subfolders freely.
+- [x] **Generic folder registrar** — `_register_folder(path, type, registrar, label)` collapsed
+      three near-identical 30-line scan functions into three one-liners, using `Callable`
+      and `is_instance_of()`
+- [x] **Layered stat system** — `perk_flat` / `perk_mult` hold perk contributions separately
+      from `active_stats`; `get_base_stat()` + `recalculate_stat()` compute
+      `final = (base + flat) * mult`. Single write path; nothing outside `Game_Manager` changed.
+- [x] **Perk system** — `purchase_perk()`, FLAT and PERCENT types, prerequisite tree,
+      `ALL` wildcard targeting, tier-grouped accordion rows, and `PREREQS_NOT_MET` tooltips
+      that name the missing prerequisites
+- [x] **`planet` / `tractor_beam` category split** — a `NON_DEFENSE_DEFAULTS` table replaced
+      the `if category == PLANET` special cases in `get_base_stat()`,
+      `_resolve_perk_categories()` and `register_perk_stats()`. Adding a non-defense category
+      is now one dictionary entry. Planet tab groups its rows by category via
+      `setup_upgrade_group()`, ordered by the const rather than folder scan order.
+- [x] **Stat counters** — `StatsManager` autoload with `run` / `lifetime` dictionaries,
+      `increment()` / `record_max()` / `reset_run()`, plus a `CounterIDs` constants class.
+      No signal on increment (damage fires dozens of times a second); `debug_print()` covers
+      display until the stats menu exists. Damage is clamped to remaining health so overkill
+	  doesn't inflate the total.
+- [x] `WaveManager.register_all_asteroids()` migrated to `_register_folder()` — Asteroids
+	  can now use subfolders and survive export-build `.remap` renaming
+- [x] **`global` → `planet` category rename** — `max_planet_shield` → `shield`.
+	  `StatIDs.GLOBAL` is reserved, unused, for genuinely game-wide stats later.
+- [x] **`shield_changed` / `planet_hit` signal split** — one signal was carrying both
+	  "value changed, redraw" and "we got hit, shake", so a perk purchase couldn't refresh
+	  the bar without faking a hit. Screen shake now scales with damage.
+- [x] **`_apply_shield_gain()`** — raising max shield tops up current shield by the
+	  difference, so it works for both FLAT and PERCENT sources
 
 ### Gameplay
 - [x] Wave system — weighted spawn pool, boss waves, `min_wave` gating
 - [x] Status effect system — `StatusEffectsData`, MODIFIER / PERIODIC families,
-      source-keyed `status_effects` dict on asteroid, per-asteroid resistances,
-      strongest-wins `get_modifier()`
+	  source-keyed `status_effects` dict on asteroid, per-asteroid resistances,
+	  strongest-wins `get_modifier()`
 - [x] Orbit ring system — type-grouped rings, even spacing, arc-motion tweening, `redistribute()`
 - [x] Planet shield as a computed property proxying into `active_stats`
 - [x] `ScalingType.SUBTRACTIVE` for fire-rate style upgrades
@@ -44,7 +75,7 @@ Tiers are about *scope and ordering*, not importance:
 
 ### UI
 - [x] Shop revamp, all three phases — `TabContainer`, custom stretch `TabBar`,
-      `FoldableContainer` accordion rows, `PurchaseLine`
+	  `FoldableContainer` accordion rows, `PurchaseLine`
 - [x] Bulk purchase — x10, Shift for max
 - [x] Range upgrade hover preview — blinking `Line2D` at next-level radius
 
@@ -61,46 +92,44 @@ Tiers are about *scope and ordering*, not importance:
 
 ### 2A · Next up
 
-- [ ] **Perk integration**
-  - [x] `PurchaseBlock.Reason.ALREADY_OWNED` + `PREREQS_NOT_MET`
-  - [x] `PerkData.get_current_cost()` + `get_block_reason()`
-  - [ ] `Game_Manager.purchase_perk()`
-  - [ ] `ui.gd` — `perks_list` reference + `_populate_shop_panel()` branch
-  - [ ] `shop_accordion_row.gd` — `setup_perk()`
-  - [ ] `purchase_line.gd` — perk path
-  - [ ] 2–3 actual perk `.tres` resources
-- [ ] **Stat counters** — `asteroids_killed`, `total_resources_earned`, `damage_dealt`,
-      `waves_survived`. Needed by the stats menu, save/load, and achievements.
+- [ ] **Partial-set perk targeting** — `target_category: String` → `target_categories: Array[String]`,
+	  with `["all"]` as the wildcard. Lets a perk hit turrets + lasers but not collectors.
+	  ~15 lines in `_resolve_perk_categories()` and `register_perk_stats()`.
+	  Same shape will be reusable for filtering stat counters by defense type.
 - [ ] **Number formatting** — `format_number()` → `1.2K` / `3.4M`. Cost labels will
-      overflow their containers otherwise.
+	  overflow their containers otherwise.
+- [ ] More perk `.tres` resources — currently 2; aim for 3 roots / 4 middles / 1 capstone
+	  so the prerequisite tree and the `", ".join()` tooltip path actually get exercised
+- [ ] `damage_perk_1.tres` says "increases ALL damage" but targets `turret_satellite` —
+	  should be `"all"`
 
 ### 2B · Core
 
 - [ ] **Save / load** — serialize a plain Dictionary via `FileAccess` + `JSON`.
-      Avoid `ResourceLoader` on user files (embedded scripts execute).
+	  Avoid `ResourceLoader` on user files (embedded scripts execute).
 - [ ] Start screen
 - [ ] Pause menu — `PauseMenu` input action is mapped to nothing
 - [ ] Game speed control (1x / 2x / 4x) — interacts with `local_time_scale` slow effects
 - [ ] Auto-start wave toggle
 - [ ] Sell / refund defenses
 - [ ] **Targeting modes** — `get_nearest_asteroid()` → `get_target()` with a mode enum
-      (nearest / lowest HP / highest HP / closest to planet)
+	  (nearest / lowest HP / highest HP / closest to planet)
 - [ ] Wave preview panel
 - [ ] **Game Stats menu** with wave-end summaries — depends on stat counters;
-      coordinate with save/load. `StatsMenu` input action is mapped to nothing.
+	  coordinate with save/load. `StatsMenu` input action is mapped to nothing.
 
 ### 2C · Content
 
 - [ ] **Splitter asteroids** — `@export var splits_into : AsteroidData` + `split_count`,
-      branch in `die()`
+	  branch in `die()`
 - [ ] **Wave modifiers** — a `WaveModifierData` resource, auto-scanned like everything
-      else, applied in `start_wave()`
+	  else, applied in `start_wave()`
 - [ ] **Boss health bar** — screen-top bar during boss waves; extends existing
-      `bwave_label` warning behavior
+	  `bwave_label` warning behavior
 - [ ] **Marker drone** — attaches to the asteroid it marks, applying `EffectIDs.DAMAGE_TAKEN`.
-      The drone body *is* the visual indicator. Gives drones an identity distinct from
-      satellites (they leave the ring and commit to a target), and caps concurrent marks
-      at the number of drones owned.
+	  The drone body *is* the visual indicator. Gives drones an identity distinct from
+	  satellites (they leave the ring and commit to a target), and caps concurrent marks
+	  at the number of drones owned.
 	  - Don't reparent to the asteroid — `queue_free()` takes children with it.
 		Track the target and set `global_position` instead.
 	  - Decide source-key granularity: shared key = one mark per asteroid;
@@ -122,15 +151,23 @@ Tiers are about *scope and ordering*, not importance:
 	  overwrites unconditionally, so STRONGEST vs REFRESH does nothing
 - [ ] `StatusEffectsData.tint` unused — no visual for a slowed asteroid
 - [ ] Orbit radius upgrades don't work — `satellite_ring.update_stats()` only reads
-      `ORBIT_SPEED`; `my_orbit_radius` is set once in `initialize()` and never re-read
+	  `ORBIT_SPEED`; `my_orbit_radius` is set once in `initialize()` and never re-read
 - [ ] Resolve `get_modifier()` direction contract — comment assumes consumers apply
-      `(1.0 - x)` as a reduction; a vulnerability debuff needs `(1.0 + x)`
+	  `(1.0 - x)` as a reduction; a vulnerability debuff needs `(1.0 + x)`
 - [ ] Orbit ring visualization — per-ring `Line2D` circle owned by `satellite_ring.gd`
 - [ ] Starfield twinkle gradient softening follow-up
 - [ ] `purchase_line._process()` polls Shift every frame on every row — move to one
-      broadcaster
+	  broadcaster
 - [ ] `_set_satellite_range_visible(false)` reaches into `sat.range_indicator` directly
-      while the `true` path uses `has_method()` guards — pick one
+	  while the `true` path uses `has_method()` guards — pick one
+- [ ] `CounterIDs.RESOURCES_SPENT` is declared but never incremented — add it to all three
+      purchase functions
+- [ ] Extract `_register_folder()` / `_scan_resource_folder()` into a static `ResourceScanner`
+      class — currently duplicated verbatim in `game_manager.gd` and `wave_manager.gd`
+- [ ] `CounterIDs.RUNS_STARTED` only increments in `game_reset()`, so the first run of a
+      session is never counted — increment in `_ready()` too, or rename it
+- [ ] `StatsManager._ready()` connects to `WaveManager.wave_complete` for `debug_print()` —
+      undocumented autoload-order dependency; remove when the stats menu lands
 - [ ] Delete `Scenes/*.tmp` editor artifacts; add `*.tmp` to `.gitignore`
 
 ---
@@ -140,12 +177,12 @@ Tiers are about *scope and ordering*, not importance:
 *Sound was deliberately moved here: a dedicated session once sprite work is further along.*
 
 - [ ] **AudioManager autoload** — pool of `AudioStreamPlayer` nodes, signal-driven off
-      `shield_changed`, asteroid death, purchases
+	  `shield_changed`, asteroid death, purchases
 - [ ] **Universal `Theme` resource** — replaces per-node styling before the UI grows further
 - [ ] Sprite work — cartoon style in Krita, then Inkscape; pixelation shader overlay
-      (not native pixel art)
+	  (not native pixel art)
 - [ ] Consider dropping base viewport resolution if going for a chunky pixel look —
-      currently 1920×1080 with nearest-neighbour filtering
+	  currently 1920×1080 with nearest-neighbour filtering
 - [ ] Resource despawn flash *(parked pending sprite art)*
 
 ---
@@ -189,12 +226,24 @@ with run currency, are a *build-choice* system — runs diverge based on which b
 could afford. That's interesting without prestige. When prestige lands, add a second set
 via `is_meta` rather than converting these. `game_reset()` keeps calling `perk.reset()`.
 
-**`active_stats` has a single-author problem.** It stores one *final* value per stat, and
-`purchase_upgrade()` writes it absolutely from `base_value + val_per_level * (level - 1)`,
-where `base_value` was synced once at registration. Any second contributor (perks) gets
-silently overwritten on the next upgrade purchase. The cheap fix is for perks to shift
-`UpgradeData.base_value` so they become part of the curve. The correct long-term fix is
-splitting `active_stats` into base + modifier layers — deferred until it's actually needed.
+**`active_stats` has a single-author problem — SOLVED, keep it that way.** It stores one
+*final* value per stat, so any second contributor gets silently overwritten. Resolved by
+layering: `perk_flat` and `perk_mult` hold perk contributions separately, `get_base_stat()`
+returns the pre-perk value (upgrade curve if one exists, else the registered default), and
+`recalculate_stat()` computes `(base + flat) * mult`. **`recalculate_stat()` is the only
+thing that may write `active_stats`.** Anything that changes a stat calls it instead of
+assigning. This was the root cause of four separate bugs — treat any new direct write as a bug.
+
+**Signals are named after what happened, not what should happen next.** `shield_changed`
+was doing double duty as "redraw the bar" and "shake the screen", so a perk purchase couldn't
+refresh the display without faking a hit. Split into `shield_changed` (state changed) and
+`planet_hit(damage)` (event occurred). New feedback — sound, particles, vignette — hooks
+the event, not the state change.
+
+**Wildcard perk targeting over explicit lists.** `target_category = "all"` resolves against
+whatever categories exist at purchase time, so a new defense carrying the same stat is
+covered with no perk edits. An `Array[DefenseData]` would have needed manual maintenance and
+failed silently when forgotten — against the drop-a-file-in-a-folder philosophy of the codebase.
 
 **Placeholder art stays longer than feels comfortable.** Feel comes from motion, timing,
 sound, and feedback far more than sprites.
@@ -210,6 +259,14 @@ Things that have bitten more than once — check these first when something beha
   need duplicating *and* reassigning; forgetting the reassignment is the common miss
 - **Guard clauses before side effects** — validate everything, *then* mutate
 - **Off-by-one around level-up** — cost reads *before* the increment, value reads *after*
+- **Direct writes to `active_stats`** — only `recalculate_stat()` may assign; everything
+  else calls it. Four bugs so far have come from bypassing it.
+- **Loop variables that are never used in the body** — either the loop is wrong or it
+  shouldn't exist (caused the duplicated perk tier rows)
+- **`continue` followed by an indented block** — that block is unreachable; watch the
+  Debugger's unreachable-code warning
+- **`Dictionary.duplicate()` is shallow** — nested dictionaries stay shared references, so
+  duplicate the inner block directly or pass `duplicate(true)`
 - **`DirAccess` folder scanning** — `.import` / `.remap` suffixes break in export builds;
   applies to the existing `.tres` scanning too
 - **Texture sizing is an import-settings problem** — fixing it via `scale_ratio` silently

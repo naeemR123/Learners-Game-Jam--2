@@ -10,8 +10,7 @@ const SLOW_EFFECT = preload("uid://b1hjfnwgatp5p")
 @export var pull_speed: float = 150.0
 @export var pull_strength: float = 10
 
-var beam_size : float = 50.0
-
+var beam_size : float
 
 func _ready() -> void:
 	# Makes the radius of the collision shape 60% of the width of the sprite
@@ -25,7 +24,7 @@ func _ready() -> void:
 
 
 func update_stats() -> void:
-	beam_size = game.active_stats[StatIDs.GLOBAL][StatIDs.BEAM_SIZE]
+	beam_size = game.active_stats[StatIDs.TRACTOR_BEAM][StatIDs.BEAM_SIZE]
 	collision.shape.radius = beam_size
 	sprite.texture.size = Vector2(beam_size,beam_size)*2
 
@@ -54,7 +53,7 @@ func _physics_process(delta: float) -> void:
 #  - Controls SLOW-DOWN mechanic for asteroids - #
 func _on_area_entered(asteroid: Area2D):
 	if asteroid.is_in_group("Asteroids"):
-		var slow_strength = game.active_stats[StatIDs.GLOBAL][StatIDs.SLOW_STRENGTH]
+		var slow_strength = game.active_stats[StatIDs.TRACTOR_BEAM][StatIDs.SLOW_STRENGTH]
 		asteroid.apply_effect(EffectIDs.TRACTOR_BEAM, SLOW_EFFECT, slow_strength)
 		print("[DEBUG] Asteroid in Tractor Beam | Current Slow Down Value: %.1f" % slow_strength)
 
