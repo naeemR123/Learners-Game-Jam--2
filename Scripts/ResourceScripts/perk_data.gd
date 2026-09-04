@@ -2,6 +2,7 @@ extends Resource
 class_name PerkData
 
 
+enum PerkEffect { STAT_MODIFIER, UNLOCK }
 enum PerkType { FLAT, PERCENT }
 
 @export var id : String
@@ -12,13 +13,19 @@ enum PerkType { FLAT, PERCENT }
 @export var cost : int
 
 @export_category("Effect")
-## Mirror [code]UpgradeData[/code]: which [code]active_stats[/code] category this affects
+## Sets [code]PerkEffect[/code] which determines which kind of perk this is. 
+## [code]STAT_MODIFIER[/code] indicates this perk will modify an [code]active_stats[/code] value by a certain amount. These [code]PerkEffects[/code] uses [code]@export[/code] values: [code]target_category, stat_id, and value[/code].
+## [code]UNLOCK[/code] indicates this perk will unlock a feature or something similar, and will not effect any stat or value. For example, unlocking extra targeting modes for satellites.
+@export var perk_effect : PerkEffect = PerkEffect.STAT_MODIFIER
+## Only affected by [code]PerkEffect[/code] [code]UNLOCK[/code].  What to unlock when perk is purchased.
+@export var unlock_id : String 
+## Only affected by [code]PerkEffect[/code] [code]STAT_MODIFIER[/code].  Mirror [code]UpgradeData[/code]: which [code]active_stats[/code] category this affects
 @export var target_category : String
-## Which [code]stat/key[/code] within the specified [code]target_category[/code]
+## Only affected by [code]PerkEffect[/code] [code]STAT_MODIFIER[/code].  Which [code]stat/key[/code] within the specified [code]target_category[/code]
 @export var stat_id : String
-## Sets [code]PerkType[/code] which affects how [code]value[/code] treats desired [code]stat[/code]. Flat for [code]FLAT[/code] (25 == +25), or fraction for [code]PERCENT[/code] (0.25 == +25%)
+## Only affected by [code]PerkEffect[/code] [code]STAT_MODIFIER[/code].  Sets [code]PerkType[/code] which affects how [code]value[/code] treats desired [code]stat[/code]. Flat for [code]FLAT[/code] (25 == +25), or fraction for [code]PERCENT[/code] (0.25 == +25%)
 @export var perk_type : PerkType = PerkType.PERCENT
-## One-time [code]value[/code] of effect - no levels or scaling, permanent increase for entire run (until [code]game_reset()[/code]. 
+## Only affected by [code]PerkEffect[/code] [code]STAT_MODIFIER[/code].  One-time [code]value[/code] of effect - no levels or scaling, permanent increase for entire run (until [code]game_reset()[/code]. 
 ## Flat amount for [code]FLAT[/code] (25 == +25), or a fraction for [code]PERCENT[/code] (0.25 == +25%). 
 @export var value : float
 
@@ -32,7 +39,7 @@ var is_purchased : bool = false
 # - Functions - 
 
 # Determines if this perk should be unlocked based on if it's prerequisites are
-func is_unlocked() -> bool:
+func _prereqs_met() -> bool:
 	for perk in prerequisites:
 		if not perk.is_purchased:
 			return false
@@ -48,7 +55,7 @@ func get_block_reason(resources: int = Game_Manager.resources) -> PurchaseBlock.
 	if is_purchased:
 		return PurchaseBlock.Reason.ALREADY_OWNED
 	
-	if not is_unlocked():
+	if not _prereqs_met():
 		return PurchaseBlock.Reason.PREREQS_NOT_MET
 	
 	if resources < cost:

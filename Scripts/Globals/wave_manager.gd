@@ -26,11 +26,12 @@ signal wave_complete()				# connects to ui.gd
 
 func _ready() -> void:
 	register_all_asteroids()	# CRITICAL : needs to run on game startup
+	
 
 
 # Scans the Asteroids folder and registers stats for every AsteroidData it find
 func register_all_asteroids() -> void:
-	ResourceScanner._register_folder("res://Scripts/Resources/Asteroids/", AsteroidData, register_asteroids_stats, "ASTEROIDS")
+	ResourceScanner.register_folder("res://Scripts/Resources/Asteroids/", AsteroidData, register_asteroids_stats, "ASTEROIDS")
 
 
 # Checks 'all_asteroids' for resource , if not found, adds it
@@ -171,6 +172,9 @@ func get_boss_asteroid(wave: int) -> AsteroidData:
 # Tracks how many asteroids are still active
 # Ends the wave if conditions are met
 func asteroid_death() -> void:
+	
+	if not wave_active: return
+	
 	asteroids_alive -= 1
 	print(" ~ %d Asteroids Remaining" % (max_asteroids - asteroids_spawned + asteroids_alive))
 	

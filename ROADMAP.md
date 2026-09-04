@@ -1,7 +1,7 @@
 # Incremental Space Game — Roadmap
 
 > **Engine:** Godot 4.7 · **Language:** GDScript
-> **Last updated:** 2026-09-02
+> **Last updated:** 2026-09-04
 
 ## How to use this file
 
@@ -61,6 +61,15 @@ Tiers are about *scope and ordering*, not importance:
 	  the bar without faking a hit. Screen shake now scales with damage.
 - [x] **`_apply_shield_gain()`** — raising max shield tops up current shield by the
 	  difference, so it works for both FLAT and PERCENT sources
+- [x] **Feature-unlock perks** — `PerkData.perk_effect` (`STAT_MODIFIER` / `UNLOCK`) splits perks
+	  into stat modifiers and feature toggles. `UNLOCK` perks carry an `unlock_id` validated at
+	  registration, so `purchase_perk()` never has to re-check it. `purchase_perk()` was
+	  restructured into validate → charge → apply → notify, so both kinds share the cost, counter,
+	  and signal bookkeeping and only the apply step branches. `Game_Manager.unlocked_features`
+	  plus `is_feature_unlocked()` and a `feature_unlocked(unlock_id)` signal; `UnlockIDs`
+	  constants class. See Decisions log.
+- [x] `ResourceScanner` extracted — `register_folder()` / `scan_resource_folder()` now live in a
+	  static class instead of being duplicated in `game_manager.gd` and `wave_manager.gd`
 
 ### Gameplay
 - [x] Wave system — weighted spawn pool, boss waves, `min_wave` gating
@@ -72,12 +81,33 @@ Tiers are about *scope and ordering*, not importance:
 - [x] `ScalingType.SUBTRACTIVE` for fire-rate style upgrades
 - [x] Frame-based claim arbitration for collector satellite gravity conflicts
 - [x] `purchase_upgrade()` cost/value ordering — cost read before `level_up()`, value after
+- [x] **Radial asteroid spawning** — spawns on a fixed-radius circle around the planet
+	  (`planet.global_position + Vector2.from_angle(randf() * TAU) * radius`) instead of picking
+	  a screen edge. Travel time is now identical for every asteroid and every player.
+	  `asteroid.gd`'s despawn check matches the geometry: a scalar `despawn_dist` computed once
+	  in `start()` from the spawn distance + margin, compared against `distance_to(planet)`.
+	  Deleted `viewport_size`, `_on_viewport_resized()`, `margin`, and `screen_size` — the file
+	  no longer reads viewport size at all, so resize can't break it. See Decisions log.
 
 ### UI
 - [x] Shop revamp, all three phases — `TabContainer`, custom stretch `TabBar`,
 	  `FoldableContainer` accordion rows, `PurchaseLine`
 - [x] Bulk purchase — x10, Shift for max
 - [x] Range upgrade hover preview — blinking `Line2D` at next-level radius
+- [x] **Off-screen threat indicator** — `ThreatArrowManager` (`CanvasLayer`) draws edge arrows
+	  for incoming asteroids outside the view, unlocked by an `UNLOCK` perk.
+	  Ranks by *seconds until visible* (world-space distance to the visible rect divided by
+	  `asteroid.speed`), so a fast Swarm outranks a slow Tank at the same distance. Arrows scale
+	  with urgency and blink on appearance.
+	  - Fixed pool of 20 built in `_ready()`; nothing is instanced or freed during play.
+	  - **Stable assignment** — an `asteroid → arrow` Dictionary keeps each arrow with its
+		asteroid for its whole lifetime. Indexing the pool by sort rank instead made arrows swap
+		screen edges whenever two asteroids traded places, and let blink tweens run on
+		reassigned arrows.
+	  - Per-frame pass is five functions: collect → rank → release → assign → update.
+		Release must run before assign, or the pool looks empty and new threats get nothing.
+	  - A dot product of the asteroid's `direction` against the direction to screen centre drops
+		arrows for anything already receding — mainly comets after they pass.
 
 ### Feel & look
 - [x] Hit flash, hit particles, death particles, floating damage numbers
@@ -85,6 +115,19 @@ Tiers are about *scope and ordering*, not importance:
 - [x] Parallax starfield with twinkle shader (phase baked into blue channel)
 - [x] Planet shield display
 - [x] Randomized asteroid textures — `get_random_texture()` + `PlaceholderTexture2D` fallback
+- [x] **Aspect-ratio scaling** — `window/stretch/mode="canvas_items"` + `aspect="expand"`.
+	  `canvas_items` renders UI natively at the screen's real resolution (the earlier `viewport`
+	  setting upscaled from 1920×1080 and made text blurry on high-res displays — a known
+	  Godot 4 behaviour). `expand` reveals extra world space on wider/taller screens instead of
+	  cropping or black-barring, and `camera.gd._update_aspect_zoom()` counteracts it with a
+	  clamped `Camera2D.zoom`, re-running on `size_changed`.
+- [x] **Resize-safe UI positioning** — `ui.gd` derives `shop_origin` / `shop_hidden_pos` from
+	  the panel's anchors × `get_parent_area_size()` instead of sampling live `global_position`
+	  and `size`, then snaps the panel to the correct target on resize. `camera.gd` stores
+	  `shop_open` so it can recompute `shop_offset` on resize without being told.
+- [x] **Projectile HDR glow** — `SatelliteData.projectile_color` → `turret_satellite.gd`
+	  → `projectile.gd`'s `modulate`, with a `WorldEnvironment` + Glow in `main.tscn`.
+	  New projectile types set one export field; no code changes.
 
 ---
 
@@ -160,14 +203,10 @@ Tiers are about *scope and ordering*, not importance:
 	  broadcaster
 - [ ] `_set_satellite_range_visible(false)` reaches into `sat.range_indicator` directly
 	  while the `true` path uses `has_method()` guards — pick one
-- [ ] `CounterIDs.RESOURCES_SPENT` is declared but never incremented — add it to all three
-      purchase functions
-- [ ] Extract `_register_folder()` / `_scan_resource_folder()` into a static `ResourceScanner`
-      class — currently duplicated verbatim in `game_manager.gd` and `wave_manager.gd`
-- [ ] `CounterIDs.RUNS_STARTED` only increments in `game_reset()`, so the first run of a
-      session is never counted — increment in `_ready()` too, or rename it
+- [ ] `CounterIDs.RUNS_STARTED` — now increments in `Game_Manager._ready()`, but `game_reset()`
+	  no longer counts a fresh run. Decide which moment the counter means and make it consistent.
 - [ ] `StatsManager._ready()` connects to `WaveManager.wave_complete` for `debug_print()` —
-      undocumented autoload-order dependency; remove when the stats menu lands
+	  undocumented autoload-order dependency; remove when the stats menu lands
 - [ ] Delete `Scenes/*.tmp` editor artifacts; add `*.tmp` to `.gitignore`
 
 ---
@@ -184,6 +223,11 @@ Tiers are about *scope and ordering*, not importance:
 - [ ] Consider dropping base viewport resolution if going for a chunky pixel look —
 	  currently 1920×1080 with nearest-neighbour filtering
 - [ ] Resource despawn flash *(parked pending sprite art)*
+- [ ] **Planet rotation** — sphere-mapping shader (fisheye UV warp sampling an equirectangular
+	  strip texture) once a planet surface texture exists. Strip size ≈ π × on-screen diameter
+	  wide, half that tall (2:1 ratio); must tile left-right seamlessly.
+- [ ] **Resource glint** — shimmer sweep shader on asteroid/resource sprites; doesn't need new
+	  art, works on whatever texture is already assigned. Cheap win, can happen anytime.
 
 ---
 
@@ -245,6 +289,42 @@ whatever categories exist at purchase time, so a new defense carrying the same s
 covered with no perk edits. An `Array[DefenseData]` would have needed manual maintenance and
 failed silently when forgotten — against the drop-a-file-in-a-folder philosophy of the codebase.
 
+**Aspect-ratio fairness — clamped zoom now, an off-screen indicator later, not raw `expand`.**
+`expand` alone reveals extra space unevenly across axes (whichever axis the screen is
+proportionally wider/taller than base on), giving some aspect ratios extra early warning for
+free. Camera zoom compensation only takes the edge off — fully correcting for 21:9 would make
+16:9 feel cramped by comparison, so `min_zoom_factor` / `max_zoom_factor` clamp it deliberately
+rather than fully equalizing. The real fairness fix is screen-size-independent: the planned
+off-screen threat indicator (Tier 2C, perk-gated) gives every player the same information
+regardless of what's physically visible, which raw camera math can only approximate.
+*(Shipped — see UI, Completed.)*
+
+**Feature unlocks are an `Array[String]`, not a resource class.** An `UnlockableData` Resource
+with `enable()` / `reset()` was drafted and rejected: it would have needed its own folder scan,
+registration function, and reset lifecycle to store what is ultimately a boolean. The test that
+settled it wasn't "how many unlocks will there be" — an array scales to fifty fine — but
+"will an unlock ever carry data beyond on/off?" Today none do. `is_feature_unlocked()` fronts
+the array so callers don't touch it, which means promoting it to a Dictionary or a resource
+later is a one-function change. Same break-even reasoning as `PurchasableData` above.
+
+**Unlockable features need both a signal and a `_ready()` check.** `feature_unlocked(unlock_id)`
+only reaches nodes listening when it fires, so it handles "unlocked mid-run" but not "already
+unlocked before I existed" (scene reload, or a node added later). Both paths call one
+`_refresh_unlock_status()` so there's a single definition of what unlocked means. The signal
+also lets a feature do one-time setup — flipping `set_process()` — instead of testing a flag
+every frame. Note `game_reset()` clears `unlocked_features` without emitting anything, so
+re-locking depends on the `reload_current_scene()` that follows it.
+
+**Radial spawning over screen-edge spawning.** Screen-derived spawn points made travel time a
+function of monitor shape — at 3440×1440 a side spawn was ~1495 units out and a top spawn ~626,
+a 2.4× difference decided by a coin flip, shifting again on every different display. A circle
+of fixed radius makes travel time identical for everyone. The tradeoff is real and accepted:
+on a non-square screen you can equalize travel time *or* visible lead-in, not both — a circle
+means top/bottom spawns stay off-screen longer than side spawns. That's the right side to land
+on because the defenses are radial too (turret range is a radius, satellites orbit in rings),
+so a circular spawn matches the geometry that actually decides difficulty. Visible lead-in is a
+presentation problem, and the off-screen indicator perk (2C) is the place to solve it.
+
 **Placeholder art stays longer than feels comfortable.** Feel comes from motion, timing,
 sound, and feedback far more than sprites.
 
@@ -254,6 +334,25 @@ sound, and feedback far more than sprites.
 
 Things that have bitten more than once — check these first when something behaves oddly.
 
+- **State that outlives its validity window** — three shapes of the same bug. A value sampled
+  once and reused after something changed it (the shop panel's `global_position` after a tween);
+  a value cached at `_ready()` that a later event invalidated (viewport size across a resize);
+  and a per-frame array that was appended to but never cleared (`tagged_asteroids` grew to 4000+
+  entries holding freed asteroids). Ask of any stored value: what could change underneath this,
+  and does anything rebuild it when that happens?
+- **Computing a value the engine already knows** — four bugs in one session. Sampling
+  `global_position` for a panel's resting spot when a tween had polluted it (the anchors were
+  clean); rebuilding a Control's parent width from `get_viewport().size` when
+  `get_parent_area_size()` reports it in the right coordinate space; deriving world positions
+  from screen dimensions in the spawner and the despawn check. If you're re-deriving something
+  Godot already computed, ask it instead.
+- **Correct only because a value is currently 0 or 1** — `anchor_left * width` looked right
+  while `anchor_left` was `0`; `get_viewport_rect().size / 2` matched the planet only while the
+  canvas was exactly 1920×1080. Test formulas against a value that *isn't* the identity.
+- **`queue_free()` is deferred, not immediate** — a freed-but-not-yet-removed node keeps
+  receiving signals and physics callbacks for the rest of the frame. Anything with a one-shot
+  side effect (decrementing a counter, dropping loot, emitting a signal) needs a guard flag,
+  not just `queue_free()`.
 - **`@onready` before `add_child`** — initialize *after* adding to the scene tree
 - **`duplicate()` + reassign** — shared resources (`CircleShape2D`, `ParticleProcessMaterial`)
   need duplicating *and* reassigning; forgetting the reassignment is the common miss
@@ -271,3 +370,7 @@ Things that have bitten more than once — check these first when something beha
   applies to the existing `.tres` scanning too
 - **Texture sizing is an import-settings problem** — fixing it via `scale_ratio` silently
   breaks collision sizing
+- **Pooled objects assigned by sort rank are unstable** — if slot `i` means "the i-th most
+  urgent thing right now", the object behind a slot changes whenever the ranking shuffles.
+  Anything with per-object continuity (a running tween, a fade-in, a position lerp) breaks or
+  lands on the wrong object. Map owner → pooled object explicitly when continuity matters.

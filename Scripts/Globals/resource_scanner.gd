@@ -8,7 +8,7 @@ class_name ResourceScanner
 # Static functions keep their inheritance when called ( so not need to write 'Game_Manager.' before register_defense_stats() )
 
 # Scans Resources folder for files (by scanning subfolders using _scan_resource_folder()) then hands it to a registrar 
-static func _register_folder(path: String, expected_type, registrar: Callable, label: String) -> void:
+static func register_folder(path: String, expected_type, registrar: Callable, label: String) -> void:
 	var paths := _scan_resource_folder(path)
 	
 	if paths.is_empty():

@@ -59,12 +59,9 @@ func _enter_tree() -> void:
 	if Engine.is_editor_hint(): return
 	
 	if custom_shield:
-		
-		
 		Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] = shield_amount
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Custom Shield Debug: ENABLED \
 		| Max Planet Shield now set to %d" % [Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD]])
-	
 
 
 func _ready() -> void:
@@ -110,6 +107,8 @@ func debug_setup() -> void:
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Boss Wave Debug: ENABLED | Boss Wave set to: Wave %d" % wave.next_boss_wave)
 	else:
 		# Prints Default Boss Wave value at game start
+		if wave_number < wave.next_boss_wave: return
+		wave.next_boss_wave = wave.current_wave + randi_range(15, 20)
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Boss Wave Debug: DISABLED | Boss Wave Randomly set to: Wave %d" % wave.next_boss_wave)
 	
 	if extra_resources:

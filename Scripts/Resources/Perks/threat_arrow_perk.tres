@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PerkData" format=3 uid="uid://b84gwjl8sa4bb"]
+
+[ext_resource type="Script" uid="uid://d1tn35sg1esit" path="res://Scripts/ResourceScripts/perk_data.gd" id="1_0pfc3"]
+
+[resource]
+script = ExtResource("1_0pfc3")
+id = "threat_arrows"
+display_name = "Threat Indicators"
+description = "Displays arrows at the edge of the screen to indicate incoming off-screen asteroids."
+cost = 50
+perk_effect = 1
+unlock_id = "threat_indicator"
+metadata/_custom_type_script = "uid://d1tn35sg1esit"

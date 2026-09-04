@@ -33,6 +33,7 @@ var resistances : Dictionary = {}
 
 var damage : float = 3
 var current_health: float
+var is_dead : bool = false	# Prevents double death bug
 
 var resource_min : int = 1
 var resource_max : int = 3
@@ -45,12 +46,12 @@ var direction : Vector2
 # -
 
 # - Despawning -
-@onready var screen_size : Vector2 = get_viewport_rect().size
-var despawn_margin : float = 350
+@export var despawn_margin : float = 200.0
+var despawn_dist : float
 # -
 
 var hit_flash_tween : Tween
-var rotation_speed : float = randf_range(-0.8,0.8)	# Random rotation : Purely visual
+var rotation_speed : float = 0	# Random rotation : Purely visual
 
 var planet: Area2D 			# Assigned at start()
 var data : AsteroidData		# ^
@@ -73,6 +74,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	# Assigns variable to Planet, and position to determined spawn position
 	planet = target_planet
 	global_position = start_pos
+	despawn_dist = start_pos.distance_to(planet.global_position) + despawn_margin
 	
 	# Adds Asteroid to 'Asteroids' group
 	add_to_group("Asteroids")
@@ -98,7 +100,6 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	current_health = data.max_health * health_multiplier
 	# For Debugging
 	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
-	rotation_speed = randf_range(-0.8, 0.8)
 	sprite.texture = data.get_random_texture()
 	damage = data.damage * damage_multiplier
 	resource_min = data.min_resources
@@ -112,13 +113,15 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	if data.behavior == AsteroidData.BehaviorType.COMET:
 		# Comets fly straight past the screen, avoiding the Planet
 		# Picks a random vector moving roughly opposite
-		var screen_center = get_viewport_rect().size/2
-		var to_center = (screen_center - global_position).normalized()
+		var planet_pos = planet.global_position
+		var to_center = (planet_pos - global_position).normalized()
 		
 		# Sets direction to fly past screen , avoiding the planet
-		direction = to_center.rotated(randf_range(-0.5,0.5)) # Slight angle variation
+		direction = to_center.rotated(deg_to_rad(randf_range(5,5))) # Slight angle variation
+		rotation = direction.angle()	# Faces towards the direction it is going
 	else:
 		# Sets direciton towards the Planet
+		rotation_speed = randf_range(-0.8, 0.8)	# Random rotation
 		direction = (planet.global_position - global_position).normalized()
 	
 	#																	#
@@ -129,6 +132,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 
 
 func _physics_process(delta: float) -> void:
+	if is_dead: return
 	
 	_tick_effects(delta)	# ticks status effects
 	
@@ -139,12 +143,9 @@ func _physics_process(delta: float) -> void:
 	global_position += direction * speed * scaled_delta
 	rotation += rotation_speed * scaled_delta
 	
-	# Checks and despawns asteroid if off-screen by 'despawn_margin' amount
-	if \
-	global_position.x < -despawn_margin or \
-	global_position.x > screen_size.x + despawn_margin or \
-	global_position.y < -despawn_margin or \
-	global_position.y > screen_size.y + despawn_margin:
+	# Checks and despawns asteroid if off-screen by spawned position and despawn_margin amount
+	var current_dist = planet.global_position.distance_to(global_position)
+	if despawn_dist < current_dist:
 		print(self, " despawned | Too far off screen")
 		wave.asteroid_death()
 		despawn()
@@ -203,8 +204,8 @@ func get_modifier(stat_id: String) -> float:
 # Processes collision damage to Planet and destroys asteroid
 func _on_area_entered(body: Area2D) -> void:
 	
-	# Safety Net : Aborts if collision is not the Planet
-	if body != planet:
+	# Safety Net : Aborts if collision is not the Planet or asteroid is freed
+	if body != planet or is_dead:
 		return
 	else:
 		tracker.increment(CounterIDs.ASTEROIDS_MISSED)
@@ -216,6 +217,9 @@ func _on_area_entered(body: Area2D) -> void:
 
 # Processes damage from Defenses
 func take_damage(amount: float, particles: bool = true): 
+	
+	if is_dead: return
+	
 	# Increments Stat Tracker
 	tracker.increment(CounterIDs.DAMAGE_DEALT, minf(amount, current_health))
 	current_health -= amount
@@ -240,7 +244,6 @@ func take_damage(amount: float, particles: bool = true):
 		var hit_particles = HIT_PARTICLES.instantiate()
 		get_tree().current_scene.call_deferred("add_child", hit_particles)
 		hit_particles.call_deferred("start", direction, global_position)
-	
 	
 	if current_health <=0:
 		die()
@@ -269,4 +272,5 @@ func die():
 
 
 func despawn() -> void:
+	is_dead = true	# Prevents double death bug
 	queue_free()

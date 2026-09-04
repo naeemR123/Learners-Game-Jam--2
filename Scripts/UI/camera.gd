@@ -19,18 +19,40 @@ extends Camera2D
 @export_group("Parallax")
 @export_range(0,10,0.5) var mouse_parallax_strength : float = 6.0 # from 1 - 10
 
+@export_group("Aspect Compensation")
+@export var base_resolution : Vector2 = Vector2(1920, 1080) 		# Matches project.godot's base viewport size
+@export_range(0.5, 1.0, 0.01) var min_zoom_factor : float = 0.9 	# Widest allowed zoom-out (tall/narrow screens)
+@export_range(1.0, 2.0, 0.01) var max_zoom_factor : float = 1.15	# Tightest allowed zoom-in (ultrawide screens)
+
 @export_group("")
 
 var shake_strength : float = 0.0
 
 var shop_offset : Vector2 = Vector2.ZERO
+var shop_open : bool = true
 var shop_tween : Tween
 
 
 func _ready() -> void:
+	# Zoom must be set BEFORE reading shop_offset below
+	get_viewport().size_changed.connect(_update_aspect_zoom)
+	_update_aspect_zoom()
 	
 	game.planet_hit.connect(_on_planet_hit)
-	shop_offset = _get_shop_slide_target()
+
+# Gets the new screen size + ratio and adjusts camera to it | Updates on screen resize
+func _update_aspect_zoom() -> void:
+	var canvas_size = shop_panel.get_parent_area_size()
+	var base_aspect = base_resolution.x / base_resolution.y
+	var current_aspect = canvas_size.x / canvas_size.y
+	
+	# How far the current screen's aspect deviates from base, in either direction
+	var deviation = max(current_aspect / base_aspect, base_aspect / current_aspect)
+	zoom = Vector2.ONE * clamp(deviation, min_zoom_factor, max_zoom_factor)
+	
+	if shop_tween:
+		shop_tween.kill()
+	shop_offset = _get_shop_slide_target() if shop_open else Vector2.ZERO
 
 func _on_planet_hit(damage: float) -> void:
 	shake_strength = shake_amount * clampf(damage/5.0, 0.5, 2.0)
@@ -58,7 +80,8 @@ func get_mouse_parallax_offset() -> Vector2:
 	return normalized_mouse_offset * parallax_strength
 
 # Tweens camera to the right | Called via ui._shop_ui()
-func set_shop_open(is_open: bool) -> void:
+func set_shop(is_open: bool) -> void:
+	shop_open = is_open
 	var target = _get_shop_slide_target() if is_open else Vector2.ZERO
 	
 	if shop_tween:
@@ -71,8 +94,8 @@ func set_shop_open(is_open: bool) -> void:
 
 # Reads shop_panels width to dynamically adjust to any screen size
 func _get_shop_slide_target() -> Vector2:
-	var viewport_width = get_viewport_rect().size.x
-	var panel_fraction = shop_panel.anchor_right
-	var shift_pixels = (panel_fraction / 2.0) * viewport_width
+	var canvas_width = shop_panel.get_parent_area_size().x
+	var panel_fraction = shop_panel.anchor_right - shop_panel.anchor_left
+	var shift_pixels = (panel_fraction / 2.0) * canvas_width
 	
 	return Vector2(-shift_pixels / zoom.x, 0)

@@ -6,22 +6,31 @@
 [ext_resource type="Script" uid="uid://toxh3tv0bgmh" path="res://Scripts/UI/camera.gd" id="2_21xkr"]
 [ext_resource type="Script" uid="uid://m860hk5ygins" path="res://Scripts/asteroid_spawner.gd" id="2_bo1nx"]
 [ext_resource type="PackedScene" uid="uid://ct42g3vrmj7ac" path="res://Scenes/Defenses/tractor_beam.tscn" id="5_kry3j"]
+[ext_resource type="Script" uid="uid://blm4lvu4re48g" path="res://Scripts/UI/threat_arrow_manager.gd" id="6_344ge"]
 [ext_resource type="PackedScene" uid="uid://nphp6edurswp" path="res://Scenes/UI/ui.tscn" id="7_6bp64"]
+
+[sub_resource type="Environment" id="Environment_t2dwb"]
+glow_enabled = true
 
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
+custom_wave = true
 wave_number = 25
 bwave_number = 26
 extra_resources = true
 extra_amount = 1000
 custom_asteroid_speed = true
 custom_asteroid_speed_value = 150.0
+metadata/_edit_lock_ = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181282094]
+environment = SubResource("Environment_t2dwb")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
-offset_left = -1151.0
-offset_top = -277.0
-offset_right = 2221.0
-offset_bottom = 1329.0
+offset_left = -2603.0
+offset_top = -1631.0
+offset_right = 3977.0
+offset_bottom = 2835.0
 color = Color(0.019607844, 0, 0.14117648, 1)
 
 [node name="Starfield" parent="." unique_id=1160965770 instance=ExtResource("2_6bp64")]
@@ -44,11 +53,13 @@ position = Vector2(960, 540)
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)
 script = ExtResource("2_bo1nx")
-margin = 100.0
 
 [node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]
 
 [node name="TractorBeam" parent="." unique_id=81739787 instance=ExtResource("5_kry3j")]
+
+[node name="ThreatArrowManager" type="CanvasLayer" parent="." unique_id=345849291]
+script = ExtResource("6_344ge")
 
 [node name="UI" parent="." unique_id=1543760008 instance=ExtResource("7_6bp64")]
 

@@ -10,10 +10,11 @@ var direction: Vector2
 var damage : float
 
 
-func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float) -> void:
+func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float, color: Color = Color(2.0, 2.0, 0.5)) -> void:
 	damage = damage_stat
 	global_position = start_pos
 	direction = (target_pos - start_pos).normalized()
+	modulate = color	# HDR color -- blooms via WorldEnvironment's Glow, once added to the scene
 	
 	
 	# Points the projectile in the direction it is flying

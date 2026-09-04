@@ -41,26 +41,30 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 @export var shop_slide_duration : float = 2
 @export var shop_hidden_margin : int = 1
 
+var shop_origin : Vector2 = Vector2(0,0)
 var shop_hidden_pos : Vector2
-var shop_origin : Vector2
+
 var manually_hidden : bool = false
 var shop_tween : Tween
 
 
+
 func _ready() -> void:
-	game.resources_changed.connect(_update_r_ui)				# signals from Game_Manager
-	game.shield_changed.connect(_update_shield_ui)			# ^
-	game.game_over.connect(game_over_event)					# ^
+	game.resources_changed.connect(_update_r_ui)	# signals from Game_Manager
+	game.shield_changed.connect(_update_shield_ui)	# ^
+	game.game_over.connect(game_over_event)			# ^
 	
-	wave.wave_complete.connect(wave_tracker)						# signal from WaveManager
+	wave.wave_complete.connect(wave_tracker)		# signal from WaveManager
 	
-	retry_button.pressed.connect(_on_retry_button_pressed)	# signal from button in ui.tscn
+	# Signals from buttons in ui.tscn
+	retry_button.pressed.connect(_on_retry_button_pressed)	
 	start_wave_button.pressed.connect(_on_start_wave_button_pressed)
 	restart_button.pressed.connect(_on_restart_button_pressed)
-	
-	shop_origin = shop_panel.global_position
-	shop_hidden_pos = shop_origin + Vector2(-shop_panel.size.x - shop_hidden_margin, 0)
 	hide_button.pressed.connect(_on_hide_button_pressed)
+	
+	# Viewport size and ratio signal
+	get_viewport().size_changed.connect(_on_screen_resize)
+	_on_screen_resize()
 	
 	_populate_shop_panel()
 	
@@ -69,16 +73,6 @@ func _ready() -> void:
 	_update_r_ui.call_deferred()
 	_update_shield_ui.call_deferred()
 	wave_tracker.call_deferred()
-
-# Refreshes resource display ui
-func _update_r_ui() -> void:
-	resource_label.text = "Resources: " + str(game.resources)
-
-# Refreshes Planet shield display ui
-func _update_shield_ui() -> void:
-	# Gets shield value from active_stats Array in Game_Manager
-	var current_shield = planet.shield
-	planet_shield.text = "Shield: %d" % current_shield
 
 # Runs reset function in Game_Manager
 func _on_retry_button_pressed() -> void:
@@ -97,9 +91,44 @@ func _on_start_wave_button_pressed() -> void:
 	wave.start_wave()
 	wave_tracker()
 
-# Displays "Game Over" screen | Called from Game_Manager
-func game_over_event() -> void:
-	game_over_screen.visible = true
+# Gets the new screen size + ratio and adjusts shop UI | Updates on screen resize
+func _on_screen_resize() -> void:
+	var canvas_size : Vector2 = shop_panel.get_parent_area_size()
+	var should_show = not wave.wave_active and not manually_hidden	# Toggle criteria
+	
+	# Readjusts the coordinates of the shop's origin
+	shop_origin = Vector2(shop_panel.anchor_left * canvas_size.x,0)
+	# Readjusts the coordinates where the shop would be fully off-screen
+	shop_hidden_pos = shop_origin - Vector2((shop_panel.anchor_right - shop_panel.anchor_left) * canvas_size.x + shop_hidden_margin, 0)
+	
+	if shop_tween:
+		shop_tween.kill()
+	shop_panel.position = shop_origin if should_show else shop_hidden_pos
+
+# Shifts the shop off-screen and centers planet
+func _on_hide_button_pressed() -> void:
+	manually_hidden = not manually_hidden
+	hide_button.text = "Show\nShop" if manually_hidden else "Hide\nShop"
+	#prints(get_viewport().size, shop_panel.size.x, shop_hidden_pos.x)
+	_update_shop_visuals()
+
+# Creates ShopAccordionRow under specified list | Called via _populate_shop_panel()
+func _add_row(list: VBoxContainer, data) -> void:
+	var row = SHOP_ACC_ROW.instantiate()
+	list.add_child(row)
+	
+	if data is DefenseData:
+		row.setup_defense(data)
+
+# Refreshes resource display ui
+func _update_r_ui() -> void:
+	resource_label.text = "Resources: " + str(game.resources)
+
+# Refreshes Planet shield display ui
+func _update_shield_ui() -> void:
+	# Gets shield value from active_stats Array in Game_Manager
+	var current_shield = planet.shield
+	planet_shield.text = "Shield: %d" % current_shield
 
 # Populates the entire shop panel with defenses and upgrades | Called via _ready()
 func _populate_shop_panel() -> void:
@@ -137,27 +166,13 @@ func _populate_shop_panel() -> void:
 		perks_list.add_child(row)
 		row.setup_perk_tier(tier, perks_by_tier[tier])
 
-# Creates ShopAccordionRow under specified list | Called via _populate_shop_panel()
-func _add_row(list: VBoxContainer, data) -> void:
-	var row = SHOP_ACC_ROW.instantiate()
-	list.add_child(row)
-	
-	if data is DefenseData:
-		row.setup_defense(data)
-
-# Shifts the shop off-screen and centers planet
-func _on_hide_button_pressed() -> void:
-	manually_hidden = not manually_hidden
-	hide_button.text = "Show\nShop" if manually_hidden else "Hide\nShop"
-	_update_shop_visuals()
-
 # Displays and handles shop screen ui
 func _update_shop_visuals() -> void:
 	var should_show = not wave.wave_active and not manually_hidden	# Toggle criteria
 	
 	# Toggle: Shifts the shop off-screen and centers planet
 	shop_slide(should_show)
-	camera.set_shop_open(should_show)
+	camera.set_shop(should_show)
 	start_wave_button.visible = not wave.wave_active
 	
 	# Displays next boss wave if current wave is within 5 waves
@@ -166,6 +181,18 @@ func _update_shop_visuals() -> void:
 		bwave_label.text = "Upcoming Boss: Wave " + str(wave.next_boss_wave)
 	else:
 		bwave_label.hide()
+
+# Tweens the shop to hide/show it | Called via _update_shop_visuals()
+func shop_slide(should_show: bool) -> void:
+	var target = shop_origin if should_show else shop_hidden_pos
+	
+	if shop_tween:
+		shop_tween.kill()
+	
+	shop_tween = create_tween()
+	shop_tween.set_ease(Tween.EASE_IN_OUT)
+	shop_tween.set_trans(Tween.TRANS_QUINT)
+	shop_tween.tween_property(shop_panel, "position", target, shop_slide_duration)
 
 # Toggles shop UI if there is no wave
 func wave_tracker() -> void:
@@ -179,14 +206,6 @@ func wave_tracker() -> void:
 	
 	_update_shop_visuals()
 
-# Tweens the shop to hide/show it
-func shop_slide(should_show: bool) -> void:
-	var target = shop_origin if should_show else shop_hidden_pos
-	
-	if shop_tween:
-		shop_tween.kill()
-	
-	shop_tween = create_tween()
-	shop_tween.set_ease(Tween.EASE_IN_OUT)
-	shop_tween.set_trans(Tween.TRANS_QUINT)
-	shop_tween.tween_property(shop_panel, "position", target, shop_slide_duration)
+# Displays "Game Over" screen | Called from Game_Manager
+func game_over_event() -> void:
+	game_over_screen.visible = true

@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://dybxnbaukeh6h"]
+
+[ext_resource type="Script" uid="uid://d2eyf1fbcqgll" path="res://Scenes/UI/threat_arrow.gd" id="1_3e54f"]
+
+[node name="Polygon2D" type="Polygon2D" unique_id=260909463]
+modulate = Color(1, 1, 1, 0.25)
+color = Color(1, 0.33083332, 0.26999998, 1)
+antialiased = true
+polygon = PackedVector2Array(-1.5258789e-05, 7.6293945e-06, -1.5258789e-05, 7.6293945e-06, -24.000015, 24, -23.999985, 56, 1.5258789e-05, 32, 23.999985, 56, 23.999985, 24)
+uv = PackedVector2Array(-40, -15.999996, -40, -15.999996, -64, 8, -63.99997, 32, -39.99997, 8, -16, 32, -16, 8)
+script = ExtResource("1_3e54f")
+duration = 0.1
+blinks = 3

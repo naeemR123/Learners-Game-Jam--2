@@ -26,6 +26,7 @@ var my_damage : float = 1.5
 var my_range : float = 300
 var my_turn_speed : float = 10
 var my_firerate : float = 2.4
+var my_projectile_color : Color = Color(2.0, 2.0, 0.5)
 # -
 
 var can_shoot : bool = true
@@ -34,6 +35,7 @@ var can_shoot : bool = true
 func initialize(data: SatelliteData):	# Runs right after instantiation, driven by GameManager
 	my_id = data.id
 	my_turn_speed = data.turn_speed
+	my_projectile_color = data.projectile_color
 
 func _ready() -> void:		# Runs after initialize()
 	turret_range.shape = turret_range.shape.duplicate()
@@ -122,6 +124,6 @@ func shoot(target: Area2D) -> void:
 	get_tree().current_scene.add_child(proj)
 	
 	# Initialize the projectile
-	proj.start(muzzle.global_position, target.global_position, my_damage)
+	proj.start(muzzle.global_position, target.global_position, my_damage, my_projectile_color)
 	can_shoot = false
 	#print("[DEBUG] Turret Satellite can_shoot: false")

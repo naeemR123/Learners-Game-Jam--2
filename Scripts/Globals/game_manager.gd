@@ -16,6 +16,7 @@ var owned_defenses: Array[String] = []			# Stores all active defenses : populate
 var all_defenses : Array[DefenseData] = []		# Stores all defenses : populated via register_all_defenses()
 var all_upgrades : Array[UpgradeData] = []		# Stores all upgrades : populated via register_all_defenses()
 var all_perks : Array[PerkData] = []			# Stores all perks : populated via register_all_perks()
+var unlocked_features : Array[String] = []			# Stores all unlocked features : populated via purchase_perks()
 
 # { category: { stat_id: summed-flat-bonus/combined-multiplier } }
 var perk_flat : Dictionary = {}					# Stores active FLAT perk-types : populated via purchase_perk()
@@ -33,6 +34,8 @@ signal resources_changed()
 signal shield_changed()
 signal planet_hit(damage: float)
 signal game_over()
+signal feature_unlocked(unlock_id: String)
+signal reset_unlocks()
 
 
 #################
@@ -87,15 +90,15 @@ func take_damage(damage_val: float) -> void:
 
 # Scans the Defenses resource folder and registers stats for every DefenseData it finds
 func register_all_defenses() -> void:
-	ResourceScanner._register_folder("res://Scripts/Resources/Defenses/", DefenseData, register_defense_stats, "DEFENSES")
+	ResourceScanner.register_folder("res://Scripts/Resources/Defenses/", DefenseData, register_defense_stats, "DEFENSES")
 
 # Scans the Upgrades resource folder and registers stats for every UpgradeData it finds
 func register_all_upgrades() -> void:
-	ResourceScanner._register_folder("res://Scripts/Resources/Upgrades/", UpgradeData, register_upgrade_array, "UPGRADES")
+	ResourceScanner.register_folder("res://Scripts/Resources/Upgrades/", UpgradeData, register_upgrade_array, "UPGRADES")
 
 # Scans the Perks resource folder and registers stats for every PerkData it finds
 func register_all_perks() -> void:
-	ResourceScanner._register_folder("res://Scripts/Resources/Perks/", PerkData, register_perk_stats, "PERKS")
+	ResourceScanner.register_folder("res://Scripts/Resources/Perks/", PerkData, register_perk_stats, "PERKS")
 
 # Checks arrays for defense , if not found, adds or duplicates it under it's id
 # Called by register_all_defenses()
@@ -131,6 +134,13 @@ func register_upgrade_array(upgrade: UpgradeData) -> void:
 func register_perk_stats(perk: PerkData) -> void:
 	# Safety Checks : aborts if already registered or if perk's target category is not found in active_stats
 	if all_perks.has(perk): return
+	
+	if perk.perk_effect == PerkData.PerkEffect.UNLOCK:
+		if perk.unlock_id == "":
+			push_warning("[color=red][b][GAME ERROR][/b][/color] register_perk_stats: '%s' has no unlock_id set. unlock_id = '%s'" % [perk.id, perk.unlock_id])
+			return 
+		all_perks.append(perk)
+		return
 	
 	if perk.target_category == StatIDs.ALL:
 		for category in active_stats:
@@ -200,6 +210,10 @@ func _apply_shield_gain(before: float) -> void:
 	if planet:
 		planet.heal(gained)
 	shield_changed.emit()
+
+# Returns if feature has been unlocked by an UNLOCK perk
+func is_feature_unlocked(unlock_id: String) -> bool:
+	return unlocked_features.has(unlock_id)
 
 # Purchase function for Defenses
 func purchase_defenses(defense: DefenseData) -> bool:
@@ -285,10 +299,11 @@ func purchase_perk(perk: PerkData) -> bool:
 		return false
 	
 	# Safety check : Only upgrades if it is a valid registered category and property
-	var categories := _resolve_perk_categories(perk)
-	if categories.is_empty():
-		push_warning("[color=red][b][GAME ERROR][/b][/color] purchase_perk: '%s' resolved to no categories for stat '%s'" % [perk.id, perk.stat_id])
-		return false
+	if perk.perk_effect == PerkData.PerkEffect.STAT_MODIFIER:
+		var categories := _resolve_perk_categories(perk)
+		if categories.is_empty():
+			push_warning("[color=red][b][GAME ERROR][/b][/color] purchase_perk: '%s' resolved to no categories for stat '%s'" % [perk.id, perk.stat_id])
+			return false
 	
 	var cost = perk.get_current_cost()
 	
@@ -298,24 +313,31 @@ func purchase_perk(perk: PerkData) -> bool:
 	resources -= cost
 	perk.is_purchased = true
 	
-	var is_shield_perk := perk.stat_id == StatIDs.MAX_SHIELD
-	var shield_before : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] if is_shield_perk else 0.0
-	
-	for cat in categories:
-		var stat := perk.stat_id
-		match perk.perk_type:
-			PerkData.PerkType.FLAT:
-				if not perk_flat.has(cat): perk_flat[cat] = {}
-				perk_flat[cat][stat] = perk_flat[cat].get(stat, 0.0) + perk.value
-			
-			PerkData.PerkType.PERCENT:
-				if not perk_mult.has(cat): perk_mult[cat] = {}
-				perk_mult[cat][stat] = perk_mult[cat].get(stat,1.0) * (1.0 + perk.value)
+	if perk.perk_effect == PerkData.PerkEffect.UNLOCK:
+		if not unlocked_features.has(perk.unlock_id):
+			unlocked_features.append(perk.unlock_id)
+			feature_unlocked.emit(perk.unlock_id)
+	else:
+		var is_shield_perk := perk.stat_id == StatIDs.MAX_SHIELD
+		var shield_before : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] if is_shield_perk else 0.0
+		var categories := _resolve_perk_categories(perk)
 		
-		recalculate_stat(cat, stat)
+		for cat in categories:
+			var stat := perk.stat_id
+			match perk.perk_type:
+				PerkData.PerkType.FLAT:
+					if not perk_flat.has(cat): perk_flat[cat] = {}
+					perk_flat[cat][stat] = perk_flat[cat].get(stat, 0.0) + perk.value
+				
+				PerkData.PerkType.PERCENT:
+					if not perk_mult.has(cat): perk_mult[cat] = {}
+					perk_mult[cat][stat] = perk_mult[cat].get(stat,1.0) * (1.0 + perk.value)
+					
+			recalculate_stat(cat, stat)
+			
+		# Heals the shield increase difference
+		if is_shield_perk: _apply_shield_gain(shield_before)
 	
-	# Heals the shield increase difference
-	if is_shield_perk: _apply_shield_gain(shield_before)
 	resources_changed.emit()
 	stats_changed.emit()
 	
@@ -419,6 +441,9 @@ func game_reset() -> void:
 	StatsManager.reset_run()
 	print(" | STATS MANAGER RESET | ")
 	
+	# Resets all unlocked features
+	reset_unlocks.emit()
+	
 	# Runs reset() for all current perks,defenses, and upgrades: sets level to 1
 	for perk in all_perks:
 		perk.reset()
@@ -443,10 +468,11 @@ func game_reset() -> void:
 	print(" | PERKS_FLAT ARRAY CLEARED | ")
 	perk_mult.clear()
 	print(" | PERKS_MULT ARRAY CLEARED | ")
+	unlocked_features.clear()
+	print(" | UNLOCKED_FEATURES RESET | ")
 	register_all_defenses()
 	register_all_upgrades()
 	register_all_perks()
-	
 	
 	# Updates UI
 	resources_changed.emit()
