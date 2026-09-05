@@ -31,30 +31,34 @@ var status_effects : Dictionary = {}
 # effect : value (i.e. {"slow": 0.25} means 25% resistance to slowness)
 var resistances : Dictionary = {}
 
+var hit_flash_tween : Tween
+
+
+# - Properties -
+var planet: Area2D 			# Assigned at start()
+var data : AsteroidData		# ^
 var damage : float = 3
 var current_health: float
 var is_dead : bool = false	# Prevents double death bug
 
+# - Drops -
 var resource_min : int = 1
 var resource_max : int = 3
+var drop_weight : Dictionary[ResourceData.ResourceType, float] = {}
+var drop_mult : float = 1.0 	# Perk adjustable -- need to implement
 
+# - World Properties -
+var rotation_speed : float = 0	# Random rotation : Purely visual
 var speed : float 
 var speed_variance : float = 15
 var max_speed : float = 300
 var min_speed : float = 20
 var direction : Vector2
-# -
 
 # - Despawning -
 @export var despawn_margin : float = 200.0
 var despawn_dist : float
 # -
-
-var hit_flash_tween : Tween
-var rotation_speed : float = 0	# Random rotation : Purely visual
-
-var planet: Area2D 			# Assigned at start()
-var data : AsteroidData		# ^
 
 
 
@@ -102,8 +106,12 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
 	sprite.texture = data.get_random_texture()
 	damage = data.damage * damage_multiplier
+	
 	resource_min = data.min_resources
 	resource_max = data.max_resources
+	
+	drop_weight = data.drop_weights.duplicate()
+	
 	resistances =  data.resistances.duplicate()
 	
 	# Sets scale based on health and asteroid type's scale ratio
@@ -254,12 +262,20 @@ func take_damage(amount: float, particles: bool = true):
 func die():
 	
 	# Randomly chooses an amount based on the min and max values of resources, then spawns that amount
-	var randamount = randi_range(resource_min, resource_max)
+	var randamount = roundi(randi_range(resource_min, resource_max) * drop_mult)
 	for i in randamount:
-		var resource = RESOURCE_SCENE.instantiate()
-		resource.global_position = global_position
-		get_tree().current_scene.call_deferred("add_child", resource)
-		resource.call_deferred("start")
+		
+		if RESOURCE_SCENE == null: 
+			push_warning("		asteroid.gd: die(): RESOURCE_SCENE preload is null. Cannot spawn any resources.")
+			break
+			
+		var r_data = _get_next_resource()
+		if r_data == null: continue
+		
+		var r = RESOURCE_SCENE.instantiate()
+		get_tree().current_scene.call_deferred("add_child", r)
+		r.call_deferred("initialize", r_data, global_position)
+	
 	
 	# Emits particles upon death
 	var particles = DEATH_PARTICLES.instantiate()
@@ -274,3 +290,36 @@ func die():
 func despawn() -> void:
 	is_dead = true	# Prevents double death bug
 	queue_free()
+
+
+func _get_next_resource() -> ResourceData:
+	
+	if game.all_resource_types.is_empty(): 
+		push_warning("asteroid.gd: _get_next_resource: all_resource_types is empty | Cannot spawn any resources")
+		return null
+	
+	# Build array and weight variable to get pool of resources and their weight
+	var eligible : Array[ResourceData] = []
+	var total_weight : float = 0
+	
+	# For each available resource, checks if it CAN spawn this wave
+	for resource in game.all_resource_types:
+		if resource.min_wave <= wave.current_wave:
+			var weight = drop_weight.get(resource.resource_type, resource.base_weight)
+			# If passes criteria, adds asteroid to the array and 
+			# adds it's spawn weight to the total_weight value
+			eligible.append(resource)
+			total_weight += weight
+	
+	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
+	
+	# Subtracts each eligible resource's weight by the random number.
+	# If the resource's weight causes the number to go below or 
+	# reaches 0, then THAT resource is returned (chosen to be spawned)
+	for resource in eligible:
+		var weight = drop_weight.get(resource.resource_type, resource.base_weight)
+		roll -= weight
+		if roll <= 0:
+			return resource
+	
+	return eligible.back() # Safety fallback in case of floating point

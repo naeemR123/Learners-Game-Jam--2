@@ -6,13 +6,13 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ohuan"]
 shader = ExtResource("2_5qa61")
-shader_parameter/twinkle_speed = 2.30000010599012
-shader_parameter/twinkle_intensity = 0.800000038
+shader_parameter/twinkle_speed = 2.20000010124012
+shader_parameter/twinkle_intensity = 1.0
 
 [node name="Starfield" type="Node2D" unique_id=1160965770]
 script = ExtResource("1_ewnal")
 far_star_count = 160
-far_star_size = 1
+far_star_size = 3
 far_autoscroll = Vector2(8, 2)
 far_repeat_times = 10
 mid_star_count = 50

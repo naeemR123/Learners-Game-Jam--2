@@ -16,4 +16,10 @@ damage = 3.0
 min_wave = 1
 spawn_weight = 10.0
 max_resources = 3
+drop_weights = Dictionary[int, float]({
+0: 95.0,
+1: 5.0,
+2: 0.0,
+3: 0.0
+})
 metadata/_custom_type_script = "uid://b7ruo5o8pgeta"

@@ -1,5 +1,6 @@
 extends Area2D
 
+@onready var sprite: Sprite2D = $Sprite2D
 
 # Despawning
 @onready var screen_size : Vector2 = get_viewport_rect().size
@@ -10,21 +11,19 @@ var direction: Vector2
 var damage : float
 
 
-func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float, color: Color = Color(2.0, 2.0, 0.5)) -> void:
+func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float, color: Color = Color(1.0, 0.9, 0.5)) -> void:
 	damage = damage_stat
 	global_position = start_pos
 	direction = (target_pos - start_pos).normalized()
-	modulate = color	# HDR color -- blooms via WorldEnvironment's Glow, once added to the scene
-	
-	
-	# Points the projectile in the direction it is flying
-	rotation = direction.angle()
+	rotation = direction.angle()	# Points the projectile in the direction it is flying
+	sprite.modulate = color
 	#print("[DEBUG] Projectile fired")
+
 
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 	
-		# Checks and despawns projectile is off-screen by 'despawn_margin' amount
+	# Checks and despawns projectile is off-screen by 'despawn_margin' amount
 	if \
 	global_position.x < -despawn_margin or \
 	global_position.x > screen_size.x + despawn_margin or \

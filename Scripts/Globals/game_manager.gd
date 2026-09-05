@@ -16,6 +16,7 @@ var owned_defenses: Array[String] = []			# Stores all active defenses : populate
 var all_defenses : Array[DefenseData] = []		# Stores all defenses : populated via register_all_defenses()
 var all_upgrades : Array[UpgradeData] = []		# Stores all upgrades : populated via register_all_defenses()
 var all_perks : Array[PerkData] = []			# Stores all perks : populated via register_all_perks()
+var all_resource_types : Array[ResourceData] = []	# Stores all resource types : populated via register_resource_types()
 var unlocked_features : Array[String] = []			# Stores all unlocked features : populated via purchase_perks()
 
 # { category: { stat_id: summed-flat-bonus/combined-multiplier } }
@@ -48,6 +49,7 @@ func _ready() -> void:
 	register_all_defenses()		# CRITICAL : ^ Defenses after category reset
 	register_all_upgrades()		# CRITICAL : 	^ Upgrades after defenses
 	register_all_perks()		# CRITICAL : 		^ Perks after upgrades
+	register_resources()		# CRITICAL : 			^ Resources after upgrades
 	
 	StatsManager.increment(CounterIDs.RUNS_STARTED)
 	print(" | INCREMENTED RUNS STARTED STAT | ")
@@ -99,6 +101,16 @@ func register_all_upgrades() -> void:
 # Scans the Perks resource folder and registers stats for every PerkData it finds
 func register_all_perks() -> void:
 	ResourceScanner.register_folder("res://Scripts/Resources/Perks/", PerkData, register_perk_stats, "PERKS")
+
+# Scans the ResourceTypes resource folder and registers stats for every ResourceData it finds
+func register_resources() -> void:
+	ResourceScanner.register_folder("res://Scripts/Resources/ResourceTypes/", ResourceData, register_resource_types, "RESOURCE TYPES")
+
+# Checks arrays for ResourceType, if not found, adds it
+# Called by register_resources()
+func register_resource_types(res: ResourceData) -> void:
+	if all_resource_types.has(res): return
+	all_resource_types.append(res)
 
 # Checks arrays for defense , if not found, adds or duplicates it under it's id
 # Called by register_all_defenses()
@@ -464,6 +476,8 @@ func game_reset() -> void:
 	print(" | ALL_UPGRADES ARRAY CLEARED | ")
 	all_perks.clear()
 	print(" | ALL_PERKS ARRAY CLEARED | ")
+	all_resource_types.clear()
+	print(" | ALL_RESOURCE_TYPES ARRAY CLEARED | ")
 	perk_flat.clear()
 	print(" | PERKS_FLAT ARRAY CLEARED | ")
 	perk_mult.clear()
@@ -473,6 +487,7 @@ func game_reset() -> void:
 	register_all_defenses()
 	register_all_upgrades()
 	register_all_perks()
+	register_resources()
 	
 	# Updates UI
 	resources_changed.emit()

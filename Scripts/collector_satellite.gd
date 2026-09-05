@@ -108,6 +108,6 @@ func _physics_process(delta: float) -> void:
 
 
 # Mask is set to 4, meaning 'area' is guaranteed to be a Resource
-func _on_collection_area_entered(area: Area2D) -> void: 
-	game.add_resource(1)
-	area.despawn()
+func _on_collection_area_entered(resource: Area2D) -> void: 
+	game.add_resource(resource.value)
+	resource.despawn()

@@ -4,6 +4,9 @@ extends CanvasLayer
 
 @onready var game := Game_Manager
 
+
+
+
 const THREAT_ARROW = preload("uid://dybxnbaukeh6h")
 
 const ASTEROID = "asteroid"
@@ -122,7 +125,7 @@ func _release_arrows(qualifying: Dictionary) -> void:
 		if is_instance_valid(asteroid) and qualifying.has(asteroid): continue
 		var arrow = arrow_assignments[asteroid]
 		arrow.hide()
-		arrow.modulate.a = default_alpha	# Resets blink() incase interrupted mid-fade
+		arrow.self_modulate.a = default_alpha	# Resets blink() incase interrupted mid-fade
 		free_arrows.append(arrow)
 		arrow_assignments.erase(asteroid)	# .keys() returns copies so erasing is safe
 
@@ -160,6 +163,7 @@ func _update_arrows(cam: Camera2D, qualifying: Dictionary) -> void:
 		
 		var seconds = qualifying[asteroid]
 		arrow.scale = Vector2.ONE * clampf(remap(seconds, max_scale_seconds, min_scale_seconds, arrow_scale_max, arrow_scale_min), arrow_scale_min, arrow_scale_max)
+		arrow.update_glow(arrow.scale)
 
 ## Resets manager to defaults | Called via signal reset_unlocks(): emitted via game.game_reset()
 func reset() -> void:

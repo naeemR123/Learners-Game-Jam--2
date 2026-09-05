@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ResourceData" format=3 uid="uid://c5qpp142ejk37"]
+
+[ext_resource type="Script" uid="uid://bgssh4eo6vcix" path="res://Scripts/ResourceScripts/resource_data.gd" id="1_1v1he"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_xpqyo"]
+size = Vector2(25, 25)
+
+[resource]
+script = ExtResource("1_1v1he")
+resource_type = 3
+value = 20
+textures = Array[Texture2D]([SubResource("PlaceholderTexture2D_xpqyo")])
+glow = true
+glow_color = Color(1, 0, 0, 0.7529412)
+min_wave = 20
+base_weight = 2.0
+metadata/_custom_type_script = "uid://bgssh4eo6vcix"
