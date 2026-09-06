@@ -1,7 +1,7 @@
 # Incremental Space Game — Roadmap
 
 > **Engine:** Godot 4.7 · **Language:** GDScript
-> **Last updated:** 2026-09-04
+> **Last updated:** 2026-09-06
 
 ## How to use this file
 
@@ -23,8 +23,8 @@ Tiers are about *scope and ordering*, not importance:
 ### Architecture
 - [x] Resource-based data system — `DefenseData` → `SatelliteData` / `DroneData`, plus
       `UpgradeData`, `PerkData`, `AsteroidData`, `StatusEffectsData`
-- [x] Auto-scanning folder registration for Defenses, Upgrades, Perks, Asteroids
-- [x] Constant ID classes — `StatIDs`, `DefenseIDs`, `EffectIDs`, `StatusEffectIDs`, `PurchaseBlock`
+- [x] Auto-scanning folder registration for Defenses, Upgrades, Perks, Asteroids, Resource types
+- [x] Constant ID classes — `StatIDs`, `DefenseIDs`, `EffectIDs`, `StatusEffectIDs`, `PurchaseBlock`, `UnlockIDs`
 - [x] `PurchaseBlock.Reason` — one enum drives button disabling, cost-label text, and tooltips
 - [x] Signal-based decoupling; `Game_Manager` + `WaveManager` autoloads
 - [x] `game_reset()` rebuilds registries instead of leaving holes in `active_stats`
@@ -88,6 +88,27 @@ Tiers are about *scope and ordering*, not importance:
 	  in `start()` from the spawn distance + margin, compared against `distance_to(planet)`.
 	  Deleted `viewport_size`, `_on_viewport_resized()`, `margin`, and `screen_size` — the file
 	  no longer reads viewport size at all, so resize can't break it. See Decisions log.
+- [x] **Resource tiers** — `ResourceData` (`resource_type` enum, `value`, `textures`, `min_wave`,
+	  `base_weight`) auto-scanned from `Resources/ResourceTypes/`. Grey 1 / Blue 5 / Gold 10 /
+	  Red 20, with Red gated behind `min_wave = 20`.
+	  - `AsteroidData.drop_weights : Dictionary[ResourceData.ResourceType, float]` overrides a
+		type's `base_weight` per asteroid, so harder enemies skew toward better drops.
+		`drop_weight.get(type, base_weight)` gives per-entry override with fallback — no need to
+		specify every type on every asteroid.
+	  - `asteroid.die()` → `_get_next_resource()` (weighted roll, wave-filtered) → instantiate →
+		`initialize(data, pos)`. All three deferred, in that order, so the node is in the tree
+		before its data arrives.
+	  - `resource.gd` has no `_ready()`: it ran during `add_child()`, *before* the deferred
+		`initialize()`, so it read `my_data` while still null. Setup lives in `initialize()`.
+	  - `collector_satellite` awards `resource.value` instead of a hardcoded 1.
+	  - Per-asteroid `drop_weights` configured: Common `95/5/0/0`, Swarm `85/10/2/0`,
+		Tank `65/25/8/2`, Boss `0/70/20/10`. Weight `0` keeps a type eligible but unwinnable.
+		Drop counts scale with difficulty too (Common 0–3 → Boss 50–75).
+	  - `ResourceData.glow` / `glow_color` drive a `PointLight2D` on `resource.tscn`, enabled in
+		`initialize()`. Gold and Red glow; Grey and Blue don't.
+	  - Four hand-drawn texture variants per tier, picked at random via `get_random_texture()`.
+	  - Fixed alongside: `resource.gd`'s despawn check was still a screen-space box in world
+		coordinates (the `asteroid.gd` bug, unfixed here), silently deleting most drops.
 
 ### UI
 - [x] Shop revamp, all three phases — `TabContainer`, custom stretch `TabBar`,
@@ -128,6 +149,27 @@ Tiers are about *scope and ordering*, not importance:
 - [x] **Projectile HDR glow** — `SatelliteData.projectile_color` → `turret_satellite.gd`
 	  → `projectile.gd`'s `modulate`, with a `WorldEnvironment` + Glow in `main.tscn`.
 	  New projectile types set one export field; no code changes.
+- [x] **Full-screen pixelation shader** — `PixelationLayer` (`CanvasLayer`, layer 2) with a
+	  full-rect `ColorRect` reading `hint_screen_texture` at `filter_nearest`, snapping
+	  `SCREEN_UV` to a grid and sampling each block's centre. `block_size = 3`.
+	  Layer ordering decides what gets quantized: world (0) and `ThreatArrowManager` (1) are
+	  pixelated, `UI` (3) stays crisp. `mouse_filter = Ignore` or the ColorRect eats every click.
+	  Chosen full-screen because per-sprite grids can't work here — `scale_ratio` and the
+	  aspect-compensation zoom both change on-screen sprite size, so no fixed art-pixel-to-block
+	  ratio exists. See Decisions log.
+- [x] **Nebula background** — two `Parallax2D` layers (`scroll_scale` 0.05 / 0.1) holding
+	  `NoiseTexture2D` sprites with `FastNoiseLite` + a `color_ramp` `Gradient` carrying alpha,
+	  so clouds sit as wisps over the navy base. Mid layer blends additively; Far randomizes its
+	  seed per run. `repeat_size` must match the *scaled* sprite size (2560×1440 at 5× → 12800×7200)
+	  or the layers drift out of view, since `autoscroll` never wraps without it.
+	  Seams were fixed by raising `frequency` and scaling the sprite up rather than widening
+	  `seamless_blend_skirt` — more, smaller noise features give the seamless blend more to work with.
+	  Node `texture_filter` is overridden to Linear; the project default is Nearest, which
+	  produced 6px chunks at 5× scale, far coarser than the 3px pixelation grid.
+- [x] **Starfield twinkle fix** — the shader multiplied RGB by `brightness_mult` but passed
+	  `tex_color.a` through untouched, so dimming stars went *dark and opaque* rather than
+	  transparent. Invisible against a near-black background; obvious the moment a bright nebula
+	  sat behind them. Alpha now carries the dimming.
 
 ---
 
@@ -141,10 +183,8 @@ Tiers are about *scope and ordering*, not importance:
 	  Same shape will be reusable for filtering stat counters by defense type.
 - [ ] **Number formatting** — `format_number()` → `1.2K` / `3.4M`. Cost labels will
 	  overflow their containers otherwise.
-- [ ] More perk `.tres` resources — currently 2; aim for 3 roots / 4 middles / 1 capstone
+- [ ] More perk `.tres` resources — currently 3; aim for 3 roots / 4 middles / 1 capstone
 	  so the prerequisite tree and the `", ".join()` tooltip path actually get exercised
-- [ ] `damage_perk_1.tres` says "increases ALL damage" but targets `turret_satellite` —
-	  should be `"all"`
 
 ### 2B · Core
 
@@ -185,6 +225,9 @@ Tiers are about *scope and ordering*, not importance:
 
 ### 2D · Wiring gaps & debt
 
+- [ ] Fill in `drop_weights` on the asteroid `.tres` files — *done; see Completed.*
+	  Balance pass still outstanding: a Boss now yields ~50–75 drops weighted toward Blue/Gold/Red,
+	  which is a very large jump from a Common's 0–3 Grey. Verify in play before tuning further.
 - [ ] Generic on-hit effects — `SatelliteData.on_hit_effect` + magnitude/duration stats
 	  → `projectile.gd` + `turret_satellite.gd`. *(Parked since the status-effect session.
 	  The marker drone is its first real customer.)*
@@ -219,9 +262,12 @@ Tiers are about *scope and ordering*, not importance:
 	  `shield_changed`, asteroid death, purchases
 - [ ] **Universal `Theme` resource** — replaces per-node styling before the UI grows further
 - [ ] Sprite work — cartoon style in Krita, then Inkscape; pixelation shader overlay
-	  (not native pixel art)
-- [ ] Consider dropping base viewport resolution if going for a chunky pixel look —
-	  currently 1920×1080 with nearest-neighbour filtering
+	  (not native pixel art). *Shader is built — see Feel & look. Rules that follow from it:*
+	  draw at display size (not small-then-upscaled), don't hand-place pixels, keep strokes and
+	  gaps ≥4px at scale 1.0, flat tones over gradients, and greyscale anything that gets
+	  `modulate`-tinted.
+- [ ] Directional projectile art — currently a square, so the `rotation` already being set
+	  reads as nothing. An elongated bar shows travel direction for the same effort.
 - [ ] Resource despawn flash *(parked pending sprite art)*
 - [ ] **Planet rotation** — sphere-mapping shader (fisheye UV warp sampling an equirectangular
 	  strip texture) once a planet surface texture exists. Strip size ≈ π × on-screen diameter
@@ -325,6 +371,25 @@ on because the defenses are radial too (turret range is a radius, satellites orb
 so a circular spawn matches the geometry that actually decides difficulty. Visible lead-in is a
 presentation problem, and the off-screen indicator perk (2C) is the place to solve it.
 
+**Full-screen pixelation, not per-sprite.** Matching an art pixel to a shader block requires a
+fixed on-screen sprite size, and this project has none: `AsteroidData.scale_ratio` renders the
+same texture at 0.5× / 1.0× / 1.5×, and `camera.gd`'s aspect compensation adds a further
+0.9–1.15× that varies per player's monitor. A screen-space pass quantizes after scaling,
+rotation and zoom have all happened, so every element shares one grid automatically. It also
+fixes rotating sprites, which normally destroy a hand-drawn pixel grid. Consequence for art:
+hand-placed pixel art only makes sense for fixed-size, non-rotating elements (UI icons);
+everything else is painted and let the shader do the pixelating.
+
+**HDR 2D was tried for glow and reverted.** `WorldEnvironment` glow needs RGB above 1.0, but
+Godot's 2D renderer clamps to LDR unless `rendering/viewport/hdr_2d` is on — which is why
+`projectile_color = Color(2.0, 2.0, 0.5)` was silently arriving as `(1, 1, 0.5)`. Enabling it
+works, but it's a project-wide colour-space change: every existing overbright value starts
+blooming (the `Color(4,4,4)` hit flash especially), and shader colour samplers need
+`source_color` hints. Rebalancing the whole project to serve two effects wasn't worth it.
+Current approach is baked glow — an additive radial gradient sprite behind the shape — which is
+per-object, needs no global setting, and quantizes predictably under the pixelation pass.
+Note bloom never lights *surrounding* objects regardless; that needs `PointLight2D`.
+
 **Placeholder art stays longer than feels comfortable.** Feel comes from motion, timing,
 sound, and feedback far more than sprites.
 
@@ -353,7 +418,10 @@ Things that have bitten more than once — check these first when something beha
   receiving signals and physics callbacks for the rest of the frame. Anything with a one-shot
   side effect (decrementing a counter, dropping loot, emitting a signal) needs a guard flag,
   not just `queue_free()`.
-- **`@onready` before `add_child`** — initialize *after* adding to the scene tree
+- **`@onready` before `add_child`** — initialize *after* adding to the scene tree. The mirror
+  case bites too: `add_child()` runs `_ready()` **synchronously inside the call**, so a `_ready()`
+  that reads data supplied by a later `initialize()` sees null. Either defer both in order, or
+  don't put externally-supplied data in `_ready()` at all.
 - **`duplicate()` + reassign** — shared resources (`CircleShape2D`, `ParticleProcessMaterial`)
   need duplicating *and* reassigning; forgetting the reassignment is the common miss
 - **Guard clauses before side effects** — validate everything, *then* mutate

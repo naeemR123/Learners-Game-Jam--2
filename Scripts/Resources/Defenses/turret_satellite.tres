@@ -5,7 +5,7 @@
 
 [resource]
 script = ExtResource("1_j5cwb")
-orbit_radius = 140.0
+orbit_radius = 160.0
 id = "turret_satellite"
 display_name = "Turret Satellite"
 description = "Defensive satellite that orbits the planet, shooting Asteroids in its range."

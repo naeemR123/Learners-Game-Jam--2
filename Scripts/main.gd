@@ -70,6 +70,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint(): return
 	debug_setup()
 	
+
 	# Starting resources for new player
 	game.add_resource(starting_resources)
 
@@ -107,9 +108,9 @@ func debug_setup() -> void:
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Boss Wave Debug: ENABLED | Boss Wave set to: Wave %d" % wave.next_boss_wave)
 	else:
 		# Prints Default Boss Wave value at game start
-		if wave_number < wave.next_boss_wave: return
-		wave.next_boss_wave = wave.current_wave + randi_range(15, 20)
-		print_rich("[color=yellow][b][DEBUG][/b][/color] Boss Wave Debug: DISABLED | Boss Wave Randomly set to: Wave %d" % wave.next_boss_wave)
+		if not wave_number < wave.next_boss_wave: 
+			wave.next_boss_wave = wave.current_wave + randi_range(15, 20)
+			print_rich("[color=yellow][b][DEBUG][/b][/color] Boss Wave Debug: DISABLED | Boss Wave Randomly set to: Wave %d" % wave.next_boss_wave)
 	
 	if extra_resources:
 		game.add_resource(extra_amount)

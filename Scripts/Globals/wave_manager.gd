@@ -22,6 +22,7 @@ var asteroids_alive : int
 # Signals
 signal timer_interval(interval)		# connects to asteroid_spawner.gd
 signal wave_complete()				# connects to ui.gd
+signal wave_started()				# connects to mouse_dot.gd
 
 
 func _ready() -> void:
@@ -86,6 +87,7 @@ func pick_asteroid_type(wave: int) -> AsteroidData:
 func start_wave() -> void:
 	
 	print("~ WAVE %d STARTED" % current_wave)
+	wave_started.emit()
 	
 	# Resets wave properties to default
 	wave_active = true

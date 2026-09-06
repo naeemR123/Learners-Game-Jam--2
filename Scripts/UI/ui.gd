@@ -74,6 +74,11 @@ func _ready() -> void:
 	_update_shield_ui.call_deferred()
 	wave_tracker.call_deferred()
 
+
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("Shop"):
+		_on_hide_button_pressed()
+
 # Runs reset function in Game_Manager
 func _on_retry_button_pressed() -> void:
 	game.game_reset()

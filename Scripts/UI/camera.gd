@@ -24,6 +24,12 @@ extends Camera2D
 @export_range(0.5, 1.0, 0.01) var min_zoom_factor : float = 0.9 	# Widest allowed zoom-out (tall/narrow screens)
 @export_range(1.0, 2.0, 0.01) var max_zoom_factor : float = 1.15	# Tightest allowed zoom-in (ultrawide screens)
 
+@export_group("Player Controls")
+@export var zoom_step : float = 0.05
+@export var max_zoom : float = 2.0
+@export var min_zoom : float = 0.75
+var default_zoom : Vector2
+
 @export_group("")
 
 var shake_strength : float = 0.0
@@ -48,7 +54,9 @@ func _update_aspect_zoom() -> void:
 	
 	# How far the current screen's aspect deviates from base, in either direction
 	var deviation = max(current_aspect / base_aspect, base_aspect / current_aspect)
-	zoom = Vector2.ONE * clamp(deviation, min_zoom_factor, max_zoom_factor)
+	var new_default = Vector2.ONE * clamp(deviation, min_zoom_factor, max_zoom_factor)
+	zoom = new_default
+	default_zoom = new_default
 	
 	if shop_tween:
 		shop_tween.kill()
@@ -66,6 +74,15 @@ func _process(delta: float) -> void:
 	
 	if shake_strength > 0:
 		shake_strength = move_toward(shake_strength, 0, shake_decay * delta)
+	
+	if Input.is_action_just_pressed("ZoomIn"):
+		zoom += Vector2(zoom_step,zoom_step)
+		zoom = Vector2.ONE * clampf(zoom.x, min_zoom, max_zoom)
+	if Input.is_action_just_pressed("ZoomOut"):
+		zoom -= Vector2(zoom_step,zoom_step)
+		zoom = Vector2.ONE * clampf(zoom.x, min_zoom, max_zoom)
+	if Input.is_action_just_pressed("ZoomReset"):
+		zoom = default_zoom
 
 
 func get_mouse_parallax_offset() -> Vector2:

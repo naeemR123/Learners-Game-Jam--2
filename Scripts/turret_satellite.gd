@@ -10,6 +10,7 @@ const PROJECTILE_SCENE = preload("uid://dp2nh1twswdbk")
 @onready var turret_range : CollisionShape2D = $Range/CollisionShape2D
 @onready var muzzle : Marker2D = $Muzzle
 @onready var firerate : Timer = $Firerate
+@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var range_indicator: Line2D = $RangeIndicator
 @onready var preview_range_indicator: Line2D = $PreviewRangeIndicator
 
@@ -43,6 +44,9 @@ func _ready() -> void:		# Runs after initialize()
 	firerate.timeout.connect(_on_firerate_timeout)
 	game.stats_changed.connect(update_satellite_stats)
 	update_satellite_stats()
+	
+	# Randomizes animation speed of sprite
+	sprite.sprite_frames.set_animation_speed("default", randf_range(7,9))
 
 
 func update_satellite_stats():

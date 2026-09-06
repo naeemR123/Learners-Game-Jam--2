@@ -20,6 +20,7 @@ var my_id : String
 var my_range : float = 100.0
 var my_collection_speed : float = 80
 var my_gravity_strength : float = 0.5
+var my_rand_rotation : float = randf_range(-2,2)
 
 func initialize(data: SatelliteData) -> void:
 	my_id = data.id
@@ -40,6 +41,10 @@ func update_satellite_stats():
 	my_range = game.active_stats[my_id][StatIDs.RANGE]
 	collector_range.shape.radius = my_range
 	range_indicator.points = _build_range_circle(my_range)
+
+
+func _process(delta: float) -> void:
+	rotation += my_rand_rotation * delta
 
 
 func _build_range_circle(radius: float, segments: int = 48) -> PackedVector2Array:

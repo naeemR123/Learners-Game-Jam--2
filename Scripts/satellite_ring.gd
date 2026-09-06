@@ -17,6 +17,9 @@ var my_orbit_radius : float
 var my_orbit_speed : float
 
 
+
+# - Functions -
+
 # Runs before added to scene tree (before _ready)
 func initialize(data: SatelliteData) -> void:
 	my_id = data.id	# Assigns self to a Satellite type
@@ -52,7 +55,7 @@ func redistribute() -> void:
 	children.sort_custom(func(a, b): return a.position.angle() < b.position.angle())
 	
 	var tween = create_tween()
-	tween.set_parallel(true)
+	tween.set_parallel()
 	
 	# Applies the following code to every satellite in array
 	#
@@ -92,4 +95,10 @@ func redistribute() -> void:
 
 
 func _set_orbit_position(angle: float, satellite: Node2D) -> void:
-	satellite.position = Vector2(my_orbit_radius, 0).rotated(angle)
+	if satellite.position != Vector2(my_orbit_radius, 0).rotated(angle):
+		var tween = create_tween()
+		tween.set_parallel()
+		tween.tween_property(satellite, "position", Vector2(my_orbit_radius, 0).rotated(angle), position_tween_speed).set_ease(Tween.EASE_IN_OUT)
+	
+	
+	
