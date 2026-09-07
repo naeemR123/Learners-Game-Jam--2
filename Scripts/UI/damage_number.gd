@@ -8,7 +8,7 @@ extends Node2D
 
 
 func start(damage_amount: float, pos: Vector2) -> void:
-	label.text = "%.1f" % damage_amount
+	label.text = NumberFormat.compact(damage_amount)
 	global_position = pos
 	
 	var tween = create_tween()

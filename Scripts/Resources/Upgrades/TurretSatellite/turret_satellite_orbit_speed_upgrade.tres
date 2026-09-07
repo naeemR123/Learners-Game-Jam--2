@@ -13,5 +13,5 @@ base_cost = 10
 cost_multiplier = 1.5
 base_value = 1.0
 max_value = 8.0
-val_per_level = 0.2
+val_per_level = 0.05
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

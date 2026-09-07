@@ -91,7 +91,7 @@ collision_mask = 2
 shape = SubResource("CircleShape2D_hskch")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=313672636]
-rotation = 4.712389
+rotation = 1.5707964
 scale = Vector2(0.25, 0.2)
 sprite_frames = SubResource("SpriteFrames_t2dwb")
 autoplay = "default"

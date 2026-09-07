@@ -149,7 +149,7 @@ func _update_defense_display() -> void:
 	# Refreshes text and values
 	name_label.text = "Buy " + defense_data.display_name
 	value_label.visible = false 	# Value label is hidden for defenses (no value)
-	owned_label.text = "%d owned" % owned 	# Allows defenses owned to display
+	owned_label.text = NumberFormat.compact(owned) + " owned"	# Allows defenses owned to display
 	owned_label.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
 	mouse_filter = Control.MOUSE_FILTER_PASS	# Enables mouse hover
 	
@@ -158,7 +158,7 @@ func _update_defense_display() -> void:
 	elif reason == PurchaseBlock.Reason.LOCKED: 
 		cost_label.text = "Unlocks Wave %d" % defense_data.unlock_wave 
 	else:
-		cost_label.text = str(cost) + " resources"
+		cost_label.text = NumberFormat.compact(cost) + " resources"
 	
 	purchase_button.tooltip_text = _get_reason_text(reason)
 	bulk_button.tooltip_text = purchase_button.tooltip_text
@@ -176,16 +176,17 @@ func _update_upgrade_display() -> void:
 	var next_val: float = upgrade_data.get_current_value(upgrade_data.current_level+1)
 	# Refreshes text and values
 	name_label.text = upgrade_data.display_name
-	value_label.text = "%.1f -> %.1f" % [current_val, next_val]
-	tooltip_text = "Level: %d\n%s" % [upgrade_data.current_level,upgrade_data.description] 	# Allows desc. to display on mouse hover
+	value_label.text = NumberFormat.compact(current_val) + " -> " + NumberFormat.compact(next_val)
+	# Allows desc. to display on mouse hover
+	tooltip_text = "Level: %s\n%s" % [NumberFormat.compact(upgrade_data.current_level),upgrade_data.description]
 	mouse_filter = Control.MOUSE_FILTER_PASS	# Enables mouse hover
 	
 	var is_maxed = reason == PurchaseBlock.Reason.MAX_COST or reason == PurchaseBlock.Reason.MAX_VALUE
-	cost_label.text = "MAXED" if is_maxed else str(cost) + " resources"
+	cost_label.text = "MAXED" if is_maxed else NumberFormat.compact(cost) + " resources"
 	
 	# If assigned to Planet tab, applies 'owned' label, otherwise hides
 	if upgrade_data.target_category == StatIDs.PLANET:
-		owned_label.text = "Level: %d" % upgrade_data.current_level
+		owned_label.text = "Level: " + NumberFormat.compact(upgrade_data.current_level)
 		owned_label.size_flags_horizontal = Control.SIZE_EXPAND | Control.SIZE_SHRINK_CENTER
 	else:
 		owned_label.visible = false
@@ -209,7 +210,7 @@ func _update_perk_display() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS	# Enables mouse hover
 	
 	var owned = reason == PurchaseBlock.Reason.ALREADY_OWNED
-	cost_label.text = "OWNED" if owned else str(cost) + " resources"
+	cost_label.text = "OWNED" if owned else NumberFormat.compact(cost) + " resources"
 	cost_label.size_flags_horizontal = Control.SIZE_SHRINK_END | Control.SIZE_EXPAND
 	
 	purchase_button.tooltip_text = _get_reason_text(reason)

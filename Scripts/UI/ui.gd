@@ -127,13 +127,12 @@ func _add_row(list: VBoxContainer, data) -> void:
 
 # Refreshes resource display ui
 func _update_r_ui() -> void:
-	resource_label.text = "Resources: " + str(game.resources)
+	resource_label.text = "Resources: " + NumberFormat.compact(game.resources)
 
 # Refreshes Planet shield display ui
 func _update_shield_ui() -> void:
 	# Gets shield value from active_stats Array in Game_Manager
-	var current_shield = planet.shield
-	planet_shield.text = "Shield: %d" % current_shield
+	planet_shield.text = "Shield: " + NumberFormat.compact(planet.shield)
 
 # Populates the entire shop panel with defenses and upgrades | Called via _ready()
 func _populate_shop_panel() -> void:
@@ -213,4 +212,5 @@ func wave_tracker() -> void:
 
 # Displays "Game Over" screen | Called from Game_Manager
 func game_over_event() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	game_over_screen.visible = true

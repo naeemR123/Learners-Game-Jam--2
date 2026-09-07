@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_0pfc3")
 id = "threat_arrows"
-display_name = "Threat Indicators"
+display_name = "Better Radars"
 description = "Displays arrows at the edge of the screen to indicate incoming off-screen asteroids."
-cost = 50
+cost = 30
 perk_effect = 1
 unlock_id = "threat_indicator"
 metadata/_custom_type_script = "uid://d1tn35sg1esit"

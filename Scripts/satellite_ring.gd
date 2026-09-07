@@ -76,7 +76,7 @@ func redistribute() -> void:
 		var target_local_pos = Vector2(my_orbit_radius, 0).rotated(target_angle)
 		var target_global_pos = to_global(target_local_pos)
 		
-		var target_rotation = target_global_pos.direction_to(planet.global_position).angle()
+		var target_rotation = planet.global_position.direction_to(target_global_pos).angle()
 		var target_local_rotation = target_rotation - rotation
 		var current_local_rotation = satellite.rotation
 		var new_local_rotation = current_local_rotation + angle_difference(current_local_rotation, target_local_rotation)  

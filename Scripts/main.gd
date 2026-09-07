@@ -53,16 +53,6 @@ extends Node2D
 @export var starting_resources : int = 15
 
 
-func _enter_tree() -> void:
-	
-	# [CRITICAL] : DO NOT REMOVE FROM TOP OF FUNCTION
-	if Engine.is_editor_hint(): return
-	
-	if custom_shield:
-		Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] = shield_amount
-		print_rich("[color=yellow][b][DEBUG][/b][/color] Custom Shield Debug: ENABLED \
-		| Max Planet Shield now set to %d" % [Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD]])
-
 
 func _ready() -> void:
 	
@@ -116,6 +106,11 @@ func debug_setup() -> void:
 		game.add_resource(extra_amount)
 		print_rich("[color=yellow][b][DEBUG][/b][/color] Extra Resources Debug: ENABLED | Added %d resources" % extra_amount)
 	
+	if custom_shield:
+		Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] = shield_amount
+		planet.sync_shield_to_max()
+		print_rich("[color=yellow][b][DEBUG][/b][/color] Custom Shield Debug: ENABLED \
+		| Max Planet Shield now set to %d" % [Game_Manager.active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD]])
 	
 	if custom_asteroid_speed:
 		asteroid_spawner.custom_asteroid_speed = true

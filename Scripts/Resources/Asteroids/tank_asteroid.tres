@@ -1,10 +1,12 @@
 [gd_resource type="Resource" script_class="AsteroidData" format=3 uid="uid://c0bh7jrawthn1"]
 
 [ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceScripts/asteroid_data.gd" id="1_4qp8t"]
+[ext_resource type="Texture2D" uid="uid://h7ip7kfh5166" path="res://Assets/Asteroids/Tank/tank_asteroid_V1_1.png" id="2_hs3uf"]
 
 [resource]
 script = ExtResource("1_4qp8t")
 name = "Tank"
+sprite_textures = Array[Texture2D]([ExtResource("2_hs3uf")])
 scale_ratio = 1.5
 max_health = 15.0
 max_speed = 30.0

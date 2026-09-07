@@ -41,6 +41,10 @@ var damage : float = 3
 var current_health: float
 var is_dead : bool = false	# Prevents double death bug
 
+var anim_sprite : bool = false 		# If comet, animates sprite
+var frame_count : int = 8			# Total frames of animation
+var frame_interval : float = 0.1	# Time between frame change
+
 # - Drops -
 var resource_min : int = 1
 var resource_max : int = 3
@@ -60,6 +64,8 @@ var direction : Vector2
 var despawn_dist : float
 # -
 
+
+var frame_clock : float
 
 
 # Runs immediately after entering the scene tree | Called from asteroid_spawner.gd
@@ -104,7 +110,6 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	current_health = data.max_health * health_multiplier
 	# For Debugging
 	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
-	sprite.texture = data.get_random_texture()
 	damage = data.damage * damage_multiplier
 	
 	resource_min = data.min_resources
@@ -125,12 +130,20 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		var to_center = (planet_pos - global_position).normalized()
 		
 		# Sets direction to fly past screen , avoiding the planet
-		direction = to_center.rotated(deg_to_rad(randf_range(5,5))) # Slight angle variation
+		direction = to_center.rotated(deg_to_rad(randf_range(-9,9))) # Slight angle variation
 		rotation = direction.angle()	# Faces towards the direction it is going
+		sprite.texture = data.get_random_texture()
+		sprite.hframes = 8
+		sprite.vframes = 1
+		sprite.scale = Vector2.ONE * 1.5
+		sprite.offset = Vector2(-17, 0)
+		anim_sprite = true
+		
 	else:
 		# Sets direciton towards the Planet
 		rotation_speed = randf_range(-0.8, 0.8)	# Random rotation
 		direction = (planet.global_position - global_position).normalized()
+		sprite.texture = data.get_random_texture()
 	
 	#																	#
 	#####################################################################
@@ -150,6 +163,13 @@ func _physics_process(delta: float) -> void:
 	# Produces movement and rotation
 	global_position += direction * speed * scaled_delta
 	rotation += rotation_speed * scaled_delta
+	
+	# Animates sprite if comet
+	if anim_sprite:
+		frame_clock += delta
+		if frame_clock >= frame_interval:
+			frame_clock -= frame_interval
+			sprite.frame = (sprite.frame + 1) % frame_count
 	
 	# Checks and despawns asteroid if off-screen by spawned position and despawn_margin amount
 	var current_dist = planet.global_position.distance_to(global_position)
@@ -207,7 +227,6 @@ func get_modifier(stat_id: String) -> float:
 			strongest = maxf(strongest, effect[MAGNITUDE])
 	
 	return strongest
-
 
 # Processes collision damage to Planet and destroys asteroid
 func _on_area_entered(body: Area2D) -> void:

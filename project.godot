@@ -37,6 +37,7 @@ enabled=PackedStringArray("res://addons/gamedev_assistant/plugin.cfg")
 
 folder_colors={
 "res://Assets/": "orange",
+"res://Legacy (Unused)/": "gray",
 "res://Scenes/": "blue",
 "res://Scripts/": "yellow",
 "res://Scripts/ResourceScripts/": "green",

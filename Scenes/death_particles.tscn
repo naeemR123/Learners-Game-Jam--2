@@ -36,7 +36,7 @@ color_ramp = SubResource("GradientTexture1D_nkpam")
 
 [sub_resource type="Gradient" id="Gradient_55cjx"]
 offsets = PackedFloat32Array(0.124542125, 0.5860806, 1)
-colors = PackedColorArray(0.2, 0, 0.5019608, 1, 0.20000005, 0, 0.5, 0.5058824, 1, 1, 1, 0)
+colors = PackedColorArray(0.34, 0.34, 0.34, 1, 0.5, 0.5, 0.5, 0.5058824, 1, 1, 1, 0)
 
 [sub_resource type="GradientTexture1D" id="GradientTexture1D_h8pr1"]
 gradient = SubResource("Gradient_55cjx")

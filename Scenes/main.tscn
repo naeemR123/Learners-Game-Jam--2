@@ -58,18 +58,19 @@ custom_wave = true
 wave_number = 15
 bwave_number = 26
 extra_resources = true
-extra_amount = 1000
-custom_asteroid_speed_value = 150.0
+extra_amount = 10000
+shield_amount = 1
+custom_asteroid_speed_value = 400.0
 metadata/_edit_lock_ = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181282094]
 environment = SubResource("Environment_t2dwb")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=1573043977]
-offset_left = -1648.0
-offset_top = -1087.0
-offset_right = 3119.0
-offset_bottom = 2208.0
+offset_left = -1740.0
+offset_top = -1144.0
+offset_right = 3027.0
+offset_bottom = 2151.0
 color = Color(0.019607844, 0, 0.14117648, 1)
 
 [node name="FarParallax2D" type="Parallax2D" parent="." unique_id=1256226927]
@@ -142,5 +143,6 @@ layer = 3
 [node name="Camera" type="Camera2D" parent="." unique_id=862122769]
 position = Vector2(960, 540)
 script = ExtResource("2_21xkr")
+max_zoom = 1.8
 
 [connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]

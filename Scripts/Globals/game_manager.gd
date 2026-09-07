@@ -141,12 +141,13 @@ func register_upgrade_array(upgrade: UpgradeData) -> void:
 		# References original data in Array
 		all_upgrades.append(upgrade)
 
-# Checks arrays for perk , if not found , adds it 
+# Registers perk and its stats to all_perks array
 # Called by register_all_perks()
 func register_perk_stats(perk: PerkData) -> void:
-	# Safety Checks : aborts if already registered or if perk's target category is not found in active_stats
+	# Safety Check : aborts if already registered
 	if all_perks.has(perk): return
 	
+	# Safety Check : aborts if UNLOCK perk without "unlock_id"
 	if perk.perk_effect == PerkData.PerkEffect.UNLOCK:
 		if perk.unlock_id == "":
 			push_warning("[color=red][b][GAME ERROR][/b][/color] register_perk_stats: '%s' has no unlock_id set. unlock_id = '%s'" % [perk.id, perk.unlock_id])
@@ -154,26 +155,29 @@ func register_perk_stats(perk: PerkData) -> void:
 		all_perks.append(perk)
 		return
 	
-	if perk.target_category == StatIDs.ALL:
-		for category in active_stats:
-			if not NON_DEFENSE_DEFAULTS.has(category) and active_stats[category].has(perk.stat_id):
-				all_perks.append(perk)
-				return
-		
-		push_warning("[color=red][b][ERROR][/b][/color] register_perk_stats: '%s' targets ALL but no defense has stat '%s'" % [perk.id, perk.stat_id])
+	# Per-target dianostic : reports each bad entry individually. Not meant to return.
+	for target in perk.target_categories:
+		if target == StatIDs.ALL:
+			continue
+		# Safety Check : aborts if target category not found in active_stats
+		if not active_stats.has(target):
+			push_warning("[color=red][b][ERROR][/b][/color] Perk not registered correctly | \
+			active_stats does not contain '%s' perk's target_category: '%s'" % [perk.id, target])
+		# Safety Check : aborts if stat_id not found for chosen target_category in active_stats
+		elif not active_stats[target].has(perk.stat_id):
+			push_warning("[color=red][b][GAME ERROR][/b][/color] register_perk_stats: Could not find perk's '%s' stat_id '%s' target_category in '%s' | \
+			Check the PerkData's fields" % [perk.id, perk.stat_id, target])
+	
+	# Safety Check : aborts if no target_categories were resolved
+	if _resolve_perk_categories(perk).is_empty():
+		push_warning("[color=red][b][GAME ERROR][/b][/color] register_perk_stats: Perk '%s' did not resolve any target_categories for stat_id '%s' | \
+		Check the PerkData's fields" % [perk.id, perk.stat_id])
 		return
 	
-	if not active_stats.has(perk.target_category): 
-		push_warning("[color=red][b][ERROR][/b][/color] Perk not registered correctly | \
-		active_stats does not contain '%s' perk's target_category: '%s'" % [perk.id, perk.target_category])
-		return
-	if not active_stats[perk.target_category].has(perk.stat_id):
-		push_warning("[color=red][b][GAME ERROR][/b][/color] register_perk_stats: stat_id '%s' not found in active_stats['%s'] | \
-		Check the PerkData's fields" % [perk.stat_id, perk.target_category])
-		return
+	# Appends STAT_MODIFIER perk if it passes all safety checks
 	all_perks.append(perk)
 
-# Returns a stat's value BEFORE any Perks and the upgrade curve if one exists | Defaults otherwise
+# Returns a stat's value BEFORE any Perks and the upgrade curve if one exists, defaults otherwise
 func get_base_stat(category: String, stat_id: String) -> float:
 	for upgrade in all_upgrades:
 		if upgrade.target_category == category and upgrade.id == stat_id:
@@ -189,30 +193,42 @@ func get_base_stat(category: String, stat_id: String) -> float:
 	push_warning("get_base_stat: no source found for '%s' / '%s'" % [category, stat_id])
 	return 0.0
 
-# Recomputes one stat from its base + every perk after, then writes the result to the stat.
+# Recomputes one stat from its base + every perk after, then writes the result to the stat. | Called via purchase_perk() 
 func recalculate_stat(category: String, stat_id: String) -> void:
 	var flat: float = perk_flat.get(category, {}).get(stat_id, 0.0)
 	var mult: float = perk_mult.get(category, {}).get(stat_id, 1.0)
 	
 	active_stats[category][stat_id] = (get_base_stat(category, stat_id) + flat) * mult
 
-
+# Returns Array of validated upgrades to apply to active_stats | Called via purchase_perk()
 func _resolve_perk_categories(perk: PerkData) -> Array[String]:
 	var categories : Array[String] = []
 	
-	if perk.target_category == StatIDs.ALL:
-		for category in active_stats:
-			if NON_DEFENSE_DEFAULTS.has(category):
-				continue
-			if active_stats[category].has(perk.stat_id):
-				categories.append(category)
-	
-	elif active_stats.has(perk.target_category) and active_stats[perk.target_category].has(perk.stat_id):
-		categories.append(perk.target_category)
+	# Goes through every entry in perk's target_categories
+	for target in perk.target_categories:
+		
+		# If a category is ALL, then adds applicable categories with stat to list
+		if target == StatIDs.ALL:
+			for category in active_stats:
+				if NON_DEFENSE_DEFAULTS.has(category):	# Skips over non-defense stats 
+					continue
+				_try_add_category(categories, category, perk.stat_id)
+				
+		# If category is not ALL, checks if category is in active_stats then tries to add to list
+		elif active_stats.has(target):
+			_try_add_category(categories, target, perk.stat_id)
 	
 	return categories
 
+# Adds it to upgrade list if it carries the stat if no duplicates | Called via _resolve_perk_categories()
+func _try_add_category(categories: Array[String], category: String, stat_id: String) -> void:
+	if not active_stats[category].has(stat_id):
+		return
+	if categories.has(category):
+		return
+	categories.append(category)
 
+# Applies Max Shield upgrade and applies the different to current shield | Called via purchase_upgrade() & purchase_perk()
 func _apply_shield_gain(before: float) -> void:
 	var gained : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] - before
 	if is_zero_approx(gained): return
@@ -223,7 +239,7 @@ func _apply_shield_gain(before: float) -> void:
 		planet.heal(gained)
 	shield_changed.emit()
 
-# Returns if feature has been unlocked by an UNLOCK perk
+# Returns if feature has been unlocked by an UNLOCK perk | Called via threat_arrow_manager.gd: _refresh_unlock_status()
 func is_feature_unlocked(unlock_id: String) -> bool:
 	return unlocked_features.has(unlock_id)
 
@@ -310,9 +326,12 @@ func purchase_perk(perk: PerkData) -> bool:
 	if perk.get_block_reason() != PurchaseBlock.Reason.NONE:
 		return false
 	
+	# Compiles perk target_categories and stat_id
+	var categories : Array[String] = []
+	
 	# Safety check : Only upgrades if it is a valid registered category and property
 	if perk.perk_effect == PerkData.PerkEffect.STAT_MODIFIER:
-		var categories := _resolve_perk_categories(perk)
+		categories = _resolve_perk_categories(perk)
 		if categories.is_empty():
 			push_warning("[color=red][b][GAME ERROR][/b][/color] purchase_perk: '%s' resolved to no categories for stat '%s'" % [perk.id, perk.stat_id])
 			return false
@@ -332,7 +351,6 @@ func purchase_perk(perk: PerkData) -> bool:
 	else:
 		var is_shield_perk := perk.stat_id == StatIDs.MAX_SHIELD
 		var shield_before : float = active_stats[StatIDs.PLANET][StatIDs.MAX_SHIELD] if is_shield_perk else 0.0
-		var categories := _resolve_perk_categories(perk)
 		
 		for cat in categories:
 			var stat := perk.stat_id

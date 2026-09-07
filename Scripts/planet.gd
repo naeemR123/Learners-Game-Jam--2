@@ -25,18 +25,23 @@ func _ready() -> void:
 	shield = active_max_shield
 	_update_shield()
 
+# Keeps shield bar UI visually up-to-date
+func shield_bar_update() -> void:
+	shield_bar.max_value = active_max_shield
+	shield_bar.value = shield
+
 # UI & Updates Max shield | Game_Manager handles damage dealth to shield
 func _update_shield() -> void:
 	# Gets max shield value from active_stats Array in Game_Manager
 	shield = minf(shield, active_max_shield)
 	shield_bar_update() # Tells UI to update
 
-# Keeps shield bar UI visually up-to-date
-func shield_bar_update() -> void:
-	shield_bar.max_value = active_max_shield
-	shield_bar.value = shield
-
 # Increases shield by amount
 func heal(amount: float) -> void:
 	shield = minf(shield + amount, active_max_shield)
 	shield_bar_update() # Tells UI to update
+
+# Syncs shield with current max shield
+func sync_shield_to_max() -> void:
+	shield = active_max_shield
+	shield_bar_update()

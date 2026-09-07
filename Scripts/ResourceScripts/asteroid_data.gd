@@ -24,6 +24,7 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var max_resources : int
 ## Empty means uses base weight of resources
 @export var drop_weights : Dictionary[ResourceData.ResourceType, float] = {} 
+@export var particle_color : Color = Color(0.44, 0.44, 0.44, 1.0)
 
 @export_category("AI")
 @export var behavior : BehaviorType = BehaviorType.DEFAULT
