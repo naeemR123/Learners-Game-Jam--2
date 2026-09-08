@@ -6,8 +6,9 @@
 script = ExtResource("1_0wwu6")
 name = "Boss"
 max_health = 100.0
-max_speed = 10.0
 damage = 20.0
+max_speed = 47.0
+speed_variance = 0.0
 resistances = Dictionary[String, float]({
 "slow": 1.0
 })

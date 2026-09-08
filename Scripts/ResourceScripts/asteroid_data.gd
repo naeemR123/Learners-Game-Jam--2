@@ -10,8 +10,16 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 
 @export_category("Base Stats")
 @export var max_health : float
-@export var max_speed : float
 @export var damage : float
+## Pixels per second at wave 1. 
+## [br]Spawn radius is [b]2120px[/b] [i](although check asteroid_spawner.radius to update)[/i] [br]
+## ^ Means 96 = 22 seconds of travel from spawn to planet [b](radius/seconds = px/s)[/b]. [br]
+## "max_speed" because there can be speed variance.
+@export var max_speed : float
+## Percentage of variance: 0.12 = up to 12% increase/decrease
+@export var speed_variance : float = 0.12
+
+@export_category("Resistances")
 ## i.e. 'slow': 0.3
 @export var resistances : Dictionary[String, float] = {}
 
@@ -20,16 +28,16 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var spawn_weight : float 
 
 @export_category("Drops")
+@export var particle_color : Color = Color(0.44, 0.44, 0.44, 1.0)
 @export var min_resources : int = 1
 @export var max_resources : int
 ## Empty means uses base weight of resources
 @export var drop_weights : Dictionary[ResourceData.ResourceType, float] = {} 
-@export var particle_color : Color = Color(0.44, 0.44, 0.44, 1.0)
 
 @export_category("AI")
 @export var behavior : BehaviorType = BehaviorType.DEFAULT
 
-# Chooses random texture from Array | Applies a placeholder if empty
+## Chooses random texture from Array | Applies a placeholder if empty
 func get_random_texture() -> Texture2D:
 	if sprite_textures.is_empty():
 		var placeholder := PlaceholderTexture2D.new()

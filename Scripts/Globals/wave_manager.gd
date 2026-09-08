@@ -2,6 +2,22 @@ extends Node
 
 
 
+# - Difficulty Scaling Constants -
+
+const SCALING_END_WAVE : float = 100	# Wave number scaling stops at, All multipliers sync | Written as float for logic, actually an int
+
+const MAX_SPEED_SCALE : float = 2.2 	# Max speed mult at scaling end wave
+const SPEED_CURVE : float = 0.7			# How fast scaling happens: < 1 = early-game ramp-up, > 1 = late-game ramp-up
+
+const DAMAGE_X2_WAVE : float = 25	# Wave number this stat doubles in value: 13 means at Wave 14 Damage is 200% base value
+const HEALTH_X2_WAVE : float = 13	# ^^^
+const DROP_X2_WAVE : float = 15 	# ^^^ wave values are integers
+
+const INTERVAL_CURVE : float = 0.9		# How fast scaling happens: < 1 = early-game ramp-up, > 1 = late-game ramp-up
+const MIN_SPAWN_INTERVAL : float = 0.25	# Lowest amount in seconds between each asteroid spawn
+# -
+
+
 # Holds data for all asteroid resources from "res://Scripts/Resources/Asteroids/"
 # Populated via register_all_asteroids()
 var all_asteroids : Array[AsteroidData] = []
@@ -42,6 +58,29 @@ func register_asteroids_stats(asteroid: AsteroidData) -> void:
 		# Appends the AsteroidData resource to the array
 		all_asteroids.append(asteroid)
 
+# Returns float from 0-1 based on current wave and SCALING_END_WAVE
+func wave_progress(wave: int = current_wave) -> float:
+	# Interpolates a value between 0-1 based on current wave and specified scaling end wave
+	var weight : float = (wave - 1) / (SCALING_END_WAVE - 1)	# Generates 0-1
+	return clampf(weight, 0.0, 1.0)
+
+# For determining speed mult, returns float from 1 to MAX_SPEED_SCALE based on ramp set by SPEED_CURVE
+func speed_multiplier(wave: int = current_wave) -> float:
+	var progress : float = wave_progress(wave)
+	var scale_curve : float = pow(progress, SPEED_CURVE)
+	return lerpf(1.0, MAX_SPEED_SCALE, scale_curve)
+
+# For determining health mult, returns float: determined by current_wave and HEALTH_X2_WAVE
+func health_multiplier(wave: int = current_wave) -> float:
+	return pow(2.0, (wave - 1) / HEALTH_X2_WAVE)
+
+# For determining damage mult, returns float: determined by current_wave and DAMAGE_X2_WAVE
+func damage_multiplier(wave: int = current_wave) -> float:
+	return pow(2.0, (wave - 1) / DAMAGE_X2_WAVE)
+
+# For determining drop mult, returns float: determined by current_wave and DROP_X2_WAVE
+func drop_multiplier(wave: int = current_wave) -> float:
+	return pow(2.0, (wave - 1) / DROP_X2_WAVE)
 
 # Chooses an asteroid to spawn based on minimum wave and spawn weight (chance)
 func pick_asteroid_type(wave: int) -> AsteroidData:
@@ -100,10 +139,12 @@ func start_wave() -> void:
 		next_boss_wave = current_wave + randi_range(15, 20)
 		return
 	
-	# Calculates asteroid amound and their spawn interval
-	# based on the current wave number
+	# Calculates asteroid amound and their spawn interval based on the current wave number
 	max_asteroids = 3 + (current_wave * 2)
-	var spawn_interval : float = clampf(max_spawn_interval - (0.1 * current_wave),0.4, max_spawn_interval)
+	var spawn_interval : float = lerpf(max_spawn_interval, MIN_SPAWN_INTERVAL, pow(wave_progress(current_wave), INTERVAL_CURVE))
+	# Debug print
+	print_rich("[color=orange] [DEBUG] [/color]: Spawn interval set. Current Wave: '%d' | Spawn Interval set to '%.2f' \
+	with the Cap being '%.2f'" % [current_wave, spawn_interval, MIN_SPAWN_INTERVAL])
 	
 	# Sends the spawn timer interval to the asteroid spawner
 	timer_interval.emit(spawn_interval)

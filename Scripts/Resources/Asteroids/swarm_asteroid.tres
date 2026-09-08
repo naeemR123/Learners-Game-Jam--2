@@ -7,8 +7,9 @@ script = ExtResource("1_3unon")
 name = "Swarm"
 scale_ratio = 0.7
 max_health = 3.0
-max_speed = 100.0
 damage = 3.0
+max_speed = 118.0
+speed_variance = 0.15
 resistances = Dictionary[String, float]({
 "slow": 0.2
 })

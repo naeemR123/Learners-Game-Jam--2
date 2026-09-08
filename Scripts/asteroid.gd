@@ -35,10 +35,10 @@ var hit_flash_tween : Tween
 
 
 # - Properties -
-var planet: Area2D 			# Assigned at start()
+var planet : Area2D 			# Assigned at start()
 var data : AsteroidData		# ^
 var damage : float = 3
-var current_health: float
+var health : float
 var is_dead : bool = false	# Prevents double death bug
 
 var anim_sprite : bool = false 		# If comet, animates sprite
@@ -53,11 +53,8 @@ var drop_mult : float = 1.0 	# Perk adjustable -- need to implement
 
 # - World Properties -
 var rotation_speed : float = 0	# Random rotation : Purely visual
+var direction : Vector2			
 var speed : float 
-var speed_variance : float = 15
-var max_speed : float = 300
-var min_speed : float = 20
-var direction : Vector2
 
 # - Despawning -
 @export var despawn_margin : float = 200.0
@@ -70,7 +67,9 @@ var frame_clock : float
 
 # Runs immediately after entering the scene tree | Called from asteroid_spawner.gd
 # Sets up asteroid with all necessary data and properties
-func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, debug_speed: bool = false, debug_speed_value: float = 200, speed_multiplier: float = 1, damage_message_toggle: bool = false, health_multiplier: float = 1, damage_multiplier: float = 1.0) -> void:
+func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2,\
+ speed_multiplier: float = 1.0, health_multiplier: float = 1.0, damage_multiplier: float = 1.0, _drop_multiplier: float = 1.0,\
+ debug_speed: bool = false, debug_speed_value: float = 200.0, damage_message_toggle: bool = false) -> void:
 	
 	# Assigns variable to chosen asteroid type
 	data = asteroid_type	# CRITICAL : Needs to be at top.
@@ -100,23 +99,38 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	if damage_message_toggle:
 		damage_msgs = damage_message_toggle
 	
+	# SPEED
 	if debug_speed == true:		# If debug mode on, sets debug speed
 		speed = debug_speed_value
 	else: 
 		# Assigns speed based on set min-max speed with speed_variance and wave's speed multiplier
-		speed = clampf((randf_range(data.max_speed - speed_variance, data.max_speed + speed_variance) * speed_multiplier) + (min_speed/2), min_speed, max_speed)
+		var variance : float = data.max_speed * data.speed_variance
+		speed = (randf_range(data.max_speed - variance, data.max_speed + variance) * speed_multiplier)
+		if speed < 5 or speed > 1000:
+			push_warning(" [WARNING] Asteroid '%s' as type '%s' spawned at implausible speed: %.1f" % [self, data.name, speed])
 	
-	# Assigning properties
-	current_health = data.max_health * health_multiplier
-	# For Debugging
-	#print("[DEBUG] Asteroid type: %s spawned with %.1f health | data.max_health set to %.1f, and health_multiplier set to %.1f" % [data.name, current_health, data.max_health, health_multiplier])
+	# HEALTH
+	health = data.max_health * health_multiplier
+	# DAMAGE
 	damage = data.damage * damage_multiplier
 	
+	# - For Debugging
+	print_rich("	[color=yellow][DEBUG][/color] Asteroid type: '%s' spawned with:
+	Health %.2f | (base %.1f × %.2f)
+	Speed: %.2f | (base %.1f ±%.0f%% × %.2f)
+	Damage: %.2f | (base %.1f × %.2f)" % 
+	[data.name, 
+	health, data.max_health, health_multiplier, 
+	speed, data.max_speed, data.speed_variance*100, speed_multiplier, 
+	damage, data.damage, damage_multiplier])
+	# -
+	
+	# DROP RESOURCES
 	resource_min = data.min_resources
 	resource_max = data.max_resources
-	
 	drop_weight = data.drop_weights.duplicate()
 	
+	# RESISTANCES
 	resistances =  data.resistances.duplicate()
 	
 	# Sets scale based on health and asteroid type's scale ratio
@@ -132,6 +146,9 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		# Sets direction to fly past screen , avoiding the planet
 		direction = to_center.rotated(deg_to_rad(randf_range(-9,9))) # Slight angle variation
 		rotation = direction.angle()	# Faces towards the direction it is going
+		
+		# Sets up sprite node for animation with comet sprite 
+		# (HARDCODED, NEEDS REWORK LATER!)
 		sprite.texture = data.get_random_texture()
 		sprite.hframes = 8
 		sprite.vframes = 1
@@ -144,12 +161,13 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		rotation_speed = randf_range(-0.8, 0.8)	# Random rotation
 		direction = (planet.global_position - global_position).normalized()
 		sprite.texture = data.get_random_texture()
+
+
+	# Displays current Asteroid's info : name, pos, and speed
+	print(" - Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed, " | Scale: ", scale, " | Sprite Size: ", sprite.texture.get_size(), " | Health: ", health)
 	
 	#																	#
 	#####################################################################
-	
-	# Displays current Asteroid's info : name, pos, and speed
-	print(" - Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed, " | Scale: ", scale, " | Sprite Size: ", sprite.texture.get_size(), " | Health: ", current_health)
 
 
 func _physics_process(delta: float) -> void:
@@ -239,8 +257,6 @@ func _on_area_entered(body: Area2D) -> void:
 		game.take_damage(damage)	# Runs function in Game_Manager, tracking Planet shield
 		wave.asteroid_death()		# Runs function in WaveManager, tracking asteroid death
 		despawn()				# Deletes this instance
-		
-
 
 # Processes damage from Defenses
 func take_damage(amount: float, particles: bool = true): 
@@ -248,9 +264,9 @@ func take_damage(amount: float, particles: bool = true):
 	if is_dead: return
 	
 	# Increments Stat Tracker
-	tracker.increment(CounterIDs.DAMAGE_DEALT, minf(amount, current_health))
-	current_health -= amount
-	print(" Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, current_health])
+	tracker.increment(CounterIDs.DAMAGE_DEALT, minf(amount, health))
+	health -= amount
+	print(" Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, health])
 	
 	# Hit Flash - Visual Effect
 	# Kills pre-existing hit-flash before starting a new one
@@ -272,7 +288,7 @@ func take_damage(amount: float, particles: bool = true):
 		get_tree().current_scene.call_deferred("add_child", hit_particles)
 		hit_particles.call_deferred("start", direction, global_position)
 	
-	if current_health <=0:
+	if health <=0:
 		die()
 
 

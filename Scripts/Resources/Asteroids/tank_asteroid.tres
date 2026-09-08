@@ -9,8 +9,9 @@ name = "Tank"
 sprite_textures = Array[Texture2D]([ExtResource("2_hs3uf")])
 scale_ratio = 1.5
 max_health = 15.0
-max_speed = 30.0
 damage = 8.0
+max_speed = 71.0
+speed_variance = 0.1
 resistances = Dictionary[String, float]({
 "slow": 0.5
 })
