@@ -6,8 +6,9 @@ extends Node
 
 # Game Start Defaults
 const NON_DEFENSE_DEFAULTS := {
-	"planet": {"shield": 20.0},
-	"tractor_beam": {"slow_strength": 0.0, "beam_size": 50.0},
+	"planet": {"shield": 20.0,},
+	"tractor_beam": {"slow_strength": 0.0, "beam_size": 50.0,},
+	"global": {"drop_amount": 1.0,},
 }
 
 # Holds the CURRENT value of ALL upgradable stats game-wide : populated via register_defense_stats()

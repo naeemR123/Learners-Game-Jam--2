@@ -9,9 +9,8 @@ const SCALING_END_WAVE : float = 100	# Wave number scaling stops at, All multipl
 const MAX_SPEED_SCALE : float = 2.2 	# Max speed mult at scaling end wave
 const SPEED_CURVE : float = 0.7			# How fast scaling happens: < 1 = early-game ramp-up, > 1 = late-game ramp-up
 
-const DAMAGE_X2_WAVE : float = 25	# Wave number this stat doubles in value: 13 means at Wave 14 Damage is 200% base value
-const HEALTH_X2_WAVE : float = 13	# ^^^
-const DROP_X2_WAVE : float = 15 	# ^^^ wave values are integers
+const DAMAGE_X2_WAVE : float = 25		# Wave number this stat doubles in value: 13 means at Wave 14 Damage is 200% base value
+const HEALTH_X2_WAVE : float = 13		# ^^^ wave values are integers
 
 const INTERVAL_CURVE : float = 0.9		# How fast scaling happens: < 1 = early-game ramp-up, > 1 = late-game ramp-up
 const MIN_SPAWN_INTERVAL : float = 0.25	# Lowest amount in seconds between each asteroid spawn
@@ -46,83 +45,41 @@ func _ready() -> void:
 	
 
 
-# Scans the Asteroids folder and registers stats for every AsteroidData it find
+## Scans the Asteroids folder and registers stats for every AsteroidData it find
 func register_all_asteroids() -> void:
 	ResourceScanner.register_folder("res://Scripts/Resources/Asteroids/", AsteroidData, register_asteroids_stats, "ASTEROIDS")
 
 
-# Checks 'all_asteroids' for resource , if not found, adds it
+## Checks 'all_asteroids' for resource , if not found, adds it
 func register_asteroids_stats(asteroid: AsteroidData) -> void:
 	# Safe for multiple calls : won't overwrite if entry exists
 	if not all_asteroids.has(asteroid):
 		# Appends the AsteroidData resource to the array
 		all_asteroids.append(asteroid)
 
-# Returns float from 0-1 based on current wave and SCALING_END_WAVE
+## Returns float from 0-1 based on current wave and SCALING_END_WAVE
 func wave_progress(wave: int = current_wave) -> float:
 	# Interpolates a value between 0-1 based on current wave and specified scaling end wave
 	var weight : float = (wave - 1) / (SCALING_END_WAVE - 1)	# Generates 0-1
 	return clampf(weight, 0.0, 1.0)
 
-# For determining speed mult, returns float from 1 to MAX_SPEED_SCALE based on ramp set by SPEED_CURVE
+## For determining speed mult, returns float from 1 to MAX_SPEED_SCALE based on ramp set by SPEED_CURVE
 func speed_multiplier(wave: int = current_wave) -> float:
 	var progress : float = wave_progress(wave)
 	var scale_curve : float = pow(progress, SPEED_CURVE)
 	return lerpf(1.0, MAX_SPEED_SCALE, scale_curve)
 
-# For determining health mult, returns float: determined by current_wave and HEALTH_X2_WAVE
+## For determining health mult, returns float: determined by current_wave and HEALTH_X2_WAVE
 func health_multiplier(wave: int = current_wave) -> float:
 	return pow(2.0, (wave - 1) / HEALTH_X2_WAVE)
 
-# For determining damage mult, returns float: determined by current_wave and DAMAGE_X2_WAVE
+## For determining damage mult, returns float: determined by current_wave and DAMAGE_X2_WAVE
 func damage_multiplier(wave: int = current_wave) -> float:
 	return pow(2.0, (wave - 1) / DAMAGE_X2_WAVE)
 
-# For determining drop mult, returns float: determined by current_wave and DROP_X2_WAVE
-func drop_multiplier(wave: int = current_wave) -> float:
-	return pow(2.0, (wave - 1) / DROP_X2_WAVE)
-
-# Chooses an asteroid to spawn based on minimum wave and spawn weight (chance)
-func pick_asteroid_type(wave: int) -> AsteroidData:
-	# Safety check : aborts if there is no asteroids in 'all_asteroids' array
-	if all_asteroids.is_empty():
-		push_warning("Cannot choose Asteroid to spawn: No Asteroids registered (from: wave_manager.gd/pick_asteroid_type | Array 'all_asteroids' is empty)")
-		asteroid_death()
-		return null
-	
-	# Build array and weight variable to get pool of asteroids and their weight
-	var eligible : Array[AsteroidData] = []
-	var total_weight : float = 0
-	
-	# For each available asteroid, checks if it CAN spawn this wave and isn't a boss
-	for asteroid in all_asteroids:
-		if asteroid.min_wave <= wave and asteroid.behavior != AsteroidData.BehaviorType.BOSS:
-			
-			# If passes criteria, adds asteroid to the array and 
-			# adds it's spawn weight to the total_weight value
-			eligible.append(asteroid)
-			total_weight += asteroid.spawn_weight
-	
-	# Safety check : aborts if there is no asteroids in 'eligible' array
-	if eligible.is_empty():
-		push_warning("Cannot choose Asteroid to spawn: No Asteroids eligible (from: wave_manager.gd/pick_asteroid_type | Array 'eligible' is empty)")
-		asteroid_death()
-		return null
-	
-	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
-	
-	# Subtracts each eligible asteroid's weight by the random number.
-	# If the asteroid's weight causes the number to go below or 
-	# reaches 0, then THAT asteroid is returned (chosen to be spawned)
-	for asteroid in eligible:
-		roll -= asteroid.spawn_weight
-		if roll <= 0:
-			return asteroid
-	
-	return eligible.back() # Safety fallback in case of floating point
 
 
-# Initiates logic for the next wave
+## Initiates logic for the next wave
 func start_wave() -> void:
 	
 	print("~ WAVE %d STARTED" % current_wave)
@@ -150,8 +107,8 @@ func start_wave() -> void:
 	timer_interval.emit(spawn_interval)
 
 
-# Used by the asteroid spawner 
-# Runs pick_asteroid_type and returns chosen asteroid type
+## Used by the asteroid spawner 
+## Runs pick_asteroid_type and returns chosen asteroid type
 func get_next_asteroid() -> AsteroidData:
 	
 	# If the max amount of asteroids has been reached, the function is aborted
@@ -159,8 +116,7 @@ func get_next_asteroid() -> AsteroidData:
 		return null # Tells spawner (timer) to stop
 	
 	# Keeps track of how many asteroids are produced
-	asteroids_spawned += 1
-	asteroids_alive += 1
+	
 	
 	# Returns BOSS Asteroid if boss wave is active
 	if is_boss_wave:
@@ -169,20 +125,17 @@ func get_next_asteroid() -> AsteroidData:
 	# Returns value back to asteroid spawner
 	return pick_asteroid_type(current_wave)
 
-
-# Searches 'all_asteroids' Array for BOSS Asteroids | Returns Boss Asteroid
+## Searches 'all_asteroids' Array for BOSS Asteroids | Returns Boss Asteroid
 func get_boss_asteroid(wave: int) -> AsteroidData:
 	
 	# Safety check : aborts if there is no asteroids in 'all_asteroids' array
 	if all_asteroids.is_empty():
 		push_warning("Cannot choose Asteroid to spawn: No Asteroids registered (from: wave_manager.gd/get_boss_asteroid | Array 'all_asteroids' is empty)")
-		asteroid_death()
 		return null
 	
 	# Build array and weight variable to get pool of asteroids and their weight
 	var eligible : Array[AsteroidData] = []
 	var total_weight : float = 0
-	
 	
 	# For each available asteroid, checks it is a BOSS and if it CAN spawn this wave 
 	for asteroid in all_asteroids:
@@ -196,7 +149,6 @@ func get_boss_asteroid(wave: int) -> AsteroidData:
 	# Safety check : aborts if there is no BOSS Asteroid found in 'eligible' array
 	if eligible.is_empty():
 		push_warning("Cannot find Boss Asteroid to spawn: No Asteroids eligible (from: wave_manager.gd/get_boss_asteroid | Array 'eligible' is empty)")
-		asteroid_death()
 		return null
 	
 	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
@@ -211,9 +163,55 @@ func get_boss_asteroid(wave: int) -> AsteroidData:
 	
 	return eligible.back() # Safety fallback in case of floating point
 
+## Chooses an asteroid to spawn based on minimum wave and spawn weight (chance)
+func pick_asteroid_type(wave: int) -> AsteroidData:
+	# Safety check : aborts if there is no asteroids in 'all_asteroids' array
+	if all_asteroids.is_empty():
+		push_warning("Cannot choose Asteroid to spawn: No Asteroids registered (from: wave_manager.gd/pick_asteroid_type | Array 'all_asteroids' is empty)")
+		return null
+	
+	# Build array and weight variable to get pool of asteroids and their weight
+	var eligible : Array[AsteroidData] = []
+	var total_weight : float = 0
+	
+	# For each available asteroid, checks if it CAN spawn this wave and isn't a boss
+	for asteroid in all_asteroids:
+		if asteroid.min_wave <= wave and asteroid.behavior != AsteroidData.BehaviorType.BOSS:
+			
+			# If passes criteria, adds asteroid to the array and 
+			# adds it's spawn weight to the total_weight value
+			eligible.append(asteroid)
+			total_weight += asteroid.spawn_weight
+	
+	# Safety check : aborts if there is no asteroids in 'eligible' array
+	if eligible.is_empty():
+		push_warning("Cannot choose Asteroid to spawn: No Asteroids eligible (from: wave_manager.gd/pick_asteroid_type | Array 'eligible' is empty)")
+		return null
+	
+	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
+	
+	# Subtracts each eligible asteroid's weight by the random number.
+	# If the asteroid's weight causes the number to go below or 
+	# reaches 0, then THAT asteroid is returned (chosen to be spawned)
+	for asteroid in eligible:
+		roll -= asteroid.spawn_weight
+		if roll <= 0:
+			return asteroid
+	
+	return eligible.back() # Safety fallback in case of floating point
 
-# Tracks how many asteroids are still active
-# Ends the wave if conditions are met
+## Calculates how many asteroids are allowed to spawn
+## Called via asteroid_spawner.gd
+func register_spawns(count: int) -> int:
+	var allowed : int = mini(count, max_asteroids - asteroids_spawned)
+	if allowed <= 0:
+		return 0
+	asteroids_spawned += allowed
+	asteroids_alive += allowed
+	return allowed
+
+## Tracks how many asteroids are still active
+## Ends the wave if conditions are met
 func asteroid_death() -> void:
 	
 	if not wave_active: return
@@ -223,7 +221,7 @@ func asteroid_death() -> void:
 	
 	# If there are no more asteroids alive and all 
 	# asteroids have been spawned, then the wave ends
-	if asteroids_alive <= 0 and asteroids_spawned == max_asteroids:
+	if asteroids_alive <= 0 and asteroids_spawned >= max_asteroids:
 		print("~ WAVE %d ENDED | WAVE %d NEXT" % [current_wave,current_wave+1])
 		
 		StatsManager.increment(CounterIDs.WAVES_SURVIVED)
@@ -233,14 +231,14 @@ func asteroid_death() -> void:
 		current_wave += 1
 		wave_complete.emit()
 
-
+## Initiates boss wave
 func boss_wave() -> void:
 	is_boss_wave = true
 	max_asteroids = 1
 	timer_interval.emit(max_spawn_interval)
 
 
-# Resets Wave info | Called via game_reset() in Game_Manager
+## Resets Wave info | Called via game_reset() in Game_Manager
 func reset() -> void:
 	current_wave = 1
 	next_boss_wave = randi_range(15, 20)

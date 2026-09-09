@@ -40,7 +40,7 @@ folder_colors={
 "res://Legacy (Unused)/": "gray",
 "res://Scenes/": "blue",
 "res://Scripts/": "yellow",
-"res://Scripts/ResourceScripts/": "green",
+"res://Scripts/ResourceDatas/": "green",
 "res://Scripts/Resources/": "green"
 }
 

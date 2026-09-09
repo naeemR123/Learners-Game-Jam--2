@@ -25,8 +25,10 @@ enum PerkType {
 @export_category("Effect")
 ## Sets [code]PerkEffect[/code] which determines which kind of perk this is.
 @export var perk_effect : PerkEffect = PerkEffect.STAT_MODIFIER
+@export_group("Parameters : Unlock")
 ## Only affected by [code]PerkEffect[/code]: [code]UNLOCK[/code].  [br].[br]What to unlock when perk is purchased. Ex: 'threat_indicator'
 @export var unlock_id : String 
+@export_group("Parameters : Stat_Modifier")
 ## Only affected by [code]PerkEffect[/code]: [code]STAT_MODIFIER[/code].  [br].[br]Mirror [code]UpgradeData[/code]: which [code]active_stats[/code] categories this affects. Can list multiple targets or "all" to target all categories with a matching [code]stat_id[/code]. [br].[br]Ex: [code]target_categories[/code] = 'planet'
 @export var target_categories : Array[String]
 ## Only affected by [code]PerkEffect[/code]: [code]STAT_MODIFIER[/code].  [br].[br]Specifies which [code]stat[/code] within the specified [code]target_categories[/code] should be altered. [br].[br]Ex: [code]target_categories[/code] = ['planet'], [code]stat_id[/code] = 'shield'

@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="AsteroidData" format=3 uid="uid://dpb6uroljx7gn"]
 
-[ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceScripts/asteroid_data.gd" id="1_3unon"]
+[ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceDatas/asteroid_data.gd" id="1_oquuj"]
 
 [resource]
-script = ExtResource("1_3unon")
+script = ExtResource("1_oquuj")
 name = "Swarm"
 scale_ratio = 0.7
 max_health = 3.0
@@ -14,13 +14,18 @@ resistances = Dictionary[String, float]({
 "slow": 0.2
 })
 min_wave = 10
-spawn_weight = 3.0
+spawn_weight = 4.0
+group_size_start = Vector2i(2, 3)
+group_size_end = Vector2i(5, 7)
+group_ramp_end_wave = 70
+group_curve = 1.4
+particle_color = Color(0.44471344, 0.45388895, 0.28854907, 1)
 min_resources = 3
 max_resources = 5
 drop_weights = Dictionary[int, float]({
 0: 85.0,
 1: 10.0,
-2: 2.0,
+2: 1.0,
 3: 0.0
 })
 metadata/_custom_type_script = "uid://b7ruo5o8pgeta"

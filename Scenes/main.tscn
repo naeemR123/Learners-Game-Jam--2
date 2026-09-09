@@ -55,8 +55,8 @@ shader_parameter/block_size = 3.000000095
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
 custom_wave = true
-wave_number = 50
-bwave_number = 26
+wave_number = 10
+bwave_number = 5
 extra_resources = true
 extra_amount = 10000
 shield_amount = 1
@@ -117,6 +117,7 @@ position = Vector2(960, 540)
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)
 script = ExtResource("2_bo1nx")
+radial_jitter = 60.0
 
 [node name="SpawnCooldown" type="Timer" parent="AsteroidSpawner" unique_id=1872355504]
 
@@ -144,5 +145,3 @@ layer = 3
 position = Vector2(960, 540)
 script = ExtResource("2_21xkr")
 max_zoom = 1.8
-
-[connection signal="timeout" from="AsteroidSpawner/SpawnCooldown" to="AsteroidSpawner" method="_on_spawn_cooldown_timeout"]

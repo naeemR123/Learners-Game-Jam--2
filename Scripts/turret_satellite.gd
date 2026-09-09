@@ -24,7 +24,8 @@ var preview_blink_tween : Tween
 # - Stat Properties -
 var my_id : String
 var my_damage : float = 1.5
-var my_range : float = 300
+var my_proj_speed : float = 300.0
+var my_range : float = 250
 var my_turn_speed : float = 10
 var my_firerate : float = 2.4
 var my_projectile_color : Color = Color(2.0, 2.0, 0.5)
@@ -52,6 +53,7 @@ func _ready() -> void:		# Runs after initialize()
 func update_satellite_stats():
 	my_firerate = game.active_stats[my_id][StatIDs.FIRE_RATE]
 	my_damage = game.active_stats[my_id][StatIDs.DAMAGE]
+	my_proj_speed = game.active_stats[my_id][StatIDs.PROJ_SPEED]
 	my_range = game.active_stats[my_id][StatIDs.RANGE]
 	turret_range.shape.radius = my_range
 	range_indicator.points = _build_range_circle(my_range)
@@ -128,6 +130,6 @@ func shoot(target: Area2D) -> void:
 	get_tree().current_scene.add_child(proj)
 	
 	# Initialize the projectile
-	proj.start(muzzle.global_position, target.global_position, my_damage, my_projectile_color)
+	proj.start(muzzle.global_position, target.global_position, my_damage, my_proj_speed, my_projectile_color)
 	can_shoot = false
 	#print("[DEBUG] Turret Satellite can_shoot: false")

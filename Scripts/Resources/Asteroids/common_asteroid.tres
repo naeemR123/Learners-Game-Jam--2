@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AsteroidData" format=3 uid="uid://dhw17c26y8o5t"]
 
-[ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceScripts/asteroid_data.gd" id="1_bgh7d"]
+[ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceDatas/asteroid_data.gd" id="1_bgh7d"]
 [ext_resource type="Texture2D" uid="uid://cpwkuvqotrlq6" path="res://Assets/Asteroids/Common/Aseprite/common_asteroid_V1_1.png" id="2_smeli"]
 [ext_resource type="Texture2D" uid="uid://br01uxsbwptf7" path="res://Assets/Asteroids/Common/Aseprite/common_asteroid_V1_2.png" id="3_kk1cs"]
 [ext_resource type="Texture2D" uid="uid://dkn23hm2vdltf" path="res://Assets/Asteroids/Common/Aseprite/common_asteroid_V1_3.png" id="4_nfb45"]
@@ -20,7 +20,7 @@ max_resources = 3
 drop_weights = Dictionary[int, float]({
 0: 95.0,
 1: 5.0,
-2: 0.0,
+2: 0.5,
 3: 0.0
 })
 metadata/_custom_type_script = "uid://b7ruo5o8pgeta"

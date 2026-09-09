@@ -12,12 +12,16 @@ const ALL = "all"
 
 const BEAM_SIZE = "beam_size"
 const SLOW_STRENGTH = "slow_strength"
+
 const MAX_SHIELD = "shield"
+
+const DROP_AMOUNT = "drop_amount"
 
 
 ######################
 # Universal Upgrades #
 const FIRE_RATE = "fire_rate"
+const PROJ_SPEED = "projectile_speed"
 const DAMAGE = "damage"
 const RANGE = "range"
 const TURN_SPEED = "turn_speed"

@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="SatelliteData" format=3 uid="uid://d3u0lub8qw7dc"]
 
-[ext_resource type="Script" uid="uid://bcoqkbjgfkbiv" path="res://Scripts/ResourceScripts/satellite_data.gd" id="1_col58"]
+[ext_resource type="Script" uid="uid://bcoqkbjgfkbiv" path="res://Scripts/ResourceDatas/satellite_data.gd" id="1_col58"]
 [ext_resource type="PackedScene" uid="uid://br3j53i1f8n32" path="res://Scenes/Defenses/collector_satellite.tscn" id="1_m0ou7"]
 
 [resource]

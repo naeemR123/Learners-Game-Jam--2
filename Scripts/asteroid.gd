@@ -49,7 +49,6 @@ var frame_interval : float = 0.1	# Time between frame change
 var resource_min : int = 1
 var resource_max : int = 3
 var drop_weight : Dictionary[ResourceData.ResourceType, float] = {}
-var drop_mult : float = 1.0 	# Perk adjustable -- need to implement
 
 # - World Properties -
 var rotation_speed : float = 0	# Random rotation : Purely visual
@@ -67,8 +66,8 @@ var frame_clock : float
 
 # Runs immediately after entering the scene tree | Called from asteroid_spawner.gd
 # Sets up asteroid with all necessary data and properties
-func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2,\
- speed_multiplier: float = 1.0, health_multiplier: float = 1.0, damage_multiplier: float = 1.0, _drop_multiplier: float = 1.0,\
+func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vector2, speed_variance: float,\
+ speed_multiplier: float = 1.0, health_multiplier: float = 1.0, damage_multiplier: float = 1.0,\
  debug_speed: bool = false, debug_speed_value: float = 200.0, damage_message_toggle: bool = false) -> void:
 	
 	# Assigns variable to chosen asteroid type
@@ -103,9 +102,8 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	if debug_speed == true:		# If debug mode on, sets debug speed
 		speed = debug_speed_value
 	else: 
-		# Assigns speed based on set min-max speed with speed_variance and wave's speed multiplier
-		var variance : float = data.max_speed * data.speed_variance
-		speed = (randf_range(data.max_speed - variance, data.max_speed + variance) * speed_multiplier)
+		# Assigns speed based on set speed × variance and wave's speed multiplier
+		speed = data.max_speed * (1.0 + speed_variance) * speed_multiplier
 		if speed < 5 or speed > 1000:
 			push_warning(" [WARNING] Asteroid '%s' as type '%s' spawned at implausible speed: %.1f" % [self, data.name, speed])
 	
@@ -138,12 +136,12 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	
 	# Determines flight path | Comet vs. Other Asteroids
 	if data.behavior == AsteroidData.BehaviorType.COMET:
-		# Comets fly straight past the screen, avoiding the Planet
+		# Comets fly straight past the screen, wihtout regard for the Planet
 		# Picks a random vector moving roughly opposite
 		var planet_pos = planet.global_position
 		var to_center = (planet_pos - global_position).normalized()
 		
-		# Sets direction to fly past screen , avoiding the planet
+		# Sets random direction to fly past screen
 		direction = to_center.rotated(deg_to_rad(randf_range(-9,9))) # Slight angle variation
 		rotation = direction.angle()	# Faces towards the direction it is going
 		
@@ -291,26 +289,10 @@ func take_damage(amount: float, particles: bool = true):
 	if health <=0:
 		die()
 
-
 # Destroys asteroid (from death by Defenses), dropping
 # assigned amount of resources and tells WaveManager
 func die():
-	
-	# Randomly chooses an amount based on the min and max values of resources, then spawns that amount
-	var randamount = roundi(randi_range(resource_min, resource_max) * drop_mult)
-	for i in randamount:
-		
-		if RESOURCE_SCENE == null: 
-			push_warning("		asteroid.gd: die(): RESOURCE_SCENE preload is null. Cannot spawn any resources.")
-			break
-			
-		var r_data = _get_next_resource()
-		if r_data == null: continue
-		
-		var r = RESOURCE_SCENE.instantiate()
-		get_tree().current_scene.call_deferred("add_child", r)
-		r.call_deferred("initialize", r_data, global_position)
-	
+	_spawn_resources()
 	
 	# Emits particles upon death
 	var particles = DEATH_PARTICLES.instantiate()
@@ -321,12 +303,35 @@ func die():
 	wave.asteroid_death()	# Runs function in WaveManager, tracking asteroid death
 	despawn()	# Deletes this instance
 
-
+# Queues the asteroid to despawn
 func despawn() -> void:
 	is_dead = true	# Prevents double death bug
 	queue_free()
 
+# Randomly chooses an amount based on the min-max drop amount * drop mult, then spawns that amount
+func _spawn_resources() -> void:
+	
+	# Stochastic rounding instead of integer rounding. Increases chance to round up based on drop_mult
+	var drop_mult : float = Game_Manager.active_stats[StatIDs.GLOBAL][StatIDs.DROP_AMOUNT]
+	var exact : float = randi_range(resource_min, resource_max) * drop_mult 
+	var randamount : int = floori(exact)
+	if randf() < (exact - randamount):
+		randamount += 1
+	
+	for i in randamount:
+		
+		if RESOURCE_SCENE == null: 
+			push_warning("		asteroid.gd: _spawn_resources(): RESOURCE_SCENE preload is null. Cannot spawn any resources.")
+			break
+			
+		var r_data = _get_next_resource()
+		if r_data == null: continue
+		
+		var r = RESOURCE_SCENE.instantiate()
+		get_tree().current_scene.call_deferred("add_child", r)
+		r.call_deferred("initialize", r_data, global_position)
 
+# Chooses random resource that is able to spawn this round
 func _get_next_resource() -> ResourceData:
 	
 	if game.all_resource_types.is_empty(): 
@@ -335,26 +340,33 @@ func _get_next_resource() -> ResourceData:
 	
 	# Build array and weight variable to get pool of resources and their weight
 	var eligible : Array[ResourceData] = []
-	var total_weight : float = 0
+	var weights : Array[float] = []
+	var total_weight : float = 0.0
 	
-	# For each available resource, checks if it CAN spawn this wave
+	# For each available resource, checks unlocks to see if it CAN spawn this
 	for resource in game.all_resource_types:
-		if resource.min_wave <= wave.current_wave:
-			var weight = drop_weight.get(resource.resource_type, resource.base_weight)
-			# If passes criteria, adds asteroid to the array and 
-			# adds it's spawn weight to the total_weight value
-			eligible.append(resource)
-			total_weight += weight
-	
+		if resource.unlock_id != "" and not game.is_feature_unlocked(resource.unlock_id):	# Skips if not unlocked and not grey
+			continue
+		
+		# If passes criteria, adds resource to the array
+		var resource_weight = drop_weight.get(resource.resource_type, resource.base_weight)
+		if resource_weight <= 0.0: continue
+		weights.append(resource_weight)
+		eligible.append(resource)
+		
+		
+		total_weight += resource_weight	# Adds it's spawn weight to the total_weight value
+		
+	#print(" 			total weight: ", total_weight)
+	if eligible.is_empty(): return null
 	var roll : float = randf_range(0,total_weight) # Randomizes number based on weight
 	
 	# Subtracts each eligible resource's weight by the random number.
 	# If the resource's weight causes the number to go below or 
 	# reaches 0, then THAT resource is returned (chosen to be spawned)
-	for resource in eligible:
-		var weight = drop_weight.get(resource.resource_type, resource.base_weight)
-		roll -= weight
+	for i in eligible.size():
+		roll -= weights[i]
 		if roll <= 0:
-			return resource
+			return eligible[i]
 	
 	return eligible.back() # Safety fallback in case of floating point
