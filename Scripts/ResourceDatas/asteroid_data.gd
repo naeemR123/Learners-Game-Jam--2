@@ -39,7 +39,6 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 ## How fast scaling happens: < 1 = early-game ramp-up , > 1 = late-game ramp-up
 @export var weight_curve : float = 1.0
 
-
 @export_group("Group Spawning")
 ## Range of group size with lowest wave scaling. Ex: (1,1) spawns 1 asteroid. (3,5) spawns 3-5 asteroids.
 @export var group_size_start : Vector2i = Vector2i(1,1)
@@ -59,6 +58,9 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 
 @export_category("AI")
 @export var behavior : BehaviorType = BehaviorType.DEFAULT
+
+
+# - Functions -
 
 ## Chooses random texture from Array | Applies a placeholder if empty
 func get_random_texture() -> Texture2D:

@@ -14,7 +14,10 @@ resistances = Dictionary[String, float]({
 "slow": 0.2
 })
 min_wave = 10
-spawn_weight = 4.0
+spawn_weight = 1.0
+spawn_weight_end = 5.0
+weight_ramp_end_wave = 80
+weight_curve = 0.85
 group_size_start = Vector2i(2, 3)
 group_size_end = Vector2i(5, 7)
 group_ramp_end_wave = 70

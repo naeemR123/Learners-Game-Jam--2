@@ -7,7 +7,6 @@ script = ExtResource("1_r01ug")
 id = "damage_1"
 display_name = "High Caliber Bullets"
 description = "Permanently increases ALL damage by 10%"
-cost = 50
 target_categories = Array[String](["all"])
 stat_id = "damage"
 value = 0.1

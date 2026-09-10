@@ -7,6 +7,17 @@
 [node name="UI" type="CanvasLayer" unique_id=1543760008]
 script = ExtResource("1_jxero")
 
+[node name="RemainingAsteroids" type="Label" parent="." unique_id=1771065396]
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_top = 30.0
+offset_right = -40.0
+offset_bottom = 23.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 24
+
 [node name="ResourceLabel" type="Label" parent="." unique_id=1558278025]
 custom_minimum_size = Vector2(250, 50)
 anchors_preset = -1

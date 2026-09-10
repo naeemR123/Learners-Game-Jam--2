@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="PerkData" format=3 uid="uid://c63i4sy4haosy"]
 
 [ext_resource type="Script" uid="uid://d1tn35sg1esit" path="res://Scripts/ResourceDatas/perk_data.gd" id="1_h421d"]
-[ext_resource type="Resource" uid="uid://d4fmiplgwosr5" path="res://Scripts/Resources/Perks/damage_perk_1.tres" id="2_itwv5"]
+[ext_resource type="Resource" uid="uid://d4fmiplgwosr5" path="res://Scripts/Resources/Perks/Stat Modifiers/damage_perk_1.tres" id="2_itwv5"]
 
 [resource]
 script = ExtResource("1_h421d")

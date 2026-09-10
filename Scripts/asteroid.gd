@@ -1,16 +1,18 @@
 extends Area2D
 
+
+# - Autoloads -
 @onready var game := Game_Manager
 @onready var wave := WaveManager
-@onready var tracker := StatsManager
 
+# - Scene Nodes -
 @onready var sprite : Sprite2D = $Sprite2D
 
+# - Preloads -
 const RESOURCE_SCENE = preload("uid://b8itoghsjeal8")
 const DAMAGE_NUMBER = preload("uid://c7hnus72cghp0")
 const DEATH_PARTICLES = preload("uid://f7ms6af6m58t")
 const HIT_PARTICLES = preload("uid://y4r8isaruwon")
-
 
 
 # - Debugging -
@@ -38,9 +40,11 @@ var hit_flash_tween : Tween
 var planet : Area2D 			# Assigned at start()
 var data : AsteroidData		# ^
 var damage : float = 3
+var max_health : float
 var health : float
 var is_dead : bool = false	# Prevents double death bug
 
+# - Sprite Animation -
 var anim_sprite : bool = false 		# If comet, animates sprite
 var frame_count : int = 8			# Total frames of animation
 var frame_interval : float = 0.1	# Time between frame change
@@ -108,9 +112,12 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 			push_warning(" [WARNING] Asteroid '%s' as type '%s' spawned at implausible speed: %.1f" % [self, data.name, speed])
 	
 	# HEALTH
-	health = data.max_health * health_multiplier
+	max_health = data.max_health * health_multiplier
+	health = max_health
+	
 	# DAMAGE
 	damage = data.damage * damage_multiplier
+	
 	
 	# - For Debugging
 	print_rich("	[color=yellow][DEBUG][/color] Asteroid type: '%s' spawned with:
@@ -251,7 +258,7 @@ func _on_area_entered(body: Area2D) -> void:
 	if body != planet or is_dead:
 		return
 	else:
-		tracker.increment(CounterIDs.ASTEROIDS_MISSED)
+		StatsManager.increment(CounterIDs.ASTEROIDS_MISSED)
 		game.take_damage(damage)	# Runs function in Game_Manager, tracking Planet shield
 		wave.asteroid_death()		# Runs function in WaveManager, tracking asteroid death
 		despawn()				# Deletes this instance
@@ -261,9 +268,9 @@ func take_damage(amount: float, particles: bool = true):
 	
 	if is_dead: return
 	
-	# Increments Stat Tracker
-	tracker.increment(CounterIDs.DAMAGE_DEALT, minf(amount, health))
-	health -= amount
+	# Increments Stat StatsManager
+	StatsManager.increment(CounterIDs.DAMAGE_DEALT, minf(amount, health))
+	health = maxf(health - amount, 0.0) 	# Clamps health to 0.0 min
 	print(" Asteroid hit! Damage taken: %.1f | Current Health: %.1f" % [amount, health])
 	
 	# Hit Flash - Visual Effect
@@ -286,7 +293,7 @@ func take_damage(amount: float, particles: bool = true):
 		get_tree().current_scene.call_deferred("add_child", hit_particles)
 		hit_particles.call_deferred("start", direction, global_position)
 	
-	if health <=0:
+	if health <= 0.01:
 		die()
 
 # Destroys asteroid (from death by Defenses), dropping
@@ -299,7 +306,7 @@ func die():
 	get_tree().current_scene.call_deferred("add_child", particles)
 	particles.call_deferred("start", direction, global_position)
 	
-	tracker.increment(CounterIDs.ASTEROIDS_DESTROYED)
+	StatsManager.increment(CounterIDs.ASTEROIDS_DESTROYED)
 	wave.asteroid_death()	# Runs function in WaveManager, tracking asteroid death
 	despawn()	# Deletes this instance
 

@@ -15,7 +15,9 @@ max_health = 3.0
 damage = 3.0
 max_speed = 96.0
 min_wave = 1
-spawn_weight = 10.0
+spawn_weight = 13.0
+spawn_weight_end = 5.0
+weight_curve = 1.5
 max_resources = 3
 drop_weights = Dictionary[int, float]({
 0: 95.0,

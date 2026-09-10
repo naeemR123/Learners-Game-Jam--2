@@ -10,8 +10,8 @@ target_category = "turret_satellite"
 description = "Each Upgrade:
 - Increases projectile speed."
 base_cost = 10
-cost_multiplier = 1.8
-base_value = 300.0
-max_value = 1200.0
+cost_multiplier = 1.75
+base_value = 800.0
+max_value = 1800.0
 val_per_level = 50.0
 metadata/_custom_type_script = "uid://b3n4xmqgxjhgf"

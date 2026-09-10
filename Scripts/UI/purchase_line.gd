@@ -203,6 +203,11 @@ func _update_perk_display() -> void:
 	var reason = perk_data.get_block_reason()
 	var cost: int = perk_data.get_current_cost()
 	
+	if reason == PurchaseBlock.Reason.PREREQS_NOT_MET or reason == PurchaseBlock.Reason.LOCKED:
+		visible = false
+		return
+	
+	visible = true
 	name_label.text = perk_data.display_name
 	value_label.visible = false
 	owned_label.visible = false 	# Owned label is hidden for perks (cost label handles it)

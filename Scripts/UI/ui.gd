@@ -21,6 +21,7 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 @onready var wave_label: Label = $WaveLabel
 @onready var bwave_label: Label = $BossWaveLabel
 @onready var planet_shield: Label = $PlanetShield
+@onready var remaining_asteroids: Label = $RemainingAsteroids
 
 # Buttons
 @onready var retry_button: Button = $GameOverScreen/VBoxContainer/RetryButton
@@ -31,6 +32,7 @@ const SHOP_ACC_ROW = preload("uid://br8qdqqge6hgr")
 # Control Nodes
 @onready var game_over_screen: Control = $GameOverScreen
 @onready var shop_panel: PanelContainer = $ShopPanel
+@onready var mouse_dot: Node2D = $ShopPanel/MouseDot
 
 # Shop Lists
 @onready var satellites_list: VBoxContainer = $ShopPanel/VBoxContainer/ShopTabs/Satellites/VBoxContainer
@@ -78,6 +80,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("Shop"):
 		_on_hide_button_pressed()
+	if Input.is_action_just_pressed("ZoomReset"):
+		_on_screen_resize()
 
 # Runs reset function in Game_Manager
 func _on_retry_button_pressed() -> void:
@@ -172,15 +176,17 @@ func _populate_shop_panel() -> void:
 
 # Displays and handles shop screen ui
 func _update_shop_visuals() -> void:
-	var should_show = not wave.wave_active and not manually_hidden	# Toggle criteria
+	var wave_inactive = not wave.wave_active
+	var should_show = wave_inactive and not manually_hidden	# Toggle criteria
 	
 	# Toggle: Shifts the shop off-screen and centers planet
 	shop_slide(should_show)
 	camera.set_shop(should_show)
-	start_wave_button.visible = not wave.wave_active
+	start_wave_button.visible = wave_inactive
+	mouse_dot.show_dot(wave_inactive)
 	
 	# Displays next boss wave if current wave is within 5 waves
-	if not wave.wave_active and wave.current_wave + 4 >= wave.next_boss_wave:
+	if wave_inactive and wave.current_wave + 4 >= wave.next_boss_wave:
 		bwave_label.show()
 		bwave_label.text = "Upcoming Boss: Wave " + str(wave.next_boss_wave)
 	else:
@@ -204,6 +210,7 @@ func wave_tracker() -> void:
 		hide_button.hide()
 		manually_hidden = false
 		wave_label.text = "Wave: " + str(wave.current_wave)
+		#remaining_asteroids.text = "Asteroids Left: " + str(wave.)
 	else:
 		hide_button.show()
 		wave_label.text = "Next Wave: " + str(wave.current_wave)

@@ -1,7 +1,7 @@
 # Incremental Space Game — Roadmap
 
 > **Engine:** Godot 4.7 · **Language:** GDScript
-> **Last updated:** 2026-09-06
+> **Last updated:** 2026-09-09
 
 ## How to use this file
 
@@ -54,8 +54,21 @@ Tiers are about *scope and ordering*, not importance:
 	  doesn't inflate the total.
 - [x] `WaveManager.register_all_asteroids()` migrated to `_register_folder()` — Asteroids
 	  can now use subfolders and survive export-build `.remap` renaming
+- [x] **Wave difficulty scaling framework** — one normalized progress function feeding every
+	  wave-derived number, replacing scattered ad-hoc formulas. `wave_progress(wave)` returns
+	  0.0 at wave 1 and 1.0 at `SCALING_END_WAVE`, clamped at both ends. Two families sit on
+	  top of it:
+	  - **Bounded** — `lerpf(start, end, pow(progress, curve))` for anything with a real
+		ceiling: `speed_multiplier()` (1.0 → `MAX_SPEED_SCALE`), spawn interval
+		(`max_spawn_interval` → `MIN_SPAWN_INTERVAL`), swarm group size, tank spawn weight.
+	  - **Unbounded** — `pow(2.0, (wave - 1) / X2_WAVE)` for stats the player's own power
+		multiplies against: `health_multiplier()`, `damage_multiplier()`. Expressed as a
+		*doubling period* rather than a raw growth rate, because "doubles every 13 waves" is
+		something you can reason about and `1.055` isn't.
+	  `SCALING_END_WAVE` typed as `float` so the division promotes; the curve exponent only
+	  bends the middle (`pow(0, n) = 0`, `pow(1, n) = 1`), so endpoints are fixed by the lerp.
 - [x] **`global` → `planet` category rename** — `max_planet_shield` → `shield`.
-	  `StatIDs.GLOBAL` is reserved, unused, for genuinely game-wide stats later.
+	  `StatIDs.GLOBAL` was reserved for genuinely game-wide stats; it now holds `drop_amount`.
 - [x] **`shield_changed` / `planet_hit` signal split** — one signal was carrying both
 	  "value changed, redraw" and "we got hit, shake", so a perk purchase couldn't refresh
 	  the bar without faking a hit. Screen shake now scales with damage.
@@ -109,6 +122,59 @@ Tiers are about *scope and ordering*, not importance:
 	  - Four hand-drawn texture variants per tier, picked at random via `get_random_texture()`.
 	  - Fixed alongside: `resource.gd`'s despawn check was still a screen-space box in world
 		coordinates (the `asteroid.gd` bug, unfixed here), silently deleting most drops.
+- [x] **Asteroid speed re-tune** — `speed_multiplier` was `0.1 * current_wave`, so wave 1 ran at
+	  a tenth speed and every asteroid clamped to `min_speed`. Combined with base speeds authored
+	  for a smaller spawn radius, a wave-1 asteroid took ~106s to arrive and ~80s of that was
+	  off-screen. Fixed by starting the multiplier at 1.0 and re-deriving all five `max_speed`
+	  values from `radius / target_seconds` (Comet 177 ≈ 12s, Swarm 118 ≈ 18s, Common 96 ≈ 22s,
+	  Tank 71 ≈ 30s, Boss 47 ≈ 45s). `speed_variance` moved to `AsteroidData` as a *fraction*
+	  (±12%) instead of an absolute ±15 px/s shared by every type. The `min_speed`/`max_speed`
+	  clamp was deleted for a `push_warning` — a silent clamp disguises bugs as mistuning, and
+	  `max_speed = 300` would have quietly eaten comet scaling from ~wave 35 on. See Decisions log.
+- [x] **Group spawning** — `AsteroidData.group_size_start` / `group_size_end` (`Vector2i` min/max
+	  pairs) + `group_ramp_end_wave` + `group_curve` → `get_group_size(wave)`. Progress is measured
+	  from `min_wave`, not wave 1, so a type unlocking at wave 10 starts at 0% of its own ramp.
+	  `Vector2i(1, 1)` defaults mean every existing `.tres` behaved identically with no migration.
+	  Swarms run 2–3 → 6–7 by wave 70.
+	  - `spawn_next()` rolls **one base angle per group**; `spawn_asteroid()` jitters ±7° around it
+		plus ±90px radially. The radial jitter is what staggers arrivals — without it the whole
+		group lands in the same frame and reads as one hit, not a swarm.
+	  - Speed variance is rolled once per group and shared, so members hold formation.
+- [x] **Spawn count bookkeeping** — `get_next_asteroid()` incremented the counters by exactly 1,
+	  an assumption group spawning breaks. Counting moved to `register_spawns(count) -> int`, which
+	  clamps the group to the remaining budget and returns how many the spawner may actually create.
+	  The wave-end check went from `==` to `>=`: an exact-equality guard on a counter anything can
+	  touch means one overshoot hangs the wave forever with no error. The two picker functions had
+	  `asteroid_death()` calls compensating for the old increment — removing the increment turned
+	  those into an active undercount.
+- [x] **Tank spawn-weight ramping** — `spawn_weight_end` / `weight_ramp_end_wave` / `weight_curve`
+	  → `get_spawn_weight(wave)`, with `-1.0` as a "no ramp" sentinel so untouched `.tres` files
+	  need no migration. A static weight can only hold a share constant; it can't produce "rare
+	  early, common late." Worse, with swarm group sizes inflating the population, a static tank
+	  weight made tanks *decline* from 18.9% to 11.8% between waves 10 and 70.
+- [x] `pick_asteroid_type()` and `get_boss_asteroid()` rebuilt on parallel `eligible` / `weights`
+	  arrays built in one pass, same as `_get_next_resource()`. Both previously computed each weight
+	  twice — harmless with a static field, a live desync hazard once the weight is wave-dependent.
+- [x] **Drop scaling is perk-driven, not wave-driven** — `StatIDs.GLOBAL` (`"global"`) activated
+	  as a `NON_DEFENSE_DEFAULTS` category holding `drop_amount`, default `1.0`. Ten FLAT perks of
+	  `0.05` give exactly `(1.0 + 0.5) * 1.0 = 1.5`; PERCENT perks would have stacked
+	  multiplicatively to `1.05¹⁰ = 1.63` and never landed on a round cap. See Decisions log.
+	  - `asteroid.die()` uses **stochastic rounding** — `floori(exact)` plus a `randf()` chance on
+		the remainder. `roundi(randi_range(1,3) * 1.05)` returned identical values to `* 1.0`, so the
+		first three economy perks would have done literally nothing, and the tenth would have
+		overdelivered at +67% instead of +50%.
+- [x] **Perk-gated resource tiers** — `ResourceData.unlock_id` replaces `min_wave` as the tier
+	  gate; an empty string means always available (Grey). `_get_next_resource()` filters on
+	  `is_feature_unlocked()` and builds parallel `eligible` / `weights` arrays in one pass instead
+	  of computing each weight twice. Zero-weight entries are skipped, and an `is_empty()` guard
+	  replaces an `eligible.back()` that would have errored on an empty array.
+- [x] **Projectile speed upgrade** — `projectile_speed` in `turret_satellite` defaults through
+	  `StatIDs.PROJ_SPEED` → `update_satellite_stats()` → `shoot()` → `projectile.start()`.
+- [x] **Projectile despawn made world-relative** — was comparing world coordinates against a fixed
+	  1920×1080 screen box anchored at the origin, which only worked because the camera happens to
+	  sit centred on the planet. The box reached 740px above/below the planet, so a `range` upgrade
+	  past ~580 would have made projectiles vanish mid-flight on the vertical axis while working
+	  fine horizontally. Now bounded by distance travelled from the firing point.
 
 ### UI
 - [x] Shop revamp, all three phases — `TabContainer`, custom stretch `TabBar`,
@@ -177,19 +243,68 @@ Tiers are about *scope and ordering*, not importance:
 
 ### 2A · Next up
 
-- [ ] **Partial-set perk targeting** — `target_category: String` → `target_categories: Array[String]`,
-	  with `["all"]` as the wildcard. Lets a perk hit turrets + lasers but not collectors.
-	  ~15 lines in `_resolve_perk_categories()` and `register_perk_stats()`.
-	  Same shape will be reusable for filtering stat counters by defense type.
-- [ ] **Number formatting** — `format_number()` → `1.2K` / `3.4M`. Cost labels will
-	  overflow their containers otherwise.
+- [x] **Partial-set perk targeting** — `target_category: String` → `target_categories: Array[String]`,
+	  with `["all"]` as the wildcard, plus a `_try_add_category()` dedupe helper. Note
+	  `_resolve_perk_categories()` skips every `NON_DEFENSE_DEFAULTS` category when resolving `"all"`,
+	  so `"all"` does **not** include `"global"` — correct, but surprising given how close the two
+	  names read in `StatIDs`.
+- [x] **Number formatting** — `NumberFormat` static class with `compact()` and trailing-zero
+	  stripping, wired to all display call sites.
 - [ ] More perk `.tres` resources — currently 3; aim for 3 roots / 4 middles / 1 capstone
 	  so the prerequisite tree and the `", ".join()` tooltip path actually get exercised
+- [ ] **Economy perk branch** — the plumbing is done and only the Blue unlock exists.
+	  Needs: ten FLAT `drop_amount` perks at `0.05` each (→ exactly +50%), plus Gold and Red
+	  `UNLOCK` perks. Planned tree shape: economy perk 3 gates Blue, 6 gates Gold, 8 gates Red,
+	  with a second branch of per-tier drop-chance perks unlocking after each tier does.
+	  Until these exist `drop_amount` sits at `1.0` and the branch is one node.
+- [ ] **Wave length pacing** — wave duration is `events × spawn_interval`, and nothing tunes the
+	  product. `max_asteroids = 3 + wave * 2` grows linearly and unbounded while the interval is
+	  floored, so length humps at ~3.9 min around wave 35–50 and collapses to ~40s by wave 100.
+	  Raising `MIN_SPAWN_INTERVAL` doesn't help (the mid-game interval is nowhere near the floor)
+	  and stretching the ramp to wave 200 makes it monotonically worse (6.7 min at wave 100).
+	  Real options: bound `max_asteroids`, or derive the interval from a target wave duration
+	  (`interval = target_seconds / expected_events`) so length is tuned directly. 203 asteroids
+	  in one wave is also the most likely framerate problem before object pooling exists.
+- [ ] **Threat arrows are perk-gated during the waves that need them most** — radial spawning
+	  means a wave-1 asteroid is hidden for ~16s, and the mitigation is behind
+	  `UnlockIDs.THREAT_INDICATOR`. Options: ungate the base arrows and sell the urgency scaling /
+	  glow / `max_arrows` as the perk; grant it free after wave N; or accept it because early waves
+	  are forgiving. Design call, not a bug.
+- [ ] **Wave 1 is not clearable** — confirmed in play. Three independent gates, all currently failing.
+	  Fixing any one alone is not enough; the first two are the blockers.
+	  - **Shots can't connect.** Projectiles fire at a position snapshot, so
+		`effective_range = hit_radius × projectile_speed / asteroid_speed`. At base 300 that's ~94px
+		against a 250 range — 62% of the range fires blanks, each costing a full cooldown.
+		**Raising base `projectile_speed` to ~800 makes the full range usable at wave 1.** *(in progress)*
+	  - **Kills don't fit the window.** A turret at orbit radius 160 with range 250 gets ~1.4s of
+		expected firing time per asteroid (see Decisions log for the coverage math). Damage 1.5 vs a
+		3.0 HP common needs two shots at 2.4s apart. **Damage must reach 3.0** to one-shot a wave-1
+		common so the window only has to contain one trigger pull. The damage upgrade is
+		MULTIPLICATIVE ×1.5, so level 2 is 2.25 and level 3 is 3.375 — one free tutorial upgrade
+		doesn't cross it. Either grant two, or switch the upgrade to ADDITIVE (level 2 = exactly 3.0).
+	  - **The opening is a forced move.** Turret 5 + collector 10 = exactly 15, and without a
+		collector there's no income at all. Fine *as a tutorial*, but real wave 1 then starts with one
+		turret. Two turrets is a bigger jump than it sounds: `redistribute()` keeps them 180° apart,
+		so one is always within 90° of any incoming asteroid and worst-case engagement distance goes
+		from d=90 to d=192. Test real wave 1 via debug injection at 15 / 22 / 33 (1, 2, 3 turrets
+		plus collector), find the loadout that works, then make the tutorial hand that over.
 
 ### 2B · Core
 
 - [ ] **Save / load** — serialize a plain Dictionary via `FileAccess` + `JSON`.
 	  Avoid `ResourceLoader` on user files (embedded scripts execute).
+- [ ] **Tutorial** — scripted opening before real wave 1. Buy a collector and a turret (the 15
+	  starting resources make this a forced move, which is what a tutorial wants), run a one-asteroid
+	  wave, teach the tractor beam on the drop, then hand over a free upgrade and a free perk.
+	  Doubles as the delivery mechanism for whatever loadout real wave 1 actually needs — see 2A.
+- [ ] **Shield recovery** — currently shield only ever decreases, so a rough early wave permanently
+	  narrows the margin and the run spirals with no way back. Planned: shop heal item + a
+	  between-waves healing perk + a heal-dropping asteroid variant. Design note: at least one
+	  source should be **automatic** (~10–20% of max per wave), because the player who most needs
+	  a paid heal is the one who couldn't afford it. Automatic regen is the floor; the shop item and
+	  perk are acceleration. Auto-regen also makes shield upgrades better, since it scales with max.
+	  The heal-dropping asteroid is the most interesting of the three — it makes one enemy type
+	  *wanted* rather than only feared, which nothing else in the game currently does.
 - [ ] Start screen
 - [ ] Pause menu — `PauseMenu` input action is mapped to nothing
 - [ ] Game speed control (1x / 2x / 4x) — interacts with `local_time_scale` slow effects
@@ -203,6 +318,29 @@ Tiers are about *scope and ordering*, not importance:
 
 ### 2C · Content
 
+- [ ] **Predictive targeting perk** — turrets solve the intercept instead of firing at a position
+	  snapshot. This is the permanent fix for `effective_range` (see Decisions log); raising
+	  `projectile_speed` only buys time, because effective range shrinks as asteroid speed scales
+	  (×2.2 by wave 100) and range upgrades push acquisition far past where direct fire connects.
+	  The perk therefore becomes *more* valuable the deeper the run goes, with no balancing needed.
+	  - Use the iterative solve, not the quadratic — easier to read and it degrades gracefully if
+		the target changes direction, where the closed form doesn't:
+		```gdscript
+		var t : float = global_position.distance_to(target.global_position) / proj_speed
+		for i in 3:
+			var predicted : Vector2 = target.global_position + target.direction * target.speed * t
+			t = global_position.distance_to(predicted) / proj_speed
+		```
+	  - Reads `target.direction` and `target.speed`, both already public on `asteroid.gd`.
+	  - **Known inaccuracy:** the tractor beam's slow is applied inside `asteroid._physics_process()`
+		via `get_modifier(TIME_SCALE)`, not to `speed` itself, so slowed asteroids get over-led.
+		Either expose an effective-speed getter on the asteroid or accept the drift.
+- [ ] **Hold-fire satellite** — reserve the "don't shoot at what you can't hit" behaviour as a
+	  *distinct weapon identity* rather than baking it into the base turret. Filters targeting to
+	  within effective range and waits, instead of spending cooldowns on shots that miss. Reads as
+	  deliberate rather than broken, and pairs naturally with a slow, heavy shot — explosive or
+	  burst-fire are the candidates. Contrast with the base turret, which fires constantly and
+	  relies on projectile speed to connect.
 - [ ] **Splitter asteroids** — `@export var splits_into : AsteroidData` + `split_count`,
 	  branch in `die()`
 - [ ] **Wave modifiers** — a `WaveModifierData` resource, auto-scanned like everything
@@ -228,6 +366,42 @@ Tiers are about *scope and ordering*, not importance:
 - [ ] Fill in `drop_weights` on the asteroid `.tres` files — *done; see Completed.*
 	  Balance pass still outstanding: a Boss now yields ~50–75 drops weighted toward Blue/Gold/Red,
 	  which is a very large jump from a Common's 0–3 Grey. Verify in play before tuning further.
+- [ ] **Range upgrade is currently a trap purchase** — miss distance scales *with* flight distance,
+	  so buying range widens the band where a turret acquires targets it cannot hit and burns
+	  cooldowns on them. `max_value = 1500` against an effective range of ~250 means the upgrade is
+	  net-negative past a point. Resolves itself once predictive targeting exists (2C); until then,
+	  either cap `max_value` near effective range or accept that the upgrade is mistuned.
+- [ ] **Damage upgrade has no diminishing returns** — `val_per_level = 1.5` (MULTIPLICATIVE) and
+	  `cost_multiplier = 1.5` are the same number, so damage-per-resource-spent is *constant
+	  forever*. There is never a reason to buy anything else, which removes the diversification
+	  decision that makes the shop interesting. Either lower `val_per_level` below `cost_multiplier`
+	  or switch to ADDITIVE (which also fixes the wave-1 damage threshold — see 2A).
+- [ ] **Verify turret damage reconciles** — a wave-35 log showed 13.5 damage. That matches ADDITIVE
+	  level 9 with *no* perk applied (`1.5 × 9`) exactly, but not MULTIPLICATIVE (level 6 = 12.53 with
+	  the 10% perk, level 7 = 18.80). Either the `.tres` changed after that log, or `damage_perk_1`
+	  (`target_categories = ["all"]`) isn't reaching `turret_satellite`. Print
+	  `active_stats["turret_satellite"]["damage"]` to settle it.
+- [ ] **Income vs cost curve check** — income now grows roughly linearly (asteroid count × a
+	  capped +50% from perks × rarity-unlock step changes), but `UpgradeData.get_current_cost()`
+	  is `base_cost * pow(cost_multiplier, level - 1)` — geometric. Geometric costs against linear
+	  income means the player eventually hard-stalls unless `max_cost` flattens the curve. Plot
+	  `income_per_wave / cost_of_next_upgrade` across waves 1–100; if it isn't roughly flat,
+	  purchases stop being meaningful decisions.
+- [ ] **Per-tier drop-chance perks** — planned as `weight_stat_id` on `ResourceData`, letting the
+	  build loop do `resource_weight *= active_stats[GLOBAL].get(id, 1.0)` with no tier knowledge in
+	  `asteroid.gd`. Derive the string from `ResourceType.keys()[resource_type].to_lower()` rather
+	  than storing a third encoding of "blue" alongside the enum and `unlock_id`. Deliberately not
+	  added yet — an unused export on every resource until the first such perk exists. Note the
+	  tradeoff: renaming an enum member silently changes every derived key, including in save files.
+- [ ] Zero-weight entries aren't skipped in `pick_asteroid_type()` / `get_boss_asteroid()` —
+	  inert today (nothing has weight 0) but a `roll` of exactly `0.0` would pick the first entry
+	  regardless of its weight. `_get_next_resource()` already guards this.
+- [ ] Comet's `start()` comment says they fly past *"avoiding the Planet"* — the intent is the
+	  opposite. Comets are aimed near the planet with a ±9° offset so a bad roll is a direct hit;
+	  that's why damage is 15 and they're rare and profitable. Fix the comment.
+- [ ] Blue's `base_weight = 20.0` is the fallback for any asteroid whose `drop_weights` omits
+	  Blue — against Grey's 95 that's ~17%, generous for the tier a perk unlocks. Confirm every
+	  asteroid lists Blue explicitly, or lower the fallback.
 - [ ] Generic on-hit effects — `SatelliteData.on_hit_effect` + magnitude/duration stats
 	  → `projectile.gd` + `turret_satellite.gd`. *(Parked since the status-effect session.
 	  The marker drone is its first real customer.)*
@@ -390,6 +564,64 @@ Current approach is baked glow — an additive radial gradient sprite behind the
 per-object, needs no global setting, and quantizes predictably under the pixelation pass.
 Note bloom never lights *surrounding* objects regardless; that needs `PointLight2D`.
 
+**Asteroid speed stays in px/s, not "seconds to arrive."** Storing `approach_time` and deriving
+`speed = distance / time` was drafted and rejected. It decouples the data from `radius` cleanly,
+but only while every trip is identical. A splitter fragment spawning 400px out would compute
+`400 / 30 = 13 px/s` and crawl; a boss dropped in close for drama would slow down for it. **Speed
+is intrinsic to the asteroid; approach time is a property of one particular journey.** The
+reciprocal also fights the difficulty scale — `speed_multiplier` is a multiply, so in time-space
+it becomes a divide and equal multiplier steps produce shrinking time steps. The root cause was
+never the unit: it was one bug (`0.1 * current_wave`) plus five numbers authored for a smaller
+radius. A doc comment on `max_speed` records the `radius / seconds` conversion so tuning can
+still be reasoned about in seconds.
+
+**Drop scaling is a player choice, not an automatic curve.** The original plan had a wave-based
+`drop_multiplier()` alongside rarity bias, but income already scales on four axes that multiply:
+asteroid count, drops per asteroid, rarity weighting, and resource value. Each looked reasonable
+alone and together they produced ~100× income by wave 50 against ~14× enemy health. Moving the
+multiplier into the perk tree cuts it to two axes — asteroid count (automatic) and player
+purchases — and makes runaway income structurally hard rather than a tuning accident. It also
+converts invisible pacing into agency: `ResourceData.min_wave` used to unlock tiers silently,
+where a perk makes it a decision with a cost. Rejected doing it with `UpgradeData` (which has
+levels and cost curves built in) because perks are where build-choice belongs; ten chained
+prerequisite nodes *are* the tree, not a workaround for it.
+
+**FLAT perks for capped multipliers, PERCENT for open-ended ones.** `recalculate_stat()` computes
+`(base + flat) * mult`, and `perk_mult` accumulates as `mult * (1.0 + value)` — multiplicative.
+Ten 5% PERCENT perks give `1.05¹⁰ = 1.629`, not 1.5. Percentages that stack by multiplication
+never land on the round number you designed. FLAT against a base of `1.0` is additive and hits
+the cap exactly.
+
+**Sentinel defaults over renames, for zero-migration exports.** `spawn_weight_end = -1.0` meaning
+"no ramp" and `group_size_start = Vector2i(1, 1)` meaning "no group" both let every existing
+`.tres` keep working untouched. The alternative — renaming `spawn_weight` to `spawn_weight_start`
+for symmetry — would leave Godot unable to map the old property on load, silently zeroing all
+five values. Naming asymmetry is cheaper than a migration, and a doc comment covers it.
+
+**Turret reach is `effective_range`, not `range` — and range is the wrong lever.** `shoot()` passes
+`target.global_position`, a snapshot, and the projectile then flies a fixed straight line while the
+asteroid keeps moving. A shot connects only when
+`asteroid_speed × (flight_distance / projectile_speed)` is smaller than the combined collision
+radius, which rearranges to:
+
+```
+effective_range = hit_radius × projectile_speed / asteroid_speed
+```
+
+The consequence that isn't obvious: **miss distance scales with flight distance, so buying range
+extends acquisition without extending the kill zone.** A longer range just means more shots fired
+at targets that cannot be hit, each costing a full cooldown — range upgrades currently *reduce*
+damage-on-target. Projectile speed is the lever, and predictive targeting is the real fix.
+
+The related geometry, which is why one turret is so much weaker than two: a turret orbits at radius
+160 with range 250, so it engages an asteroid from `d = 410` when on the same side but only from
+`d = 90` when on the far side — a 4.5× swing decided by orbit phase the player doesn't control.
+Time-weighted, that's ~1.4s of expected firing time per asteroid at wave 1. Because
+`redistribute()` spaces satellites evenly, **two turrets are always 180° apart**, so one is always
+within 90° of any incoming asteroid and worst-case engagement rises from `d = 90` to `d = 192`.
+The second turret is worth far more than the first — relevant to any "how much should the player
+have by wave N" question.
+
 **Placeholder art stays longer than feels comfortable.** Feel comes from motion, timing,
 sound, and feedback far more than sprites.
 
@@ -414,6 +646,36 @@ Things that have bitten more than once — check these first when something beha
 - **Correct only because a value is currently 0 or 1** — `anchor_left * width` looked right
   while `anchor_left` was `0`; `get_viewport_rect().size / 2` matched the planet only while the
   canvas was exactly 1920×1080. Test formulas against a value that *isn't* the identity.
+- **Multipliers must initialize to `1.0`, additive bonuses to `0.0`** — the inverse of the above.
+  A bare `var health_mult : float` is `0.0`, and `data.max_health * 0.0` is a silent zero with no
+  error: asteroids die to any hit and deal no damage. Use the identity value for the operation.
+- **A local sharing a name with a `data.` field** — three bugs in one session. `max_speed` (the
+  clamp ceiling) vs `data.max_speed` (the stat) collapsed speed variance; `speed_variance` (a
+  rolled offset) vs `data.speed_variance` (a configured fraction) reduced ±15% to ±0.15 px/s;
+  `resource` as a `ResourceData` in one loop and an index in the next produced `weights[resource]`.
+  The compiler is happy and the meaning quietly shifts. Name the local for what it *is*
+  (`speed_offset`, `i`), not for the field it came from.
+- **Rounding a small integer destroys a small multiplier** — `roundi(randi_range(1,3) * 1.05)`
+  returns exactly what `* 1.0` returns, so the first several upgrade levels do nothing, and large
+  multipliers overshoot (`roundi(1.5)` is +100% on that roll). Use stochastic rounding: `floori()`
+  plus a `randf()` chance on the remainder. The average is then exact at every scale.
+- **Two reasonable curves multiplying into an untuned third** — income scaling on four independent
+  axes reached ~100× while each axis looked mild; wave length is `events × interval` and humps in
+  the middle because neither curve is tuned against the product. When two scaling systems feed one
+  outcome, plot the outcome, not the inputs.
+- **A doc comment describing intent rather than behaviour** — `spawn_weight_end = -1.0` was
+  documented as "no ramp" and the function never checked for it, so every unmodified asteroid's
+  weight lerped toward `-1` and went negative around wave 68. Stale comments do the same thing
+  (`DROP_X2_WAVE` was referenced by a comment after the constant stopped being used). The comment
+  makes the gap invisible during review — verify against the code, not the description.
+- **Integer division in scaling math** — `(wave - min_wave) / (end_wave - min_wave)` with all-`int`
+  operands returns `0` until the final wave, then `1`. No warning, and the symptom looks like a
+  step function instead of a ramp. Force one operand to `float` (`maxf()` on the denominator is
+  the tidiest, since it doubles as the divide-by-zero guard).
+- **`pow()` of a negative base with a fractional exponent is `NaN`** — and `NaN` survives
+  `clampf()` untouched, since every comparison against it is false. Clamp the *progress* before
+  `pow()`, not the result after. Relevant anywhere a wave number could fall below a `min_wave`,
+  which wave-preview features will do.
 - **`queue_free()` is deferred, not immediate** — a freed-but-not-yet-removed node keeps
   receiving signals and physics callbacks for the rest of the frame. Anything with a one-shot
   side effect (decrementing a counter, dropping loot, emitting a signal) needs a guard flag,

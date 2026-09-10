@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://toxh3tv0bgmh" path="res://Scripts/UI/camera.gd" id="2_21xkr"]
 [ext_resource type="Script" uid="uid://m860hk5ygins" path="res://Scripts/asteroid_spawner.gd" id="2_bo1nx"]
 [ext_resource type="Script" uid="uid://c3jff2nq5qb8d" path="res://Scripts/nebula.gd" id="2_hptm8"]
+[ext_resource type="Script" uid="uid://dvdbnf22gmxgo" path="res://Scripts/UI/asteroid_health_bars.gd" id="5_d1ilt"]
 [ext_resource type="PackedScene" uid="uid://ct42g3vrmj7ac" path="res://Scenes/Defenses/tractor_beam.tscn" id="5_kry3j"]
 [ext_resource type="Script" uid="uid://blm4lvu4re48g" path="res://Scripts/UI/threat_arrow_manager.gd" id="6_344ge"]
 [ext_resource type="PackedScene" uid="uid://nphp6edurswp" path="res://Scenes/UI/ui.tscn" id="7_6bp64"]
@@ -55,12 +56,13 @@ shader_parameter/block_size = 3.000000095
 [node name="Main" type="Node2D" unique_id=1160054467]
 script = ExtResource("1_344ge")
 custom_wave = true
-wave_number = 10
+wave_number = 12
 bwave_number = 5
 extra_resources = true
 extra_amount = 10000
 shield_amount = 1
 custom_asteroid_speed_value = 400.0
+starting_resources = 27
 metadata/_edit_lock_ = true
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181282094]
@@ -113,6 +115,12 @@ near2_repeat_times = 3
 position = Vector2(960, 540)
 
 [node name="OrbitManager" type="Node2D" parent="." unique_id=1736299382]
+
+[node name="AsteroidHealthBars" type="Node2D" parent="." unique_id=715778826]
+z_index = 100
+script = ExtResource("5_d1ilt")
+bar_background = Color(0, 0, 0, 0.73333335)
+bar_fill_full = Color(0.116666794, 1, 0, 1)
 
 [node name="AsteroidSpawner" type="Marker2D" parent="." unique_id=346610206]
 position = Vector2(960, 540)

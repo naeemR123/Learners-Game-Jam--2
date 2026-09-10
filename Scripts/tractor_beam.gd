@@ -92,7 +92,7 @@ func _on_area_entered(asteroid: Area2D):
 	if asteroid.is_in_group("Asteroids"):
 		var slow_strength = game.active_stats[StatIDs.TRACTOR_BEAM][StatIDs.SLOW_STRENGTH]
 		asteroid.apply_effect(EffectIDs.TRACTOR_BEAM, SLOW_EFFECT, slow_strength)
-		print("[DEBUG] Asteroid in Tractor Beam | Current Slow Down Value: %.1f" % slow_strength)
+		#print("[DEBUG] Asteroid in Tractor Beam | Current Slow Down Value: %.1f" % slow_strength)
 
 func _on_area_exited(asteroid: Area2D):
 	if asteroid.is_in_group("Asteroids"):

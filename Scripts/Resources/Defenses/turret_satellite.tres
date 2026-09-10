@@ -12,10 +12,10 @@ description = "Defensive satellite that orbits the planet, shooting Asteroids in
 defense_scene = ExtResource("1_kx8qd")
 base_cost = 5
 default_stats = Dictionary[String, float]({
-"damage": 1.5,
-"fire_rate": 2.4,
+"damage": 2.0,
+"fire_rate": 2.0,
 "orbit_speed": 1.0,
-"projectile_speed": 300.0,
+"projectile_speed": 600.0,
 "range": 250.0
 })
 metadata/_custom_type_script = "uid://bcoqkbjgfkbiv"
