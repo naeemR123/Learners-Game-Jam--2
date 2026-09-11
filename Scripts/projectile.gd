@@ -4,8 +4,9 @@ extends Area2D
 
 # Despawning
 @onready var screen_size : Vector2 = get_viewport_rect().size
-var despawn_margin : float = 200.0
+var despawn_margin : float = 500.0
 var despawn_dist : float 
+var despawn_dist_min : float
 
 var origin : Vector2
 
@@ -22,8 +23,12 @@ func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float, speed_st
 	
 	global_position = start_pos
 	direction = (target_pos - start_pos).normalized()
-	despawn_dist = start_pos.distance_to(target_pos) + despawn_margin
 	rotation = direction.angle()	# Points the projectile in the direction it is flying
+	
+	# Sets despawn distance
+	despawn_dist = start_pos.distance_to(target_pos) + despawn_margin
+	# Sets minimum despawn distance : half screen size + margin
+	despawn_dist_min = screen_size.x*2/3 + despawn_margin
 	
 	sprite.modulate = color
 	#print("[DEBUG] Projectile fired")
@@ -32,9 +37,9 @@ func start(start_pos: Vector2, target_pos: Vector2, damage_stat: float, speed_st
 func _physics_process(delta: float) -> void:
 	global_position += direction * speed * delta
 	
-	# Checks and despawns projectile is off-screen by 'despawn_margin' amount
-	if origin.distance_to(global_position) > despawn_dist:
-		#print("Projectile despawned : Too far off screen")
+	# Checks how far projectile has traveled and despawns when reaches specified distance
+	if origin.distance_to(global_position) > maxf(despawn_dist, despawn_dist_min):
+		print("Projectile despawned : Too far off screen")
 		_despawn()
 
 
