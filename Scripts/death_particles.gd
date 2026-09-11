@@ -8,7 +8,7 @@ extends Node2D
 @onready var chunk_node: GPUParticles2D = $ChunkParticles
 
 @onready var debris_material: ParticleProcessMaterial = debris_node.process_material.duplicate()
-@onready var countdeb_material: ParticleProcessMaterial = debris_node.process_material.duplicate()
+@onready var countdeb_material: ParticleProcessMaterial = countdeb_node.process_material.duplicate()
 @onready var spark_material: ParticleProcessMaterial = spark_node.process_material.duplicate()
 @onready var chunk_material: ParticleProcessMaterial = chunk_node.process_material.duplicate()
 

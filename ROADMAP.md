@@ -93,36 +93,36 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
   - Damage is clamped to remaining health so overkill doesn't inflate the total.
   - `RESOURCES_SPENT` increments in all three purchase functions.
 - [x] **`NumberFormat` static class** — `compact()` (K/M/B/T suffixes, truncation not
-      rounding) with trailing-zero stripping. Wired to every display call site.
+	  rounding) with trailing-zero stripping. Wired to every display call site.
 
 ### Stat & Perk System
 
 - [x] **Layered stat system** — `perk_flat` / `perk_mult` hold perk contributions separately from
-      `active_stats`. `get_base_stat()` returns the pre-perk value (upgrade curve if one exists,
-      else the registered default); `recalculate_stat()` computes `(base + flat) * mult`.
-      **Single write path** — nothing outside `recalculate_stat()` writes `active_stats`.
+	  `active_stats`. `get_base_stat()` returns the pre-perk value (upgrade curve if one exists,
+	  else the registered default); `recalculate_stat()` computes `(base + flat) * mult`.
+	  **Single write path** — nothing outside `recalculate_stat()` writes `active_stats`.
 - [x] **Perk system** — `purchase_perk()` structured as validate → charge → apply → notify, so
-      both perk kinds share cost/counter/signal bookkeeping and only the apply step branches.
+	  both perk kinds share cost/counter/signal bookkeeping and only the apply step branches.
   - `PerkEffect.STAT_MODIFIER` with `PerkType.FLAT` / `PERCENT`.
   - `PerkEffect.UNLOCK` perks carry an `unlock_id`, validated at registration so
-    `purchase_perk()` never re-checks it. `Game_Manager.unlocked_features` +
-    `is_feature_unlocked()` + `feature_unlocked(unlock_id)` signal.
+	`purchase_perk()` never re-checks it. `Game_Manager.unlocked_features` +
+	`is_feature_unlocked()` + `feature_unlocked(unlock_id)` signal.
   - Prerequisite tree via `PerkData.prerequisites`; `tier` groups perks into accordion rows.
   - **Partial-set targeting** — `target_categories: Array[String]` with `["all"]` as the
-    wildcard; `_try_add_category()` dedupes. Note `"all"` skips every `NON_DEFENSE_DEFAULTS`
-    category, so it does **not** include `"global"` — correct, but surprising given how close
-    the two names read in `StatIDs`.
+	wildcard; `_try_add_category()` dedupes. Note `"all"` skips every `NON_DEFENSE_DEFAULTS`
+	category, so it does **not** include `"global"` — correct, but surprising given how close
+	the two names read in `StatIDs`.
   - `register_perk_stats()` reports each bad target individually, then aborts only if the
-    perk resolves to zero categories.
+	perk resolves to zero categories.
 - [x] **`NON_DEFENSE_DEFAULTS` table** — replaced the `if category == PLANET` special cases in
-      `get_base_stat()`, `_resolve_perk_categories()` and `register_perk_stats()`. Adding a
-      non-defense category is one dictionary entry. Currently `planet`, `tractor_beam`, `global`.
+	  `get_base_stat()`, `_resolve_perk_categories()` and `register_perk_stats()`. Adding a
+	  non-defense category is one dictionary entry. Currently `planet`, `tractor_beam`, `global`.
 - [x] **`global` → `planet` category rename** — `max_planet_shield` → `shield`.
-      `StatIDs.GLOBAL` was reserved for genuinely game-wide stats and now holds `drop_amount`.
+	  `StatIDs.GLOBAL` was reserved for genuinely game-wide stats and now holds `drop_amount`.
 - [x] **`_apply_shield_gain()`** — raising max shield tops up current shield by the difference,
-      so it works for both FLAT and PERCENT sources, from upgrades or perks.
+	  so it works for both FLAT and PERCENT sources, from upgrades or perks.
 - [x] **`shield_changed` / `planet_hit` signal split** — one signal was carrying both "value
-      changed, redraw" and "we got hit, shake". Screen shake now scales with damage.
+	  changed, redraw" and "we got hit, shake". Screen shake now scales with damage.
 - [x] **Planet shield as a computed property** proxying into `active_stats`.
 - [x] `ScalingType.SUBTRACTIVE` for fire-rate style upgrades.
 - [x] `purchase_upgrade()` cost/value ordering — cost read *before* `level_up()`, value *after*.
@@ -130,27 +130,27 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
 ### Waves & Difficulty Scaling
 
 - [x] **Wave system** — weighted spawn pool, `min_wave` gating, randomised boss waves every
-      15–20 waves (`is_boss_wave` flag reuses the normal spawn-tracking/completion logic).
+	  15–20 waves (`is_boss_wave` flag reuses the normal spawn-tracking/completion logic).
 - [x] **`WaveManager` as single source of truth for scaling.** One normalized
-      `wave_progress(wave)` (0.0 at wave 1 → 1.0 at `SCALING_END_WAVE = 100`, clamped) feeds
-      every wave-derived number. Two families sit on top of it:
+	  `wave_progress(wave)` (0.0 at wave 1 → 1.0 at `SCALING_END_WAVE = 100`, clamped) feeds
+	  every wave-derived number. Two families sit on top of it:
   - **Bounded** — `lerpf(start, end, pow(progress, curve))` for anything with a real ceiling:
-    `speed_multiplier()` (1.0 → `MAX_SPEED_SCALE = 2.2`), spawn interval
-    (`max_spawn_interval = 7` → `MIN_SPAWN_INTERVAL = 0.5`), swarm group size, spawn weight.
+	`speed_multiplier()` (1.0 → `MAX_SPEED_SCALE = 2.2`), spawn interval
+	(`max_spawn_interval = 7` → `MIN_SPAWN_INTERVAL = 0.5`), swarm group size, spawn weight.
   - **Unbounded** — `pow(2.0, (wave - 1) / X2_WAVE)` for stats the player's own power
     multiplies against: `health_multiplier()` (`HEALTH_X2_WAVE = 20`), `damage_multiplier()`
     (`DAMAGE_X2_WAVE = 25`). Expressed as a *doubling period* because "doubles every 20 waves"
-    is reasonable to think about and `1.035` isn't.
+	is reasonable to think about and `1.035` isn't.
   - `SCALING_END_WAVE` is typed `float` so the division promotes. The curve exponent only
-    bends the middle (`pow(0, n) = 0`, `pow(1, n) = 1`) — endpoints are fixed by the lerp.
+	bends the middle (`pow(0, n) = 0`, `pow(1, n) = 1`) — endpoints are fixed by the lerp.
 - [x] **Spawn count bookkeeping** — `register_spawns(count) -> int` clamps a group to the
-      remaining budget and returns how many the spawner may actually create. Wave-end check is
-      `>=` not `==`. `max_asteroids = clampi(3 + wave * 2, 1, 180)`.
+	  remaining budget and returns how many the spawner may actually create. Wave-end check is
+	  `>=` not `==`. `max_asteroids = clampi(3 + wave * 2, 1, 180)`.
 
 ### Asteroids & Spawning
 
 - [x] **Radial world-space spawning** — spawns on a fixed-radius circle (2120px) around the
-      planet, so travel time is identical for every asteroid and every player. `asteroid.gd`'s
+	  planet, so travel time is identical for every asteroid and every player. `asteroid.gd`'s
       despawn check is a scalar `despawn_dist` (spawn distance + margin) vs
       `distance_to(planet)`; it never reads viewport size. See [Decisions](#spawning--difficulty).
 - [x] **Asteroid speed re-tune** — `speed_multiplier` starts at 1.0 (was `0.1 * wave`, which
@@ -192,17 +192,17 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
     during `add_child()`, *before* the deferred `initialize()` supplied data.
   - `collector_satellite` awards `resource.value` instead of a hardcoded 1.
 - [x] **Per-asteroid drop weights** — `AsteroidData.drop_weights : Dictionary[ResourceType, float]`
-      overrides a type's `base_weight`; `drop_weight.get(type, base_weight)` gives per-entry
-      override with fallback. Every asteroid now lists all four tiers explicitly.
+	  overrides a type's `base_weight`; `drop_weight.get(type, base_weight)` gives per-entry
+	  override with fallback. Every asteroid now lists all four tiers explicitly.
   - Current: Common `95/5/0.5/0`, Swarm `85/10/1/0`, Tank `70/26/4/0.5`, Comet `25/55/18/1.5`,
-    Boss `0.5/70/25/5`. Drop counts: Common 1–3, Swarm 3–5, Tank 4–7, Comet 10–20, Boss 50–75.
+	Boss `0.5/70/25/5`. Drop counts: Common 1–3, Swarm 3–5, Tank 4–7, Comet 10–20, Boss 50–75.
 - [x] **Perk-gated resource tiers** — `ResourceData.unlock_id` replaces `min_wave`; empty string
-      means always available (Grey). `_get_next_resource()` filters on `is_feature_unlocked()`,
-      skips zero-weight entries, and guards `is_empty()`.
+	  means always available (Grey). `_get_next_resource()` filters on `is_feature_unlocked()`,
+	  skips zero-weight entries, and guards `is_empty()`.
 - [x] **Drop scaling is perk-driven, not wave-driven** — `StatIDs.GLOBAL` category holds
-      `drop_amount`, default `1.0`. See [Decisions](#economy).
+	  `drop_amount`, default `1.0`. See [Decisions](#economy).
   - `asteroid._spawn_resources()` uses **stochastic rounding** — `floori(exact)` plus a
-    `randf()` chance on the remainder — so small multipliers don't vanish to integer rounding.
+	`randf()` chance on the remainder — so small multipliers don't vanish to integer rounding.
 - [x] **Economy perk branch (complete)** — ten FLAT `drop_amount` perks at `0.05`
       (Metal Refiner I–V, Dense Asteroids I–V; costs 20 → 800) landing on exactly +50%, plus
       three UNLOCK perks: Blue (after Refiner II), Gold (after Blue + Refiner V), Red (after
@@ -222,52 +222,52 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
       not a fixed 1920×1080 box at the origin that would have eaten vertical shots past
       ~580 range.
 - [x] **Turret base stats re-tuned for wave 1** — damage 1.5 → 2.0, fire rate 2.4 → 2.0s,
-      projectile speed 300 → 600. Partial fix; see [2A](#2a-next-up) for what's still open.
+	  projectile speed 300 → 600. Partial fix; see [2A](#2a-next-up) for what's still open.
 - [x] **Range indicators on both satellite types** — `set_range_visible()` +
-      `set_preview_range_visible(can_see, radius)` with a looping alpha tween on the preview.
+	  `set_preview_range_visible(can_see, radius)` with a looping alpha tween on the preview.
 
 ### UI & Shop
 
 - [x] **Shop revamp, all three phases** — `TabContainer`, custom stretch `TabBar`,
-      `FoldableContainer` accordion rows (`ShopAccordionRow`), `PurchaseLine`.
+	  `FoldableContainer` accordion rows (`ShopAccordionRow`), `PurchaseLine`.
   - Planet tab groups rows by category via `setup_upgrade_group()`, ordered by the
-    `NON_DEFENSE_DEFAULTS` const rather than folder scan order.
+	`NON_DEFENSE_DEFAULTS` const rather than folder scan order.
   - Perks tab groups by `tier` via `setup_perk_tier()`. Perks whose prerequisites aren't
     met are **hidden** (`visible = false`) rather than shown greyed-out.
 - [x] **Bulk purchase** — x10, Shift for max (`purchase_*_bulk()` with `-1` meaning max).
 - [x] **Range upgrade hover preview** — hovering a `range` row shows one random satellite's
-      current ring and a blinking `Line2D` at the next-level radius. Both paths use
-      `has_method()` guards; the `false` path clears every satellite on the ring.
+	  current ring and a blinking `Line2D` at the next-level radius. Both paths use
+	  `has_method()` guards; the `false` path clears every satellite on the ring.
 - [x] **Off-screen threat indicator** — `ThreatArrowManager` (`CanvasLayer`) draws edge arrows
-      for incoming asteroids outside the view, unlocked by `UnlockIDs.THREAT_INDICATOR`.
+	  for incoming asteroids outside the view, unlocked by `UnlockIDs.THREAT_INDICATOR`.
   - Ranks by *seconds until visible* (world-space distance to the visible rect ÷
-    `asteroid.speed`), so a fast Swarm outranks a slow Tank at the same distance.
-    Arrows scale with urgency and blink on appearance.
+	`asteroid.speed`), so a fast Swarm outranks a slow Tank at the same distance.
+	Arrows scale with urgency and blink on appearance.
   - Fixed pool of 20 built in `_ready()`; nothing is instanced or freed during play.
   - **Stable assignment** — an `asteroid → arrow` Dictionary keeps each arrow with its
-    asteroid for its whole lifetime (see [Bugs](#state--timing) on rank-indexed pools).
+	asteroid for its whole lifetime (see [Bugs](#state--timing) on rank-indexed pools).
   - Per-frame pass: collect → rank → release → assign → update. Release must run before
-    assign, or the pool looks empty and new threats get nothing.
+	assign, or the pool looks empty and new threats get nothing.
   - A dot product against the direction to screen centre drops arrows for anything already
-    receding — mainly comets after they pass.
+	receding — mainly comets after they pass.
   - Listens to `feature_unlocked` *and* checks in `_ready()`; `reset()` on `reset_unlocks`.
 - [x] **Asteroid health bars** — `AsteroidHealthBars` (`Node2D`, z 100) does one `_draw()`
-      pass over the `Asteroids` group each frame: background, fill lerped
-      `bar_fill_empty → bar_fill_full`, outline. Skips dead, full-HP, and BOSS asteroids.
+	  pass over the `Asteroids` group each frame: background, fill lerped
+	  `bar_fill_empty → bar_fill_full`, outline. Skips dead, full-HP, and BOSS asteroids.
 - [x] **Planet shield bar** (`ProgressBar` on the planet) + shield/resource/wave labels;
-      boss-wave warning label shows when the next boss is within 4 waves.
+	  boss-wave warning label shows when the next boss is within 4 waves.
 - [x] Custom mouse dot replaces the OS cursor inside the shop.
 
 ### Camera, Screen & Resize
 
 - [x] **Aspect-ratio scaling** — `window/stretch/mode="canvas_items"` + `aspect="expand"`.
-      `canvas_items` renders UI at real resolution (the earlier `viewport` mode upscaled from
-      1920×1080 and blurred text); `expand` reveals extra world space rather than cropping.
-      `camera.gd._update_aspect_zoom()` counteracts it with a clamped `Camera2D.zoom`
-      (`min_zoom_factor 0.9` / `max_zoom_factor 1.15`), re-running on `size_changed`.
-      See [Decisions](#rendering--presentation).
+	  `canvas_items` renders UI at real resolution (the earlier `viewport` mode upscaled from
+	  1920×1080 and blurred text); `expand` reveals extra world space rather than cropping.
+	  `camera.gd._update_aspect_zoom()` counteracts it with a clamped `Camera2D.zoom`
+	  (`min_zoom_factor 0.9` / `max_zoom_factor 1.15`), re-running on `size_changed`.
+	  See [Decisions](#rendering--presentation).
 - [x] **Resize-safe UI positioning** — `ui.gd` derives `shop_origin` / `shop_hidden_pos` from
-      the panel's anchors × `get_parent_area_size()`, then snaps to the correct target on
+	  the panel's anchors × `get_parent_area_size()`, then snaps to the correct target on
       resize. `camera.gd` stores `shop_open` so it can recompute `shop_offset` unprompted.
 - [x] **Camera feel** — screen shake (scaled by damage, `move_toward` decay), mouse parallax,
       shop slide with camera counter-offset, player zoom (scroll / `+` / `-` / `0` reset).
@@ -278,11 +278,11 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
       (four `GPUParticles2D` emitters with duplicated `ParticleProcessMaterial`s so direction
       is per-instance), floating damage numbers via `NumberFormat.compact()`.
 - [x] **Projectile HDR glow** — `SatelliteData.projectile_color` → `turret_satellite.gd` →
-      `projectile.gd`'s `modulate`, with `WorldEnvironment` + Glow in `main.tscn`. New
-      projectile types set one export field. See [Decisions](#rendering--presentation) on HDR.
+	  `projectile.gd`'s `modulate`, with `WorldEnvironment` + Glow in `main.tscn`. New
+	  projectile types set one export field. See [Decisions](#rendering--presentation) on HDR.
 - [x] **Full-screen pixelation shader** — `PixelationLayer` (`CanvasLayer`, layer 2) with a
-      full-rect `ColorRect` reading `hint_screen_texture` at `filter_nearest`, snapping
-      `SCREEN_UV` to a `block_size = 3` grid and sampling each block's centre.
+	  full-rect `ColorRect` reading `hint_screen_texture` at `filter_nearest`, snapping
+	  `SCREEN_UV` to a `block_size = 3` grid and sampling each block's centre.
   - Layer ordering decides what gets quantized: world (0) and `ThreatArrowManager` (1) are
     pixelated; `UI` (3) stays crisp. `mouse_filter = Ignore` or the ColorRect eats every click.
   - Chosen full-screen over per-sprite — see [Decisions](#rendering--presentation).
@@ -325,17 +325,17 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
         Damage upgrade is MULTIPLICATIVE ×1.5 → level 2 = 3.0 exactly now (was 2.25 at 1.5
         base). So one free tutorial upgrade *does* cross it — or switch to ADDITIVE.
   - [ ] **The opening is a forced move** — turret 5 + collector 10 = 15, and without a
-        collector there's no income. `starting_resources` in `main.tscn` is currently **27**
-        (enough for collector + 2 turrets at 5 / 7). Two turrets is a bigger jump than it
-        sounds: `redistribute()` keeps them 180° apart, so one is always within 90° of any
-        incoming asteroid and worst-case engagement distance rises from d=90 to d=192.
-        Test real wave 1 via debug injection at 15 / 22 / 33, find the loadout that works, then
-        make the tutorial hand that over.
+		collector there's no income. `starting_resources` in `main.tscn` is currently **27**
+		(enough for collector + 2 turrets at 5 / 7). Two turrets is a bigger jump than it
+		sounds: `redistribute()` keeps them 180° apart, so one is always within 90° of any
+		incoming asteroid and worst-case engagement distance rises from d=90 to d=192.
+		Test real wave 1 via debug injection at 15 / 22 / 33, find the loadout that works, then
+		make the tutorial hand that over.
 - [ ] **Wave length pacing** — wave duration is `events × spawn_interval`, and nothing tunes
-      the product. `max_asteroids` is now clamped to 180 (a bound, not a curve), so length
-      still humps mid-game and collapses late.
+	  the product. `max_asteroids` is now clamped to 180 (a bound, not a curve), so length
+	  still humps mid-game and collapses late.
   - [ ] Decide: bound `max_asteroids` on a curve, *or* derive the interval from a target wave
-        duration (`interval = target_seconds / expected_events`) so length is tuned directly.
+		duration (`interval = target_seconds / expected_events`) so length is tuned directly.
   - [ ] Raising `MIN_SPAWN_INTERVAL` doesn't help (mid-game interval is nowhere near the
         floor) and stretching the ramp to wave 200 makes it monotonically worse.
   - [ ] 180 asteroids in one wave is the most likely framerate problem before object pooling.
@@ -351,26 +351,26 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
         chain gets exercised beyond one link.
   - [ ] `damage_perk_1` ("High Caliber Bullets") has no `cost` set — it's free. Decide a price.
   - [ ] Decide whether hidden-until-unlocked perks (current behaviour) or greyed-out with the
-        `Requires: X` tooltip (the code path that `_missing_prereq_names()` still supports but
-        never reaches) is the intended UX. Hidden keeps the panel short; greyed-out shows the
-        tree.
+		`Requires: X` tooltip (the code path that `_missing_prereq_names()` still supports but
+		never reaches) is the intended UX. Hidden keeps the panel short; greyed-out shows the
+		tree.
 
 ### 2B: Core Features
 
 - [ ] **Save / load**
   - [ ] Serialize a plain Dictionary via `FileAccess` + `JSON`. Include a **version field**
-        from day one.
+		from day one.
   - [ ] Avoid `ResourceLoader` on user files — embedded scripts execute.
   - [ ] `StatsManager.lifetime` is the first customer ("survives reset, saves to disk").
 - [ ] **Tutorial** — scripted opening before real wave 1.
   - [ ] Buy a collector and a turret (the forced move is what a tutorial wants), run a
-        one-asteroid wave, teach the tractor beam on the drop.
+		one-asteroid wave, teach the tractor beam on the drop.
   - [ ] Hand over a free upgrade and a free perk. Doubles as the delivery mechanism for
-        whatever loadout real wave 1 actually needs (see 2A).
+		whatever loadout real wave 1 actually needs (see 2A).
 - [ ] **Shield recovery** — shield only ever decreases, so a rough early wave permanently
-      narrows the margin and the run spirals.
+	  narrows the margin and the run spirals.
   - [ ] **Automatic regen** (~10–20% of max per wave) is the floor — the player who most needs
-        a paid heal is the one who can't afford it. Also makes shield upgrades better, since it
+		a paid heal is the one who can't afford it. Also makes shield upgrades better, since it
         scales with max.
   - [ ] Shop heal item and a between-waves healing perk as acceleration.
   - [ ] Heal-dropping asteroid variant — the most interesting of the three: one enemy type
@@ -411,21 +411,21 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
           t = global_position.distance_to(predicted) / proj_speed
       ```
     - Reads `target.direction` and `target.speed`, both already public on `asteroid.gd`.
-    - **Known inaccuracy:** the tractor beam's slow is applied inside
-      `asteroid._physics_process()` via `get_modifier(TIME_SCALE)`, not to `speed` itself, so
-      slowed asteroids get over-led. Either expose an effective-speed getter or accept the drift.
+	- **Known inaccuracy:** the tractor beam's slow is applied inside
+	  `asteroid._physics_process()` via `get_modifier(TIME_SCALE)`, not to `speed` itself, so
+	  slowed asteroids get over-led. Either expose an effective-speed getter or accept the drift.
   - [ ] **Hold-fire satellite** — a *distinct weapon identity*: filters targeting to within
-        effective range and waits instead of spending cooldowns on misses. Pairs with a slow,
-        heavy shot — explosive or burst-fire. Contrast with the base turret, which fires
-        constantly and relies on projectile speed to connect.
+		effective range and waits instead of spending cooldowns on misses. Pairs with a slow,
+		heavy shot — explosive or burst-fire. Contrast with the base turret, which fires
+		constantly and relies on projectile speed to connect.
   - [ ] Laser satellite, missile satellite (`DefenseIDs.LASER_SAT` / `MISSILE_SAT` reserved).
   - [ ] Cryo / incendiary satellite — first customers for on-hit status effects (see 2D).
 - [ ] **Drones** — `DroneData` is still an empty marker class; the Drones tab is empty.
   - [ ] **Marker drone** — attaches to the asteroid it marks, applying `EffectIDs.DAMAGE_TAKEN`.
-        The drone body *is* the visual indicator. Gives drones an identity distinct from
-        satellites (they leave the ring and commit to a target), and caps concurrent marks at
-        the number of drones owned.
-    - Don't reparent to the asteroid — `queue_free()` takes children with it. Track the target
+		The drone body *is* the visual indicator. Gives drones an identity distinct from
+		satellites (they leave the ring and commit to a target), and caps concurrent marks at
+		the number of drones owned.
+	- Don't reparent to the asteroid — `queue_free()` takes children with it. Track the target
       and set `global_position` instead.
     - Decide source-key granularity: shared key = one mark per asteroid;
       `"marker_drone_%d" % get_instance_id()` = stacking.
@@ -448,10 +448,10 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
 - [ ] **Balance & tuning**
   - [ ] **Damage upgrade has no diminishing returns** — `val_per_level = 1.5` (MULTIPLICATIVE)
         and `cost_multiplier = 1.5` are the same number, so damage-per-resource is *constant
-        forever*. There's never a reason to buy anything else. Either lower `val_per_level`
-        below `cost_multiplier` or switch to ADDITIVE (which also settles the wave-1 threshold).
+		forever*. There's never a reason to buy anything else. Either lower `val_per_level`
+		below `cost_multiplier` or switch to ADDITIVE (which also settles the wave-1 threshold).
   - [ ] **Range upgrade is a trap purchase** — miss distance scales *with* flight distance, so
-        buying range widens the band where a turret acquires targets it can't hit and burns
+		buying range widens the band where a turret acquires targets it can't hit and burns
         cooldowns on them. `max_value = 1500` against an effective range of ~188 (at 600 proj
         speed) is net-negative past a point. Resolves once predictive targeting exists (2C);
         until then, cap `max_value` near effective range or accept the mistune.
@@ -461,8 +461,8 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
         `damage_perk_1` (`target_categories = ["all"]`) and confirm the 10% lands.
   - [ ] **Income vs cost curve check** — income grows roughly linearly (asteroid count × a
         capped +50% × rarity-unlock step changes) but `UpgradeData.get_current_cost()` is
-        geometric. Plot `income_per_wave / cost_of_next_upgrade` across waves 1–100; if it isn't
-        roughly flat, purchases stop being decisions. `max_cost` is the flattening lever.
+		geometric. Plot `income_per_wave / cost_of_next_upgrade` across waves 1–100; if it isn't
+		roughly flat, purchases stop being decisions. `max_cost` is the flattening lever.
   - [ ] **Drop balance pass** — a Boss yields 50–75 drops weighted Blue/Gold/Red vs a Common's
         1–3 Grey. Verify in play before tuning further.
 - [ ] **Status effects**
@@ -479,44 +479,44 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
         Must be settled before the marker drone.
 - [ ] **Perks & drops**
   - [ ] **Per-tier drop-chance perks** — `ResourceData.get_weight_stat_id()` now exists
-        (`"blue_weight_mult"` etc., derived from `ResourceType.keys()` so there's no third
-        encoding of the tier name). Still to wire: `_get_next_resource()` should do
-        `resource_weight *= active_stats[GLOBAL].get(id, 1.0)`, and `NON_DEFENSE_DEFAULTS["global"]`
-        needs the four keys at `1.0`. Note the tradeoff: renaming an enum member silently changes
-        every derived key, including in save files.
+		(`"blue_weight_mult"` etc., derived from `ResourceType.keys()` so there's no third
+		encoding of the tier name). Still to wire: `_get_next_resource()` should do
+		`resource_weight *= active_stats[GLOBAL].get(id, 1.0)`, and `NON_DEFENSE_DEFAULTS["global"]`
+		needs the four keys at `1.0`. Note the tradeoff: renaming an enum member silently changes
+		every derived key, including in save files.
   - [ ] Zero-weight entries aren't skipped in `pick_asteroid_type()` / `get_boss_asteroid()` —
         inert today, but a `roll` of exactly `0.0` picks the first entry regardless.
         `_get_next_resource()` already guards this.
 - [ ] **Satellites & rings**
   - [ ] **Orbit radius upgrades don't work** — `satellite_ring.update_stats()` only reads
-        `ORBIT_SPEED`; `my_orbit_radius` is set once in `initialize()` and never re-read.
-        `StatIDs.ORBIT_RADIUS` exists but no upgrade `.tres` uses it yet.
+		`ORBIT_SPEED`; `my_orbit_radius` is set once in `initialize()` and never re-read.
+		`StatIDs.ORBIT_RADIUS` exists but no upgrade `.tres` uses it yet.
   - [ ] Orbit ring visualization — per-ring `Line2D` circle owned by `satellite_ring.gd`.
   - [ ] `purchase_line._process()` polls Shift every frame on every row — move to one
-        broadcaster (`ui.gd` or an input singleton) and let rows listen.
+		broadcaster (`ui.gd` or an input singleton) and let rows listen.
   - [ ] Comet sprite setup in `asteroid.start()` is hardcoded (`hframes = 8`, `scale 1.5`,
-        `offset (-17, 0)`) — the comment says it needs rework. Move to `AsteroidData`.
+		`offset (-17, 0)`) — the comment says it needs rework. Move to `AsteroidData`.
 - [ ] **Stats & counters**
   - [ ] `CounterIDs.RUNS_STARTED` increments in `Game_Manager._ready()` only, so `game_reset()`
-        doesn't count a fresh run. Decide which moment the counter means and make it consistent.
+		doesn't count a fresh run. Decide which moment the counter means and make it consistent.
   - [ ] `StatsManager._ready()` connects to `WaveManager.wave_complete` for `debug_print()` —
         undocumented autoload-order dependency; remove when the stats menu lands.
 - [ ] **Code hygiene & cleanup**
   - [ ] Comet's `start()` comment says they fly *"without regard for the Planet"* — the intent
-        is the opposite. Comets are aimed near the planet with a ±9° offset so a bad roll is a
-        direct hit; that's why damage is 15 and they're rare and profitable. Fix the comment.
+		is the opposite. Comets are aimed near the planet with a ±9° offset so a bad roll is a
+		direct hit; that's why damage is 15 and they're rare and profitable. Fix the comment.
   - [ ] `asteroid_health_bars.gd` has a leftover `print(get_nodes_in_group(...).size())`
-        inside the `_draw()` loop — fires once per damaged asteroid per frame.
+		inside the `_draw()` loop — fires once per damaged asteroid per frame.
   - [ ] `death_particles.gd`: `countdeb_material` duplicates `debris_node.process_material`,
-        not `countdeb_node.process_material`. Works only while the two nodes share a material.
+		not `countdeb_node.process_material`. Works only while the two nodes share a material.
   - [ ] `projectile.gd` still reads `get_viewport_rect().size` for `despawn_dist_min`. Harmless
-        as a floor, but it's the last viewport read in a gameplay script.
+		as a floor, but it's the last viewport read in a gameplay script.
   - [ ] Debug flags are currently **on** in `main.tscn`: `custom_wave = true` (wave 12),
         `extra_resources = true` (10 000). Turn off before any real playtest.
   - [ ] Delete `Scenes/*.tmp` editor artifacts (4 files: `main` ×2, `resource`, `ui`);
         add `*.tmp` to `.gitignore`.
   - [ ] `Legacy (Unused)/` — `defenses_button` / `upgrade_button` scenes and scripts. Delete or
-        confirm they're referenced nowhere.
+		confirm they're referenced nowhere.
   - [ ] Starfield twinkle gradient softening follow-up.
 
 ---
@@ -527,12 +527,12 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
 
 - [ ] **Audio**
   - [ ] `AudioManager` autoload — pool of `AudioStreamPlayer` nodes, signal-driven off
-        `planet_hit`, asteroid death, purchases. Hook *events*, not state changes (see
-        [Decisions](#architecture)).
+		`planet_hit`, asteroid death, purchases. Hook *events*, not state changes (see
+		[Decisions](#architecture)).
 - [ ] **Theming**
   - [ ] Universal `Theme` resource — replaces per-node `theme_override_*` before the UI grows.
 - [ ] **Sprite work** — cartoon style in Krita, then Inkscape; pixelation shader overlay
-      (not native pixel art). *Shader is built.* Rules that follow from it:
+	  (not native pixel art). *Shader is built.* Rules that follow from it:
   - Draw at display size (not small-then-upscaled); don't hand-place pixels.
   - Keep strokes and gaps ≥ 4px at scale 1.0; flat tones over gradients.
   - Greyscale anything that gets `modulate`-tinted.
@@ -551,16 +551,16 @@ gaps and debt. Items are grouped by subject; sub-checklists hold the specifics.
 ## Tier 3: Bigger Systems
 
 - [ ] **Prestige / meta-progression** — the genre-defining feature. `game_reset()` already does
-      the hard part; add a currency it doesn't clear. Perks gain an `is_meta` flag and a second
-      tree rather than converting the run-scoped ones.
+	  the hard part; add a currency it doesn't clear. Perks gain an `is_meta` flag and a second
+	  tree rather than converting the run-scoped ones.
 - [ ] **Visual perk tree** — `PerkData.tier` and `prerequisites` exist for exactly this.
 - [ ] **Object pooling** — projectiles, resources, damage numbers, hit particles.
-      `ThreatArrowManager` is the in-house reference for a stable pool.
+	  `ThreatArrowManager` is the in-house reference for a stable pool.
 - [ ] **Achievements / milestones** — nearly free once stat counters persist.
 - [ ] **`PurchasableData` base class** — *revisit here only if a fourth purchasable type
-      appears.* See [Decisions](#architecture).
+	  appears.* See [Decisions](#architecture).
 - [ ] **Headless balance simulation tooling** — plot income vs cost, wave length, and kill
-      windows across waves 1–100 without playing.
+	  windows across waves 1–100 without playing.
 
 ---
 

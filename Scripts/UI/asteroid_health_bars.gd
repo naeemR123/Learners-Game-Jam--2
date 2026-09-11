@@ -20,7 +20,7 @@ func _draw() -> void:
 		
 		# Skips asteroids that are freed, full HP, or bosses
 		if a.is_dead or a.health >= a.max_health or a.data.behavior == AsteroidData.BehaviorType.BOSS: continue
-		print(get_tree().get_nodes_in_group("Asteroids").size())
+		#print(get_tree().get_nodes_in_group("Asteroids").size())
 		
 		# Records asteroid health
 		var max_health : float = a.max_health

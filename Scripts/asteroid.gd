@@ -50,6 +50,8 @@ var frame_count : int = 8			# Total frames of animation
 var frame_interval : float = 0.1	# Time between frame change
 
 # - Drops -
+var is_golden : bool = false
+
 var resource_min : int = 1
 var resource_max : int = 3
 var drop_weight : Dictionary[ResourceData.ResourceType, float] = {}
@@ -82,6 +84,9 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		despawn()
 		push_warning("No AsteroidData loaded. Asteroid aborted.")
 		return
+	
+	# GOLDEN ASTEROID LOGIC
+	if randf() < data.golden_spawn_chance: is_golden = true
 	
 	# Assigns variable to Planet, and position to determined spawn position
 	planet = target_planet
@@ -130,10 +135,27 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 	damage, data.damage, damage_multiplier])
 	# -
 	
+	# GOLDEN ASTEROID LOGIC
+	if is_golden:
+		resource_min = data.golden_min_resources
+		resource_max = data.golden_max_resources
+		drop_weight = data.golden_drop_weights.duplicate()
+		sprite.set_instance_shader_parameter("tint_strength", data.golden_tint_strength)
+		
 	# DROP RESOURCES
-	resource_min = data.min_resources
-	resource_max = data.max_resources
-	drop_weight = data.drop_weights.duplicate()
+	else:
+		resource_min = data.min_resources
+		resource_max = data.max_resources
+		drop_weight = data.drop_weights.duplicate()
+		sprite.set_instance_shader_parameter("tint_strength", 0.0)
+	
+	# GOLDEN SHADER DEBUG
+	print_rich("[color=gold] [GOLD] [/color] %s | mat: %d | local: %s | readback: '%s'" % [
+		data.name,
+		sprite.material.get_instance_id(),
+		sprite.material.resource_local_to_scene,
+		sprite.get_instance_shader_parameter("tint_strength"),
+	])
 	
 	# RESISTANCES
 	resistances =  data.resistances.duplicate()
@@ -166,10 +188,13 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		rotation_speed = randf_range(-0.8, 0.8)	# Random rotation
 		direction = (planet.global_position - global_position).normalized()
 		sprite.texture = data.get_random_texture()
+	
+
 
 
 	# Displays current Asteroid's info : name, pos, and speed
-	print(" - Spawned: ", data.name , " at: ", global_position, " | Speed: ", speed, " | Scale: ", scale, " | Sprite Size: ", sprite.texture.get_size(), " | Health: ", health)
+	print(" - Spawned: ", data.name , " at: ", global_position, " | Golden: ", is_golden,
+	"\nSpeed: ", speed, " | Scale: ", scale, "\n | Sprite Size: ", sprite.texture.get_size(), " | Health: ", health)
 	
 	#																	#
 	#####################################################################

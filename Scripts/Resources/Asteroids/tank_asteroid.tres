@@ -29,4 +29,10 @@ drop_weights = Dictionary[int, float]({
 2: 4.0,
 3: 0.5
 })
+golden_drop_weights = Dictionary[int, float]({
+0: 0.1,
+1: 50.0,
+2: 35.0,
+3: 1.5
+})
 metadata/_custom_type_script = "uid://b7ruo5o8pgeta"

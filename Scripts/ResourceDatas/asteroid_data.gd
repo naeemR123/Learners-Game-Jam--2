@@ -31,6 +31,8 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var min_wave : int
 ## How likely this asteroid is to spawn. Weighed against all asteroids available for this wave (based on min_wave). Higher = more likely
 @export var spawn_weight : float 
+## Chance for asteroid to be golden: 0.1 = 10% chance
+@export var golden_spawn_chance : float = 0.05
 @export_group("Spawn Weight Scaling")
 ## Spawn Weight at Weight Ramp End Wave. [br]Ex: -1 = no ramp, weight stays flat. 40 = Spawn Weight is 40 at the specified end wave
 @export var spawn_weight_end : float = -1.0
@@ -55,6 +57,19 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var max_resources : int
 ## Empty means uses base weight of resources
 @export var drop_weights : Dictionary[ResourceData.ResourceType, float] = {} 
+
+@export_group("Golden Asteroid")
+@export_range(0.0, 2.0, 0.01) var golden_tint_strength : float = 1.4
+@export var golden_particle_color : Color = Color("a3723b")
+@export var golden_min_resources : int = 5
+@export var golden_max_resources : int = 10
+@export var golden_drop_weights : Dictionary[ResourceData.ResourceType, float] = { 
+	ResourceData.ResourceType.GREY: 1.0, 
+	ResourceData.ResourceType.BLUE: 60.0, 
+	ResourceData.ResourceType.GOLD: 25.0, 
+	ResourceData.ResourceType.RED: 0.5, 
+} 
+
 
 @export_category("AI")
 @export var behavior : BehaviorType = BehaviorType.DEFAULT

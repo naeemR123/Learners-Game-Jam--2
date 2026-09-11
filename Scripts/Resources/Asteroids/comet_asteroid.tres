@@ -18,7 +18,7 @@ scale_ratio = 0.5
 max_health = 3.0
 damage = 15.0
 max_speed = 177.0
-speed_variance = 0.08
+speed_variance = 0.03
 resistances = Dictionary[String, float]({
 "slow": 0.25
 })
@@ -35,6 +35,14 @@ drop_weights = Dictionary[int, float]({
 1: 55.0,
 2: 18.0,
 3: 1.5
+})
+golden_min_resources = 15
+golden_max_resources = 18
+golden_drop_weights = Dictionary[int, float]({
+0: 0.1,
+1: 40.0,
+2: 50.0,
+3: 2.5
 })
 behavior = 1
 metadata/_custom_type_script = "uid://b7ruo5o8pgeta"
