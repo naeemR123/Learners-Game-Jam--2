@@ -188,6 +188,7 @@ func start(asteroid_type : AsteroidData, target_planet: Area2D, start_pos: Vecto
 		rotation_speed = randf_range(-0.8, 0.8)	# Random rotation
 		direction = (planet.global_position - global_position).normalized()
 		sprite.texture = data.get_random_texture()
+		sprite.scale = Vector2.ONE * data.sprite_scale
 	
 
 

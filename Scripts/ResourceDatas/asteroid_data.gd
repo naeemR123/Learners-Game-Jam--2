@@ -21,6 +21,7 @@ enum BehaviorType { DEFAULT, COMET, BOSS }
 @export var max_speed : float
 ## Percentage of variance: 0.12 = up to 12% increase/decrease
 @export var speed_variance : float = 0.12
+@export var sprite_scale : float = 1.0
 
 @export_category("Resistances")
 ## i.e. 'slow': 0.3 = 30% resistance to slow status effect

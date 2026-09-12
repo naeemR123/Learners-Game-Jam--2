@@ -1,17 +1,19 @@
 [gd_resource type="Resource" script_class="AsteroidData" format=3 uid="uid://c0bh7jrawthn1"]
 
 [ext_resource type="Script" uid="uid://b7ruo5o8pgeta" path="res://Scripts/ResourceDatas/asteroid_data.gd" id="1_hs3uf"]
-[ext_resource type="Texture2D" uid="uid://h7ip7kfh5166" path="res://Assets/Asteroids/Tank/tank_asteroid_V1_1.png" id="2_hs3uf"]
+[ext_resource type="Texture2D" uid="uid://cun4dfwifgprr" path="res://Assets/Asteroids/Tank/tank_asteroid_V2_1.png" id="2_og64o"]
+[ext_resource type="Texture2D" uid="uid://co41krlr7ejuo" path="res://Assets/Asteroids/Tank/tank_asteroid_V2_2.png" id="3_h3tjd"]
 
 [resource]
 script = ExtResource("1_hs3uf")
 name = "Tank"
-sprite_textures = Array[Texture2D]([ExtResource("2_hs3uf")])
-scale_ratio = 1.5
-max_health = 15.0
+sprite_textures = Array[Texture2D]([ExtResource("2_og64o"), ExtResource("3_h3tjd")])
+scale_ratio = 2.0
+max_health = 18.0
 damage = 8.0
 max_speed = 71.0
 speed_variance = 0.1
+sprite_scale = 0.45
 resistances = Dictionary[String, float]({
 "slow": 0.5
 })
